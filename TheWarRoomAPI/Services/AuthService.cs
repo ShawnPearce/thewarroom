@@ -172,6 +172,24 @@ namespace TheWarRoomAPI.Services
                 loginSessionId = session.Id;
             }
 
+            // The position groups the user is assigned to: the groups a coach coaches, or the groups a player is in.
+            // Many permission rules depend on them (see AccessRules).
+            List<CurrentUserGroup> groups;
+            if (user.Role == UserRole.Player)
+            {
+                groups = await _context.PlayerGroupAssignments
+                    .Where(a => a.PlayerId == userId)
+                    .Select(a => new CurrentUserGroup { Id = a.PositionGroupId, Unit = a.PositionGroup!.Unit })
+                    .ToListAsync();
+            }
+            else
+            {
+                groups = await _context.CoachGroupAssignments
+                    .Where(a => a.CoachId == userId)
+                    .Select(a => new CurrentUserGroup { Id = a.PositionGroupId, Unit = a.PositionGroup!.Unit })
+                    .ToListAsync();
+            }
+
             return new CurrentUser
             {
                 Id = user.Id,
@@ -181,6 +199,7 @@ namespace TheWarRoomAPI.Services
                 CanPublishPlaybook = user.CanPublishPlaybook,
                 CanEditDepthChart = user.CanEditDepthChart,
                 CanRecordAttendance = user.CanRecordAttendance,
+                Groups = groups,
                 LoginSessionId = loginSessionId
             };
         }

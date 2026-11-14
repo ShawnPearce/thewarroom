@@ -36,8 +36,30 @@ namespace TheWarRoomApp.Controllers
                 return await ApiFailureAsync(response);
             }
 
-            var me = await response.Content.ReadFromJsonAsync<CurrentUserDto>();
-            return View(me);   // Dashboard View
+            var model = new DashboardViewModel
+            {
+                Me = (await response.Content.ReadFromJsonAsync<CurrentUserDto>())!
+            };
+
+            // This week's depth chart. 404 only means the team has not made one yet.
+            var chartResponse = await _client.GetAsync("api/DepthChart/current");
+            if (chartResponse.IsSuccessStatusCode)
+            {
+                var chart = await chartResponse.Content.ReadFromJsonAsync<DepthChartDto>();
+                model.Week = chart!.Week;
+
+                // A player sees where they stand this week
+                if (model.Me.Role == UserRole.Player)
+                {
+                    var mineResponse = await _client.GetAsync($"api/DepthChart/weeks/{chart.Week.Id}/my");
+                    if (mineResponse.IsSuccessStatusCode)
+                    {
+                        model.MyPlacements = (await mineResponse.Content.ReadFromJsonAsync<List<MyPlacementDto>>())!;
+                    }
+                }
+            }
+
+            return View(model);   // Dashboard View
         }
 
         // GET: Home/Privacy

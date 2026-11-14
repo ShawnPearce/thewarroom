@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
@@ -25,6 +25,22 @@
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="DepthChart" asp-action="Index">Depth chart</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Team</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Roster" asp-action="Index">Roster</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Staff" asp-action="Index">Coaching staff</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Groups" asp-action="Index">Groups and positions</a></li>
+                                @if (User.IsHeadCoach())
+                                {
+                                    <li><hr class="dropdown-divider"/></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Team" asp-action="Settings">Team settings</a></li>
+                                }
+                            </ul>
                         </li>
                     </ul>
                     <ul class="navbar-nav">
@@ -65,6 +81,10 @@
         @if (TempData["Message"] is string message)
         {
             <div class="alert alert-success" role="status">@message</div>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <div class="alert alert-danger" role="alert">@error</div>
         }
         @RenderBody()
     </main>

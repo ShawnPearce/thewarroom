@@ -10,6 +10,9 @@ namespace TheWarRoomAPI.Tests
             _now = start;
         }
 
+        // Tests always run in UTC, so "today" does not depend on the machine's time zone
+        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
+
         public override DateTimeOffset GetUtcNow()
         {
             return _now;

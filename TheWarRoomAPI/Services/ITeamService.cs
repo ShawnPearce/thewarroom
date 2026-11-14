@@ -8,5 +8,7 @@ namespace TheWarRoomAPI.Services
         Task<LoginResultDto> RegisterAsync(RegisterTeamDto dto);
 
         Task<TeamDto?> GetAsync(CurrentUser currentUser);
+
+        Task<bool> UpdateAsync(CurrentUser currentUser, UpdateTeamDto dto);
     }
 }

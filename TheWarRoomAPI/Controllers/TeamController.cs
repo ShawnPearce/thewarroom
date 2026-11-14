@@ -29,6 +29,26 @@ namespace TheWarRoomAPI.Controllers
             return Ok(team);   // 200 OK
         }
 
+        // PUT: api/Team
+        [HttpPut]
+        public async Task<IActionResult> UpdateTeam(UpdateTeamDto dto)
+        {
+            try
+            {
+                var result = await _teamService.UpdateAsync(CurrentUser, dto);
+                if (!result)
+                {
+                    return NotFound();   // 404 Not Found
+                }
+
+                return NoContent();   // 204 No Content
+            }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden
+            }
+        }
+
         // POST: api/Team/register
         [HttpPost("register")]
         [AllowWithoutSignIn]

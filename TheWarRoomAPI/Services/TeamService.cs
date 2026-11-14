@@ -26,7 +26,7 @@ namespace TheWarRoomAPI.Services
             var email = dto.Email.Trim();
 
             // Business rule: an email address can belong to only one account
-            await EnsureEmailIsUniqueAsync(email);
+            await AccountRules.EnsureEmailIsUniqueAsync(_context, email);
 
             var now = _clock.GetUtcNow().UtcDateTime;
 
@@ -55,6 +55,10 @@ namespace TheWarRoomAPI.Services
             headCoach.PasswordHash = _passwordHasher.HashPassword(headCoach, dto.Password);
 
             _context.Users.Add(headCoach);   // the team is saved with it through the navigation property
+
+            // Every new team starts with the standard position groups and positions
+            TeamDefaults.AddTo(team, _context);
+
             await _context.SaveChangesAsync();
 
             return await _authService.StartSessionAsync(headCoach);
@@ -74,13 +78,22 @@ namespace TheWarRoomAPI.Services
                 .FirstOrDefaultAsync();
         }
 
-        private async Task EnsureEmailIsUniqueAsync(string email)
+        public async Task<bool> UpdateAsync(CurrentUser currentUser, UpdateTeamDto dto)
         {
-            bool exists = await _context.Users.AnyAsync(u => u.Email == email);
-            if (exists)
+            if (!AccessRules.CanManageTeam(currentUser))
             {
-                throw new InvalidOperationException("An account with this email address already exists.");
+                throw new ForbiddenException("Only the head coach can change the team's settings.");
             }
+
+            var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == currentUser.TeamId);
+            if (team == null)
+            {
+                return false;
+            }
+
+            team.Name = dto.Name.Trim();
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

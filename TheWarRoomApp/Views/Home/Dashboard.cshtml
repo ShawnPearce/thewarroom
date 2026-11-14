@@ -1,40 +1,92 @@
-@model CurrentUserDto
+@model DashboardViewModel
 
 @{
     ViewData["Title"] = "Dashboard";
 }
 
-<h1 class="h3">Welcome, @Model.FirstName</h1>
-<p class="text-muted">@User.GetRoleLabel() &middot; @Model.TeamName</p>
+<h1 class="h3">Welcome, @Model.Me.FirstName</h1>
+<p class="text-muted">@User.GetRoleLabel() &middot; @Model.Me.TeamName</p>
 
 <div class="row g-4">
+    @if (Model.Me.Role == UserRole.Player)
+    {
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Your depth chart spots</div>
+                <div class="card-body">
+                    @if (Model.Week == null)
+                    {
+                        <p class="mb-0 text-muted">Your coaches have not posted a depth chart yet.</p>
+                    }
+                    else if (Model.MyPlacements.Count == 0)
+                    {
+                        <p class="text-muted">You are not listed on the current depth chart (@DisplayText.WeekOf(Model.Week)).</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted small">@DisplayText.WeekOf(Model.Week)</p>
+                        <ul class="list-unstyled mb-3">
+                            @foreach (var placement in Model.MyPlacements)
+                            {
+                                <li>
+                                    <strong>@placement.PositionName</strong>:
+                                    @DisplayText.Ordinal(placement.Rank) of @placement.PlayersAtPosition
+                                    @if (placement.Rank == 1)
+                                    {
+                                        <span class="badge text-bg-success">Starter</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    @if (Model.Week != null)
+                    {
+                        <a asp-controller="DepthChart" asp-action="Index">See the full depth chart</a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Depth chart</div>
+                <div class="card-body">
+                    @if (Model.Week == null)
+                    {
+                        <p class="text-muted">The team has no depth chart yet.</p>
+                        <a asp-controller="DepthChart" asp-action="Index">Open the depth chart</a>
+                    }
+                    else
+                    {
+                        <p>@DisplayText.WeekOf(Model.Week)</p>
+                        <a asp-controller="DepthChart" asp-action="Index">Open this week's depth chart</a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">Your account</div>
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Name</dt>
-                    <dd class="col-sm-8">@Model.FirstName @Model.LastName</dd>
-                    <dt class="col-sm-4">
-                        @Html.DisplayNameFor(model => model.Email)
-                    </dt>
-                    <dd class="col-sm-8">
-                        @Html.DisplayFor(model => model.Email)
-                    </dd>
+                    <dd class="col-sm-8">@Model.Me.FirstName @Model.Me.LastName</dd>
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">@Model.Me.Email</dd>
                     <dt class="col-sm-4">Role</dt>
                     <dd class="col-sm-8">@User.GetRoleLabel()</dd>
-                    <dt class="col-sm-4">
-                        @Html.DisplayNameFor(model => model.TeamName)
-                    </dt>
-                    <dd class="col-sm-8">
-                        @Html.DisplayFor(model => model.TeamName)
-                    </dd>
+                    <dt class="col-sm-4">Team</dt>
+                    <dd class="col-sm-8">@Model.Me.TeamName</dd>
                 </dl>
             </div>
         </div>
     </div>
 
-    @if (Model.Role != UserRole.Player)
+    @if (Model.Me.Role != UserRole.Player)
     {
         <div class="col-md-6">
             <div class="card">
@@ -42,11 +94,11 @@
                 <div class="card-body">
                     <dl class="row mb-0">
                         <dt class="col-sm-8">Publish playbook changes without approval</dt>
-                        <dd class="col-sm-4">@(Model.CanPublishPlaybook ? "Yes" : "No")</dd>
+                        <dd class="col-sm-4">@(Model.Me.CanPublishPlaybook ? "Yes" : "No")</dd>
                         <dt class="col-sm-8">Edit the depth chart</dt>
-                        <dd class="col-sm-4">@(Model.CanEditDepthChart ? "Yes" : "No")</dd>
+                        <dd class="col-sm-4">@(Model.Me.CanEditDepthChart ? "Yes" : "No")</dd>
                         <dt class="col-sm-8">Record attendance</dt>
-                        <dd class="col-sm-4">@(Model.CanRecordAttendance ? "Yes" : "No")</dd>
+                        <dd class="col-sm-4">@(Model.Me.CanRecordAttendance ? "Yes" : "No")</dd>
                     </dl>
                 </div>
             </div>

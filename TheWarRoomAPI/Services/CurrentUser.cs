@@ -15,11 +15,27 @@ namespace TheWarRoomAPI.Services
         public bool CanEditDepthChart { get; set; }
         public bool CanRecordAttendance { get; set; }
 
+        // The position groups this user is assigned to: the groups a coach coaches, or the groups a player is in
+        public List<CurrentUserGroup> Groups { get; set; } = new List<CurrentUserGroup>();
+
         // The sign-in this request belongs to; empty when the caller sent no session token (Swagger)
         public int? LoginSessionId { get; set; }
 
         public bool IsHeadCoach => Role == UserRole.HeadCoach;
+        public bool IsCoordinator => Role == UserRole.Coordinator;
         public bool IsCoach => Role != UserRole.Player;
         public bool IsPlayer => Role == UserRole.Player;
+
+        public bool IsInGroup(int positionGroupId)
+        {
+            return Groups.Any(g => g.Id == positionGroupId);
+        }
+    }
+
+    // One of the current user's position groups, with the unit it belongs to
+    public class CurrentUserGroup
+    {
+        public int Id { get; set; }
+        public TeamUnit Unit { get; set; }
     }
 }

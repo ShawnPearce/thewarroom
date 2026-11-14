@@ -47,5 +47,12 @@ namespace TheWarRoomAPI.Models
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; }
+
+        //Navigation property for a player's roster entry (empty for coaches)
+        public RosterEntry? RosterEntry { get; set; }
+
+        //Navigation properties for the position groups a coach coaches or a player belongs to
+        public List<CoachGroupAssignment>? CoachGroupAssignments { get; set; }
+        public List<PlayerGroupAssignment>? PlayerGroupAssignments { get; set; }
     }
 }

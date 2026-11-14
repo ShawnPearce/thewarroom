@@ -89,3 +89,19 @@ a {
   border-top: 3px solid var(--wr-gold);
   height: 100%;
 }
+
+/* ---------- Depth chart ---------- */
+
+/* Fixed layout keeps the rank columns the same width in every group's table */
+.wr-depth-chart {
+  table-layout: fixed;
+}
+
+.wr-depth-chart th {
+  background-color: #f4f6f9;
+  font-weight: 600;
+}
+
+.wr-depth-chart td:first-child {
+  background-color: #fafbfc;
+}
