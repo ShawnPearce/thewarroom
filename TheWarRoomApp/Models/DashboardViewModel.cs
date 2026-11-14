@@ -10,5 +10,8 @@ namespace TheWarRoomApp.Models
 
         // A player's own spots on this week's chart
         public List<MyPlacementDto> MyPlacements { get; set; } = new List<MyPlacementDto>();
+
+        // The next few events on the schedule
+        public List<ScheduledEventDto> NextEvents { get; set; } = new List<ScheduledEventDto>();
     }
 }

@@ -33,7 +33,11 @@ namespace TheWarRoomApp.Controllers
             }
 
             var team = await response.Content.ReadFromJsonAsync<TeamDto>();
-            return View(new UpdateTeamDto { Name = team!.Name });   // Settings View
+            return View(new UpdateTeamDto
+            {
+                Name = team!.Name,
+                AttendanceTrackingEnabled = team.AttendanceTrackingEnabled
+            });   // Settings View
         }
 
         // POST: Team/Settings

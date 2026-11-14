@@ -1,0 +1,50 @@
+@model IEnumerable<MyAttendanceDto>
+
+@{
+    ViewData["Title"] = "My attendance";
+}
+
+<h1 class="h3">My attendance</h1>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Nothing has been recorded for you yet.</p>
+}
+else
+{
+    <p>
+        @foreach (var status in new[] { AttendanceStatus.Present, AttendanceStatus.Late, AttendanceStatus.Absent, AttendanceStatus.Excused })
+        {
+            <span class="badge text-bg-@DisplayText.AttendanceColour(status) me-1">@DisplayText.Attendance(status): @Model.Count(r => r.Status == status)</span>
+        }
+    </p>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Event</th>
+                    <th>Attendance</th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var item in Model) {
+                <tr>
+                    <td class="text-nowrap">@DisplayText.Date(item.EventDate)</td>
+                    <td><span class="badge wr-event-@item.EventType.ToString().ToLower()">@DisplayText.Event(item.EventType)</span></td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.EventId">@item.Title</a>
+                    </td>
+                    <td><span class="badge text-bg-@DisplayText.AttendanceColour(item.Status)">@DisplayText.Attendance(item.Status)</span></td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+}
+
+<div>
+    <a asp-action="Index">Back to the schedule</a>
+</div>

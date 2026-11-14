@@ -19,6 +19,7 @@ namespace TheWarRoomAPI.Tests
         public TestClock Clock { get; } = new TestClock(new DateTimeOffset(2026, 9, 2, 12, 0, 0, TimeSpan.Zero));
 
         public static readonly DateOnly ThisMonday = new DateOnly(2026, 8, 31);
+        public static readonly DateOnly Today = new DateOnly(2026, 9, 2);
 
         public PasswordHasher<User> PasswordHasher { get; } = new PasswordHasher<User>();
 
@@ -39,6 +40,9 @@ namespace TheWarRoomAPI.Tests
         public RosterService Roster(AppDbContext context) => new RosterService(context, PasswordHasher, Clock);
         public PositionGroupService Groups(AppDbContext context) => new PositionGroupService(context, Clock);
         public DepthChartService DepthChart(AppDbContext context) => new DepthChartService(context, Clock);
+        public ScheduleService Schedule(AppDbContext context) => new ScheduleService(context, Clock);
+        public AttendanceService Attendance(AppDbContext context) => new AttendanceService(context, Schedule(context), Clock);
+        public TeamService Teams(AppDbContext context) => new TeamService(context, Auth(context), PasswordHasher, Clock);
 
         // ---------- Setting up data ----------
 
@@ -112,6 +116,37 @@ namespace TheWarRoomAPI.Tests
             await context.SaveChangesAsync();
 
             return week.Id;
+        }
+
+        public async Task<int> AddEventAsync(CurrentUser teamMember, DateOnly date, EventType type = EventType.Practice, string title = "Practice")
+        {
+            using var context = NewContext();
+
+            var scheduledEvent = new ScheduledEvent
+            {
+                TeamId = teamMember.TeamId,
+                EventType = type,
+                Title = title,
+                EventDate = date,
+                StartTime = new TimeOnly(15, 30),
+                EndTime = new TimeOnly(17, 30),
+                Location = "Practice field",
+                CreatedById = teamMember.Id,
+                CreatedAt = Clock.GetUtcNow().UtcDateTime
+            };
+            context.ScheduledEvents.Add(scheduledEvent);
+            await context.SaveChangesAsync();
+
+            return scheduledEvent.Id;
+        }
+
+        // The head coach's switch for attendance tracking
+        public async Task SetAttendanceTrackingAsync(CurrentUser teamMember, bool enabled)
+        {
+            using var context = NewContext();
+            var team = await context.Teams.SingleAsync(t => t.Id == teamMember.TeamId);
+            team.AttendanceTrackingEnabled = enabled;
+            await context.SaveChangesAsync();
         }
 
         // ---------- Looking things up ----------

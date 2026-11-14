@@ -32,6 +32,40 @@ namespace TheWarRoomApp.Infrastructure
             return status.ToString();
         }
 
+        public static string Event(EventType type)
+        {
+            return type.ToString();
+        }
+
+        public static string Attendance(AttendanceStatus status)
+        {
+            return status.ToString();
+        }
+
+        // The Bootstrap colour used for each attendance status
+        public static string AttendanceColour(AttendanceStatus status)
+        {
+            return status switch
+            {
+                AttendanceStatus.Present => "success",
+                AttendanceStatus.Late => "warning",
+                AttendanceStatus.Absent => "danger",
+                _ => "secondary"
+            };
+        }
+
+        // "Tue, Nov 10, 2026"
+        public static string Date(DateOnly date)
+        {
+            return date.ToString("ddd, MMM d, yyyy");
+        }
+
+        // "3:30 PM", or "3:30 PM to 5:30 PM" when the event has an end time
+        public static string Times(TimeOnly start, TimeOnly? end)
+        {
+            return end != null ? $"{start:h:mm tt} to {end:h:mm tt}" : $"{start:h:mm tt}";
+        }
+
         // 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 4 -> "4th", 11 -> "11th"
         public static string Ordinal(int number)
         {

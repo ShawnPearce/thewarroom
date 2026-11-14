@@ -17,6 +17,44 @@ namespace TheWarRoomAPI.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.15");
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.AttendanceRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RecordedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ScheduledEventId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasIndex("RecordedById");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("ScheduledEventId", "PlayerId")
+                        .IsUnique();
+
+                    b.ToTable("AttendanceRecords");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.CoachGroupAssignment", b =>
                 {
                     b.Property<int>("Id")
@@ -258,6 +296,56 @@ namespace TheWarRoomAPI.Migrations
                     b.ToTable("RosterEntries");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.ScheduledEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("EventDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("ScheduledEvents");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.Team", b =>
                 {
                     b.Property<int>("Id")
@@ -341,6 +429,41 @@ namespace TheWarRoomAPI.Migrations
                     b.HasIndex("TeamId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.AttendanceRecord", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.User", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.User", "RecordedBy")
+                        .WithMany()
+                        .HasForeignKey("RecordedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.ScheduledEvent", "ScheduledEvent")
+                        .WithMany("AttendanceRecords")
+                        .HasForeignKey("ScheduledEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+
+                    b.Navigation("RecordedBy");
+
+                    b.Navigation("ScheduledEvent");
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("TheWarRoomAPI.Models.CoachGroupAssignment", b =>
@@ -487,6 +610,25 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.ScheduledEvent", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.User", b =>
                 {
                     b.HasOne("TheWarRoomAPI.Models.Team", "Team")
@@ -510,6 +652,11 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("PlayerAssignments");
 
                     b.Navigation("Positions");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.ScheduledEvent", b =>
+                {
+                    b.Navigation("AttendanceRecords");
                 });
 
             modelBuilder.Entity("TheWarRoomAPI.Models.Team", b =>

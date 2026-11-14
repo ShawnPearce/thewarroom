@@ -20,17 +20,18 @@ namespace TheWarRoomAPI.Data
             }
 
             var now = clock.GetUtcNow().UtcDateTime;
-            var thisMonday = WeekDates.MondayOf(WeekDates.Today(clock));
+            var today = WeekDates.Today(clock);
+            var thisMonday = WeekDates.MondayOf(today);
 
             // All demo accounts have the same password, so it is hashed once and the hash is shared
             var passwordHash = new PasswordHasher<User>().HashPassword(new User(), demoPassword);
 
-            SeedLakeshoreLions(context, passwordHash, now, thisMonday);
+            SeedLakeshoreLions(context, passwordHash, now, today, thisMonday);
             SeedNorthgateKnights(context, passwordHash, now, thisMonday);
         }
 
-        // The main demo team: a full staff, a roster and two weeks of depth charts
-        private static void SeedLakeshoreLions(AppDbContext context, string passwordHash, DateTime now, DateOnly thisMonday)
+        // The main demo team: a full staff, a roster, two weeks of depth charts, and a schedule with attendance
+        private static void SeedLakeshoreLions(AppDbContext context, string passwordHash, DateTime now, DateOnly today, DateOnly thisMonday)
         {
             var lions = new DemoTeam(context, "Lakeshore Lions", "lakeshorelions.example", passwordHash, now);
             lions.Team.AttendanceTrackingEnabled = true;
@@ -136,6 +137,41 @@ namespace TheWarRoomAPI.Data
             chart["RB"] = new[] { 22, 44, 28 };
             lions.AddDepthChartWeek(thisMonday, "vs Northgate", chart);
 
+            // ----- Schedule: last week, this week and the start of next week -----
+            var practiceStart = new TimeOnly(15, 30);
+            var practiceEnd = new TimeOnly(17, 30);
+            const string practiceField = "Lakeshore practice field";
+
+            var lastTuesday = lions.AddEvent(EventType.Practice, "Practice", thisMonday.AddDays(-6), practiceStart, practiceEnd, practiceField);
+            var lastThursday = lions.AddEvent(EventType.Practice, "Practice", thisMonday.AddDays(-4), practiceStart, practiceEnd, practiceField);
+            var lastGame = lions.AddEvent(EventType.Game, "at Riverside Raiders", thisMonday.AddDays(-3), new TimeOnly(19, 0), null, "Riverside Stadium");
+            var filmReview = lions.AddEvent(EventType.Meeting, "Film review: Riverside", thisMonday, new TimeOnly(15, 15), new TimeOnly(16, 0), "Room 114");
+            var tuesday = lions.AddEvent(EventType.Practice, "Practice", thisMonday.AddDays(1), practiceStart, practiceEnd, practiceField);
+            var thursday = lions.AddEvent(EventType.Practice, "Practice", thisMonday.AddDays(3), practiceStart, practiceEnd, practiceField);
+            var homeGame = lions.AddEvent(EventType.Game, "vs Northgate Knights", thisMonday.AddDays(4), new TimeOnly(19, 0), null, "Lakeshore Field");
+            lions.AddEvent(EventType.Meeting, "Film review: Northgate", thisMonday.AddDays(7), new TimeOnly(15, 15), new TimeOnly(16, 0), "Room 114");
+            lions.AddEvent(EventType.Practice, "Practice", thisMonday.AddDays(8), practiceStart, practiceEnd, practiceField);
+
+            // ----- Attendance for the events that have already happened -----
+            // Everyone is present unless listed here by jersey number. #28 is injured, so he is excused throughout.
+            var exceptions = new Dictionary<ScheduledEvent, Dictionary<int, AttendanceStatus>>
+            {
+                [lastTuesday] = new() { [28] = AttendanceStatus.Excused, [84] = AttendanceStatus.Late, [62] = AttendanceStatus.Absent },
+                [lastThursday] = new() { [28] = AttendanceStatus.Excused, [9] = AttendanceStatus.Late },
+                [lastGame] = new() { [28] = AttendanceStatus.Excused },
+                [filmReview] = new() { [28] = AttendanceStatus.Excused, [50] = AttendanceStatus.Absent },
+                [tuesday] = new() { [28] = AttendanceStatus.Excused, [84] = AttendanceStatus.Late },
+                [thursday] = new() { [28] = AttendanceStatus.Excused },
+                [homeGame] = new() { [28] = AttendanceStatus.Excused }
+            };
+            foreach (var entry in exceptions)
+            {
+                if (entry.Key.EventDate < today)
+                {
+                    lions.AddAttendance(entry.Key, entry.Value);
+                }
+            }
+
             context.SaveChanges();
         }
 
@@ -160,6 +196,9 @@ namespace TheWarRoomAPI.Data
                 ["X"] = new[] { 80 }
             });
 
+            // This team has attendance tracking switched off, so its event has no attendance
+            knights.AddEvent(EventType.Practice, "Practice", thisMonday.AddDays(8), new TimeOnly(16, 0), new TimeOnly(18, 0), "Northgate field");
+
             context.SaveChanges();
         }
 
@@ -173,6 +212,7 @@ namespace TheWarRoomAPI.Data
             private readonly Dictionary<int, User> _playersByJersey = new Dictionary<int, User>();
 
             public Team Team { get; }
+            public User? HeadCoach { get; private set; }
 
             public DemoTeam(AppDbContext context, string name, string emailDomain, string passwordHash, DateTime now)
             {
@@ -195,6 +235,7 @@ namespace TheWarRoomAPI.Data
                 headCoach.Email = $"{emailName}@{_emailDomain}";
                 headCoach.CanPublishPlaybook = true;
                 _context.Users.Add(headCoach);
+                HeadCoach = headCoach;
                 return headCoach;
             }
 
@@ -258,6 +299,46 @@ namespace TheWarRoomAPI.Data
                 }
 
                 _context.DepthChartWeeks.Add(week);
+            }
+
+            public ScheduledEvent AddEvent(EventType type, string title, DateOnly date, TimeOnly start, TimeOnly? end, string location)
+            {
+                var scheduledEvent = new ScheduledEvent
+                {
+                    Team = Team,
+                    EventType = type,
+                    Title = title,
+                    EventDate = date,
+                    StartTime = start,
+                    EndTime = end,
+                    Location = location,
+                    CreatedBy = HeadCoach,
+                    CreatedAt = _now,
+                    AttendanceRecords = new List<AttendanceRecord>()
+                };
+
+                _context.ScheduledEvents.Add(scheduledEvent);
+                return scheduledEvent;
+            }
+
+            // Marks every player present at the event, except the jersey numbers given another status
+            public void AddAttendance(ScheduledEvent scheduledEvent, Dictionary<int, AttendanceStatus> exceptionsByJersey)
+            {
+                // Recorded by the head coach on the evening of the event
+                var date = scheduledEvent.EventDate;
+                var recordedAt = new DateTime(date.Year, date.Month, date.Day, 23, 0, 0, DateTimeKind.Utc);
+
+                foreach (var player in _playersByJersey)
+                {
+                    scheduledEvent.AttendanceRecords!.Add(new AttendanceRecord
+                    {
+                        Team = Team,
+                        Player = player.Value,
+                        Status = exceptionsByJersey.TryGetValue(player.Key, out var status) ? status : AttendanceStatus.Present,
+                        RecordedBy = HeadCoach,
+                        RecordedAt = recordedAt
+                    });
+                }
             }
 
             private User NewUser(string firstName, string lastName, UserRole role, TeamUnit? coordinatorUnit)

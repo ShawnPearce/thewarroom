@@ -64,6 +64,19 @@ namespace TheWarRoomAPI.Services
             return user.IsHeadCoach || user.IsCoordinator;
         }
 
+        // Adding, changing and removing schedule events: the head coach and coordinators.
+        public static bool CanManageSchedule(CurrentUser user)
+        {
+            return user.IsHeadCoach || user.IsCoordinator;
+        }
+
+        // Recording attendance: the head coach, or a coach whose attendance permission has not been switched off.
+        // Whether tracking is switched on for the team at all is a separate rule (see AttendanceService).
+        public static bool CanRecordAttendance(CurrentUser user)
+        {
+            return user.IsHeadCoach || (user.IsCoach && user.CanRecordAttendance);
+        }
+
         // Creating accounts, changing roles and permissions, deactivating, resetting passwords,
         // team settings, deleting a week: the head coach only.
         public static bool CanManageTeam(CurrentUser user)

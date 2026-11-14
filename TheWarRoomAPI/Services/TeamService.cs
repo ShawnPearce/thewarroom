@@ -92,6 +92,7 @@ namespace TheWarRoomAPI.Services
             }
 
             team.Name = dto.Name.Trim();
+            team.AttendanceTrackingEnabled = dto.AttendanceTrackingEnabled;
             await _context.SaveChangesAsync();
             return true;
         }

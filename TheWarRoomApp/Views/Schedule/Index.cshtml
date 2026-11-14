@@ -1,0 +1,95 @@
+@model ScheduleViewModel
+
+@{
+    ViewData["Title"] = "Schedule";
+    bool canManage = User.IsHeadCoach() || User.IsInRole(nameof(UserRole.Coordinator));
+    bool past = Model.Show == "past";
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 mb-0">Schedule</h1>
+    <div>
+        @if (User.IsPlayer())
+        {
+            <a asp-action="MyAttendance" class="btn btn-outline-primary">My attendance</a>
+        }
+        else
+        {
+            <a asp-action="Summary" class="btn btn-outline-primary">Attendance summary</a>
+        }
+        @if (canManage)
+        {
+            <a asp-action="Create" class="btn btn-primary">Add an event</a>
+        }
+    </div>
+</div>
+
+@* Upcoming / past, and the type filter, are links that reload the page *@
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(past ? "" : "active")" asp-action="Index" asp-route-show="upcoming" asp-route-type="@Model.Type">Upcoming</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(past ? "active" : "")" asp-action="Index" asp-route-show="past" asp-route-type="@Model.Type">Past</a>
+    </li>
+</ul>
+
+<p>
+    <span class="text-muted me-2">Show:</span>
+    <a asp-action="Index" asp-route-show="@Model.Show" class="btn btn-sm @(Model.Type == null ? "btn-primary" : "btn-outline-primary")">All</a>
+    @foreach (var type in new[] { EventType.Practice, EventType.Game, EventType.Meeting })
+    {
+        <a asp-action="Index" asp-route-show="@Model.Show" asp-route-type="@type"
+           class="btn btn-sm @(Model.Type == type ? "btn-primary" : "btn-outline-primary")">@DisplayText.Event(type)s</a>
+    }
+</p>
+
+@if (Model.Events.Count == 0)
+{
+    <p class="text-muted">@(past ? "There are no past events to show." : "Nothing is scheduled from today onwards.")</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Event</th>
+                    <th>Location</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var item in Model.Events) {
+                <tr>
+                    <td class="text-nowrap">@DisplayText.Date(item.EventDate)</td>
+                    <td class="text-nowrap">@DisplayText.Times(item.StartTime, item.EndTime)</td>
+                    <td><span class="badge wr-event-@item.EventType.ToString().ToLower()">@DisplayText.Event(item.EventType)</span></td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
+                    </td>
+                    <td>@item.Location</td>
+                    <td class="text-nowrap">
+                        @if (User.IsCoach())
+                        {
+                            <a asp-action="Attendance" asp-route-id="@item.Id">Attendance</a>
+                            @if (item.AttendanceCount > 0)
+                            {
+                                <span class="text-muted small">(@item.AttendanceCount)</span>
+                            }
+                        }
+                        @if (item.CanEdit)
+                        {
+                            <text>| </text><a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                            <text>| </text><a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        }
+                    </td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+}

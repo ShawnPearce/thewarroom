@@ -1,0 +1,57 @@
+@model AttendanceSummaryViewModel
+
+@{
+    ViewData["Title"] = "Attendance summary";
+}
+
+<h1 class="h3">Attendance summary</h1>
+<p class="text-muted">How often each active player was recorded present, late, absent or excused.</p>
+
+@* The period is optional; leaving both dates empty counts everything *@
+<form asp-action="Summary" method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+        <label asp-for="From" class="form-label">From</label>
+        <input asp-for="From" type="date" class="form-control" />
+    </div>
+    <div class="col-auto">
+        <label asp-for="To" class="form-label">To</label>
+        <input asp-for="To" type="date" class="form-control" />
+    </div>
+    <div class="col-auto">
+        <input type="submit" value="Show" class="btn btn-outline-primary" />
+        <a asp-action="Summary" class="btn btn-link">Clear</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th class="text-end">Present</th>
+                <th class="text-end">Late</th>
+                <th class="text-end">Absent</th>
+                <th class="text-end">Excused</th>
+                <th class="text-end">Events recorded</th>
+            </tr>
+        </thead>
+        <tbody>
+@foreach (var item in Model.Rows.OrderBy(r => r.JerseyNumber ?? 999)) {
+            <tr>
+                <td>
+                    <a asp-controller="Roster" asp-action="Details" asp-route-id="@item.PlayerId">@DisplayText.Player(item.JerseyNumber, item.FirstName, item.LastName)</a>
+                </td>
+                <td class="text-end">@item.Present</td>
+                <td class="text-end">@item.Late</td>
+                <td class="text-end">@item.Absent</td>
+                <td class="text-end">@item.Excused</td>
+                <td class="text-end">@(item.Present + item.Late + item.Absent + item.Excused)</td>
+            </tr>
+}
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <a asp-action="Index">Back to the schedule</a>
+</div>

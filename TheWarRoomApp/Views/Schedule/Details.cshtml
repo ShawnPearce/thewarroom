@@ -1,0 +1,67 @@
+@model EventDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Event.Title;
+    var item = Model.Event;
+}
+
+<h1 class="h3">
+    @item.Title
+    <span class="badge wr-event-@item.EventType.ToString().ToLower()">@DisplayText.Event(item.EventType)</span>
+</h1>
+<hr />
+
+<dl class="row">
+    <dt class="col-sm-2">
+        @Html.DisplayNameFor(model => model.Event.EventDate)
+    </dt>
+    <dd class="col-sm-10">@DisplayText.Date(item.EventDate)</dd>
+    <dt class="col-sm-2">Time</dt>
+    <dd class="col-sm-10">@DisplayText.Times(item.StartTime, item.EndTime)</dd>
+    <dt class="col-sm-2">
+        @Html.DisplayNameFor(model => model.Event.Location)
+    </dt>
+    <dd class="col-sm-10">
+        @Html.DisplayFor(model => model.Event.Location)
+    </dd>
+    @if (!string.IsNullOrWhiteSpace(item.Notes))
+    {
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Event.Notes)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Event.Notes)
+        </dd>
+    }
+    @if (User.IsPlayer())
+    {
+        <dt class="col-sm-2">Your attendance</dt>
+        <dd class="col-sm-10">
+            @if (Model.MyStatus != null)
+            {
+                <span class="badge text-bg-@DisplayText.AttendanceColour(Model.MyStatus.Value)">@DisplayText.Attendance(Model.MyStatus.Value)</span>
+            }
+            else
+            {
+                <span class="text-muted">Nothing recorded</span>
+            }
+        </dd>
+    }
+    else
+    {
+        <dt class="col-sm-2">Attendance</dt>
+        <dd class="col-sm-10">
+            @item.AttendanceCount recorded &middot;
+            <a asp-action="Attendance" asp-route-id="@item.Id">Open the attendance sheet</a>
+        </dd>
+    }
+</dl>
+
+<div>
+    @if (item.CanEdit)
+    {
+        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a><text> | </text>
+        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a><text> | </text>
+    }
+    <a asp-action="Index">Back to List</a>
+</div>

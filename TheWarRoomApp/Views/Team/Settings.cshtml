@@ -12,9 +12,19 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
-                <label asp-for="Name" class="control-label">Team name</label>
+                <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check form-switch">
+                    <input asp-for="AttendanceTrackingEnabled" class="form-check-input" />
+                    <label asp-for="AttendanceTrackingEnabled" class="form-check-label"></label>
+                </div>
+                <div class="form-text">
+                    While this is switched off, nobody can record attendance. Records made earlier are kept.
+                </div>
             </div>
 
             <div class="form-group">

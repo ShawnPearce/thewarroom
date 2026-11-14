@@ -59,6 +59,15 @@ namespace TheWarRoomApp.Controllers
                 }
             }
 
+            // The next three events from today onwards
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var eventsResponse = await _client.GetAsync($"api/ScheduledEvent?from={today:yyyy-MM-dd}");
+            if (eventsResponse.IsSuccessStatusCode)
+            {
+                var upcoming = await eventsResponse.Content.ReadFromJsonAsync<List<ScheduledEventDto>>();
+                model.NextEvents = upcoming!.Take(3).ToList();
+            }
+
             return View(model);   // Dashboard View
         }
 

@@ -1,0 +1,27 @@
+@model SaveScheduledEventDto
+
+@{
+    ViewData["Title"] = "Add an event";
+}
+
+<h1 class="h3">Add an event</h1>
+<hr />
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="Create">
+            <partial name="_EventFields" />
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

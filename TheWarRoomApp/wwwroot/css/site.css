@@ -105,3 +105,20 @@ a {
 .wr-depth-chart td:first-child {
   background-color: #fafbfc;
 }
+
+/* ---------- Schedule ---------- */
+
+.wr-event-practice {
+  background-color: var(--wr-navy-light);
+  color: #fff;
+}
+
+.wr-event-game {
+  background-color: var(--wr-gold);
+  color: #212529;
+}
+
+.wr-event-meeting {
+  background-color: #6c757d;
+  color: #fff;
+}

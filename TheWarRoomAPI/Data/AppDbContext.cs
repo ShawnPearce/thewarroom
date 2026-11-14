@@ -28,6 +28,10 @@ namespace TheWarRoomAPI.Data
         public DbSet<DepthChartWeek> DepthChartWeeks { get; set; }
         public DbSet<DepthChartPlacement> DepthChartPlacements { get; set; }
 
+        // Schedule and attendance
+        public DbSet<ScheduledEvent> ScheduledEvents { get; set; }
+        public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
+
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
             // Every DateTime in the model is stored and read back as UTC
@@ -60,6 +64,13 @@ namespace TheWarRoomAPI.Data
             modelBuilder.Entity<PositionGroup>().Property(g => g.Name).UseCollation("NOCASE");
             modelBuilder.Entity<Position>().Property(p => p.Code).UseCollation("NOCASE");
 
+            // An attendance record points at two users: the player it is about and the coach who recorded it
+            modelBuilder.Entity<AttendanceRecord>(entity =>
+            {
+                entity.HasOne(a => a.Player).WithMany().HasForeignKey(a => a.PlayerId);
+                entity.HasOne(a => a.RecordedBy).WithMany().HasForeignKey(a => a.RecordedById);
+            });
+
             // Deleting a record never silently deletes the records that point to it.
             // A relationship that should cascade is switched on explicitly below this loop.
             foreach (var foreignKey in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
@@ -68,7 +79,7 @@ namespace TheWarRoomAPI.Data
             }
 
             // Records that only exist as part of their parent are deleted with it:
-            // a week's placements, and a group's coach and player assignments.
+            // a week's placements, a group's coach and player assignments, and an event's attendance.
             modelBuilder.Entity<DepthChartPlacement>()
                 .HasOne(p => p.DepthChartWeek)
                 .WithMany(w => w.Placements)
@@ -82,6 +93,11 @@ namespace TheWarRoomAPI.Data
             modelBuilder.Entity<PlayerGroupAssignment>()
                 .HasOne(a => a.PositionGroup)
                 .WithMany(g => g.PlayerAssignments)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AttendanceRecord>()
+                .HasOne(a => a.ScheduledEvent)
+                .WithMany(e => e.AttendanceRecords)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -56,6 +56,8 @@ namespace TheWarRoomAPI
             builder.Services.AddScoped<IRosterService, RosterService>();
             builder.Services.AddScoped<IPositionGroupService, PositionGroupService>();
             builder.Services.AddScoped<IDepthChartService, DepthChartService>();
+            builder.Services.AddScoped<IScheduleService, ScheduleService>();
+            builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 
             var app = builder.Build();
 

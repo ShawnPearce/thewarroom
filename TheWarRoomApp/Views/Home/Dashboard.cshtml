@@ -70,6 +70,34 @@
 
     <div class="col-md-6">
         <div class="card">
+            <div class="card-header">Next on the schedule</div>
+            <div class="card-body">
+                @if (Model.NextEvents.Count == 0)
+                {
+                    <p class="text-muted">Nothing is scheduled from today onwards.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-3">
+                        @foreach (var item in Model.NextEvents)
+                        {
+                            <li class="mb-2">
+                                <a asp-controller="Schedule" asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
+                                <span class="badge wr-event-@item.EventType.ToString().ToLower()">@DisplayText.Event(item.EventType)</span>
+                                <div class="small text-muted">
+                                    @DisplayText.Date(item.EventDate), @DisplayText.Times(item.StartTime, item.EndTime) &middot; @item.Location
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                <a asp-controller="Schedule" asp-action="Index">See the full schedule</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
             <div class="card-header">Your account</div>
             <div class="card-body">
                 <dl class="row mb-0">

@@ -1,0 +1,97 @@
+@model AttendanceSheetDto
+
+@{
+    ViewData["Title"] = "Attendance";
+    var item = Model.Event;
+    var statuses = new[] { AttendanceStatus.Present, AttendanceStatus.Late, AttendanceStatus.Absent, AttendanceStatus.Excused };
+}
+
+<h1 class="h3">Attendance</h1>
+<p class="text-muted">
+    <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a> &middot;
+    @DisplayText.Date(item.EventDate), @DisplayText.Times(item.StartTime, item.EndTime) &middot; @item.Location
+</p>
+
+@if (!Model.CanRecord)
+{
+    <div class="alert alert-secondary" role="alert">
+        @Model.CannotRecordReason
+        @if (!Model.TrackingEnabled && User.IsHeadCoach())
+        {
+            <a asp-controller="Team" asp-action="Settings">Open Team settings</a>
+        }
+    </div>
+}
+
+@if (Model.Rows.Count == 0)
+{
+    <p class="text-muted">The team has no active players yet.</p>
+}
+else
+{
+    <form asp-action="Attendance" asp-route-id="@item.Id" method="post">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Attendance</th>
+                        <th>Recorded</th>
+                    </tr>
+                </thead>
+                <tbody>
+        @for (int i = 0; i < Model.Rows.Count; i++) {
+                    var row = Model.Rows[i];
+                    <tr>
+                        <td>@DisplayText.Player(row.JerseyNumber, row.FirstName, row.LastName)</td>
+                        <td>
+                            @if (Model.CanRecord)
+                            {
+                                @* One entry per player is posted back: the player's id and the chosen status *@
+                                <input type="hidden" name="Entries[@i].PlayerId" value="@row.PlayerId" />
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Attendance for @row.FirstName @row.LastName">
+                                    @foreach (var status in statuses)
+                                    {
+                                        <input type="radio" class="btn-check" name="Entries[@i].Status" value="@status" id="status-@i-@status"
+                                               autocomplete="off" checked="@(row.Status == status)" />
+                                        <label class="btn btn-outline-@DisplayText.AttendanceColour(status)" for="status-@i-@status">@DisplayText.Attendance(status)</label>
+                                    }
+                                    <input type="radio" class="btn-check" name="Entries[@i].Status" value="" id="status-@i-none"
+                                           autocomplete="off" checked="@(row.Status == null)" />
+                                    <label class="btn btn-outline-secondary" for="status-@i-none" title="Nothing recorded">&ndash;</label>
+                                </div>
+                            }
+                            else if (row.Status != null)
+                            {
+                                <span class="badge text-bg-@DisplayText.AttendanceColour(row.Status.Value)">@DisplayText.Attendance(row.Status.Value)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Nothing recorded</span>
+                            }
+                        </td>
+                        <td class="small text-muted">
+                            @if (row.RecordedAt != null)
+                            {
+                                <span>@row.RecordedBy, @row.RecordedAt.Value.ToLocalTime().ToString("MMM d, h:mm tt")</span>
+                            }
+                        </td>
+                    </tr>
+        }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.CanRecord)
+        {
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <button type="submit" name="fillPresent" value="true" class="btn btn-outline-primary">Mark the rest present and save</button>
+            </div>
+        }
+    </form>
+}
+
+<div>
+    <a asp-action="Index" asp-route-show="@(item.EventDate < DateOnly.FromDateTime(DateTime.Today) ? "past" : "upcoming")">Back to the schedule</a>
+</div>
