@@ -52,6 +52,8 @@ namespace TheWarRoomAPI.Tests
         public VideoService Videos(AppDbContext context) => new VideoService(context, Clips(context));
         public CutupService Cutups(AppDbContext context) => new CutupService(context, Clock);
         public TendencyService Tendencies(AppDbContext context) => new TendencyService(context);
+        public StudyTimeService StudyTime(AppDbContext context) => new StudyTimeService(context, Clock);
+        public ActivityService Activity(AppDbContext context) => new ActivityService(context, Clock);
 
         // ---------- Setting up data ----------
 
@@ -306,6 +308,45 @@ namespace TheWarRoomAPI.Tests
         }
 
         private int _nextPlaySecond;
+
+        // ---------- Study time ----------
+
+        // A sign-in in the past: it started then and its last request came so many minutes later
+        public async Task AddLoginSessionAsync(CurrentUser user, DateTime startedAtUtc, int minutes)
+        {
+            using var context = NewContext();
+
+            context.LoginSessions.Add(new LoginSession
+            {
+                UserId = user.Id,
+                Token = Guid.NewGuid().ToString("N"),
+                StartedAt = startedAtUtc,
+                LastSeenAt = startedAtUtc.AddMinutes(minutes),
+                EndedAt = startedAtUtc.AddMinutes(minutes)
+            });
+            await context.SaveChangesAsync();
+        }
+
+        // Viewing time that was already counted: so many minutes of film or playbook, starting at a moment in the past
+        public async Task AddViewingAsync(CurrentUser player, ViewingKind kind, DateTime startedAtUtc, int minutes)
+        {
+            using var context = NewContext();
+
+            context.ViewingSessions.Add(new ViewingSession
+            {
+                TeamId = player.TeamId,
+                UserId = player.Id,
+                Kind = kind,
+                PlaybookId = kind == ViewingKind.Playbook
+                    ? await context.Playbooks.Where(p => p.TeamId == player.TeamId).Select(p => (int?)p.Id).FirstAsync()
+                    : null,
+                PageKey = Guid.NewGuid().ToString("N"),
+                StartedAt = startedAtUtc,
+                LastCreditAt = startedAtUtc.AddMinutes(minutes),
+                ActiveMs = minutes * 60 * 1000
+            });
+            await context.SaveChangesAsync();
+        }
 
         // ---------- Looking things up ----------
 

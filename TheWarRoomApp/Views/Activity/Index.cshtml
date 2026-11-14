@@ -1,0 +1,83 @@
+@model ActivityIndexViewModel
+
+@{
+    ViewData["Title"] = "Study time";
+    var week = Model.Report.WeekStart;
+    bool isThisWeek = week == Model.ThisWeek;
+    var players = Model.Report.Players;
+}
+
+<h1 class="h3">Study time</h1>
+<p class="text-muted">
+    How long each player was signed in, and how much time went to film and to the playbook.
+    The three numbers are measured separately. They show activity, not proof of learning.
+</p>
+
+@* Earlier and later weeks are links that reload the page *@
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <a asp-action="Index" asp-route-weekOf="@week.AddDays(-7).ToString("yyyy-MM-dd")" class="btn btn-outline-primary btn-sm">&larr; Earlier</a>
+    <strong>@DisplayText.WeekOf(week)</strong>
+    @if (isThisWeek)
+    {
+        <span class="badge text-bg-primary">This week</span>
+    }
+    else
+    {
+        <a asp-action="Index" asp-route-weekOf="@week.AddDays(7).ToString("yyyy-MM-dd")" class="btn btn-outline-primary btn-sm">Later &rarr;</a>
+        <a asp-action="Index" class="btn btn-link btn-sm">This week</a>
+    }
+</div>
+
+@if (players.Count == 0)
+{
+    <p class="text-muted">
+        @if (User.IsHeadCoach())
+        {
+            <text>The team has no active players yet.</text>
+        }
+        else
+        {
+            <text>None of your groups has players yet. You see the players of the position groups you coach.</text>
+        }
+    </p>
+}
+else
+{
+    <p class="small text-muted">
+        @players.Count(p => p.SignIns > 0) of @DisplayText.Count(players.Count, "player", "players") signed in @(isThisWeek ? "this week" : "that week").
+        @if (!User.IsHeadCoach())
+        {
+            <text>You see the players of the position groups you coach.</text>
+        }
+    </p>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Groups</th>
+                    <th class="text-end text-nowrap">Signed in</th>
+                    <th class="text-end text-nowrap">Film</th>
+                    <th class="text-end text-nowrap">Playbook</th>
+                    <th class="text-end text-nowrap">Sign-ins</th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var item in players) {
+                <tr class="@(item.SignIns == 0 ? "text-muted" : "")">
+                    <td>
+                        <a asp-action="Player" asp-route-id="@item.PlayerId">@DisplayText.Player(item.JerseyNumber, item.FirstName, item.LastName)</a>
+                    </td>
+                    <td class="small">@string.Join(", ", item.Groups)</td>
+                    <td class="text-end text-nowrap">@DisplayText.StudyTime(item.LoginSeconds)</td>
+                    <td class="text-end text-nowrap">@DisplayText.StudyTime(item.FilmSeconds)</td>
+                    <td class="text-end text-nowrap">@DisplayText.StudyTime(item.PlaybookSeconds)</td>
+                    <td class="text-end">@item.SignIns</td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+}
+
+<partial name="_HowItIsMeasured" />

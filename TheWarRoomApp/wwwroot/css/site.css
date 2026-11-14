@@ -250,3 +250,14 @@ a {
 .wr-tendency-grid td {
   min-width: 8.5rem;
 }
+
+/* ---------- Study time ---------- */
+
+/* The timer a player sees on film and playbook pages */
+.wr-study-timer {
+  margin-bottom: 1rem;
+}
+
+.wr-study-timer .badge {
+  margin-right: 0.35rem;
+}

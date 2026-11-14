@@ -318,6 +318,53 @@ namespace TheWarRoomAPI.Tests
         }
 
         [Fact]
+        public async Task ASessionThatHasBeenQuietForThirtyMinutes_IsOver_AndEndedAtItsLastRequest()
+        {
+            var registered = await RegisterTeamAsync();
+            var startedAt = _clock.GetUtcNow().UtcDateTime;
+
+            // The last request arrives ten minutes after signing in
+            _clock.Advance(TimeSpan.FromMinutes(10));
+            await ResolveAsync(registered.UserId, registered.SessionToken);
+
+            // 31 minutes of silence later the token no longer works
+            _clock.Advance(TimeSpan.FromMinutes(31));
+            using (var context = _database.CreateContext())
+            {
+                Assert.Null(await CreateAuthService(context).ResolveCurrentUserAsync(registered.UserId, registered.SessionToken));
+            }
+
+            // The session ended when it was last used, not when the late request arrived
+            using var checkContext = _database.CreateContext();
+            var session = await checkContext.LoginSessions.SingleAsync();
+            Assert.Equal(startedAt.AddMinutes(10), session.EndedAt);
+            Assert.Equal(startedAt.AddMinutes(10), session.LastSeenAt);
+
+            // Signing in again opens a new session
+            var again = await CreateAuthService(checkContext).LoginAsync(new LoginDto { Email = Email, Password = Password });
+            Assert.NotEqual(registered.SessionToken, again!.SessionToken);
+            Assert.Equal(2, await checkContext.LoginSessions.CountAsync());
+        }
+
+        [Fact]
+        public async Task ASessionThatKeepsBeingUsed_StaysOpen()
+        {
+            var registered = await RegisterTeamAsync();
+
+            // A request every 25 minutes for two and a half hours
+            for (int i = 0; i < 6; i++)
+            {
+                _clock.Advance(TimeSpan.FromMinutes(25));
+                await ResolveAsync(registered.UserId, registered.SessionToken);
+            }
+
+            using var context = _database.CreateContext();
+            var session = await context.LoginSessions.SingleAsync();
+            Assert.Null(session.EndedAt);
+            Assert.Equal(TimeSpan.FromMinutes(150), session.LastSeenAt - session.StartedAt);
+        }
+
+        [Fact]
         public async Task LastSeen_IsUpdatedAtMostOnceAMinute()
         {
             var registered = await RegisterTeamAsync();

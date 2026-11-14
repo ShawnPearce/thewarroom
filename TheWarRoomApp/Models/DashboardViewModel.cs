@@ -22,5 +22,8 @@ namespace TheWarRoomApp.Models
 
         // Film: a player's shared cutups, or all of the team's cutups for a coach (the latest first)
         public List<CutupDto> Cutups { get; set; } = new List<CutupDto>();
+
+        // A player's own study time this week
+        public ActivityWeekDto? MyWeek { get; set; }
     }
 }

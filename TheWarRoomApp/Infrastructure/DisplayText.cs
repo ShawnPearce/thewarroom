@@ -273,6 +273,24 @@ namespace TheWarRoomApp.Infrastructure
             return $"{Ordinal(down.Value)} down, {Distance(distance.Value).ToLowerInvariant()}";
         }
 
+        // ---------- Study time ----------
+
+        // A length of study time in words: a dash for none, "under 1 min", "25 min", "1 h 5 min"
+        public static string StudyTime(int seconds)
+        {
+            if (seconds <= 0)
+            {
+                return "–";
+            }
+            if (seconds < 60)
+            {
+                return "under 1 min";
+            }
+
+            int minutes = seconds / 60;
+            return minutes >= 60 ? $"{minutes / 60} h {minutes % 60} min" : $"{minutes} min";
+        }
+
         // What a coach's changes to a playbook lead to, shown next to the playbook's name
         public static string PlaybookRights(PlaybookDto playbook)
         {

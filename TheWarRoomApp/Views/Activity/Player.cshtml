@@ -1,0 +1,72 @@
+@model PlayerActivityDto
+
+@{
+    bool mine = User.IsPlayer();
+    string name = DisplayText.Player(Model.JerseyNumber, Model.FirstName, Model.LastName);
+    ViewData["Title"] = mine ? "My study time" : $"Study time: {Model.FirstName} {Model.LastName}";
+}
+
+@if (!mine)
+{
+    <partial name="_Trail" model="@(new List<PageLink> {
+        new PageLink("Study time", Url.Action("Index")),
+        new PageLink(name, null) })" />
+}
+
+<h1 class="h3">@(mine ? "My study time" : name)</h1>
+<p class="text-muted">
+    @if (mine)
+    {
+        <text>What the site has counted for you, week by week. Your head coach and the coaches of your position groups see the same numbers.</text>
+    }
+    else if (Model.Groups.Count > 0)
+    {
+        @string.Join(", ", Model.Groups)
+    }
+    else
+    {
+        <text>Not in a position group yet</text>
+    }
+</p>
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Week</th>
+                <th class="text-end text-nowrap">Signed in</th>
+                <th class="text-end text-nowrap">Film</th>
+                <th class="text-end text-nowrap">Playbook</th>
+                <th class="text-end text-nowrap">Sign-ins</th>
+            </tr>
+        </thead>
+        <tbody>
+    @{ bool first = true; }
+    @foreach (var week in Model.Weeks) {
+            <tr class="@(week.SignIns == 0 ? "text-muted" : "")">
+                <td class="text-nowrap">
+                    @DisplayText.WeekOf(week.WeekStart)
+                    @if (first)
+                    {
+                        <span class="badge text-bg-primary">This week</span>
+                    }
+                </td>
+                <td class="text-end text-nowrap">@DisplayText.StudyTime(week.LoginSeconds)</td>
+                <td class="text-end text-nowrap">@DisplayText.StudyTime(week.FilmSeconds)</td>
+                <td class="text-end text-nowrap">@DisplayText.StudyTime(week.PlaybookSeconds)</td>
+                <td class="text-end">@week.SignIns</td>
+            </tr>
+            first = false;
+    }
+        </tbody>
+    </table>
+</div>
+
+<partial name="_HowItIsMeasured" />
+
+@if (!mine)
+{
+    <div class="mt-3">
+        <a asp-action="Index">Back to List</a>
+    </div>
+}

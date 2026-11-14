@@ -155,6 +155,34 @@
         </div>
     </div>
 
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">@(Model.Me.Role == UserRole.Player ? "Your study time this week" : "Study time")</div>
+            <div class="card-body">
+                @if (Model.Me.Role != UserRole.Player)
+                {
+                    <p class="text-muted">How long your players were signed in, watched film and read the playbook.</p>
+                    <a asp-controller="Activity" asp-action="Index">See this week's study time</a>
+                }
+                else
+                {
+                    @if (Model.MyWeek != null)
+                    {
+                        <dl class="row mb-2">
+                            <dt class="col-sm-5">Signed in</dt>
+                            <dd class="col-sm-7">@DisplayText.StudyTime(Model.MyWeek.LoginSeconds)</dd>
+                            <dt class="col-sm-5">Film</dt>
+                            <dd class="col-sm-7">@DisplayText.StudyTime(Model.MyWeek.FilmSeconds)</dd>
+                            <dt class="col-sm-5">Playbook</dt>
+                            <dd class="col-sm-7">@DisplayText.StudyTime(Model.MyWeek.PlaybookSeconds)</dd>
+                        </dl>
+                    }
+                    <a asp-controller="Activity" asp-action="Mine">See how it is counted</a>
+                }
+            </div>
+        </div>
+    </div>
+
     @if (Model.Me.Role != UserRole.Player)
     {
         <div class="col-md-6">

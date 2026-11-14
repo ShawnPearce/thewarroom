@@ -975,6 +975,60 @@ namespace TheWarRoomAPI.Migrations
                     b.ToTable("Videos");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.ViewingSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ActiveMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CutupId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastCreditAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("LoginSessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PageKey")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PlaybookId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CutupId");
+
+                    b.HasIndex("LoginSessionId");
+
+                    b.HasIndex("PlaybookId");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("UserId", "PageKey")
+                        .IsUnique();
+
+                    b.ToTable("ViewingSessions");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.ApprovalRequest", b =>
                 {
                     b.HasOne("TheWarRoomAPI.Models.Formation", "Formation")
@@ -1493,6 +1547,46 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("Team");
 
                     b.Navigation("UploadedBy");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.ViewingSession", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.Cutup", "Cutup")
+                        .WithMany()
+                        .HasForeignKey("CutupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TheWarRoomAPI.Models.LoginSession", "LoginSession")
+                        .WithMany()
+                        .HasForeignKey("LoginSessionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TheWarRoomAPI.Models.Playbook", "Playbook")
+                        .WithMany()
+                        .HasForeignKey("PlaybookId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cutup");
+
+                    b.Navigation("LoginSession");
+
+                    b.Navigation("Playbook");
+
+                    b.Navigation("Team");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TheWarRoomAPI.Models.Clip", b =>

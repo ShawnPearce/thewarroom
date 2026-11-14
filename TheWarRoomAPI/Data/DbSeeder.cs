@@ -32,7 +32,7 @@ namespace TheWarRoomAPI.Data
         }
 
         // The main demo team: a full staff, a roster, two weeks of depth charts, a schedule with attendance,
-        // a playbook with change requests, and game film with tagged plays and cutups
+        // a playbook with change requests, game film with tagged plays and cutups, and two weeks of study time
         private static void SeedLakeshoreLions(AppDbContext context, string passwordHash, DateTime now, DateOnly today, DateOnly thisMonday)
         {
             var lions = new DemoTeam(context, "Lakeshore Lions", "lakeshorelions.example", passwordHash, now);
@@ -364,6 +364,12 @@ namespace TheWarRoomAPI.Data
             // Not shared with anyone yet, so only coaches see it
             lions.AddCutup("Riverside short yardage (in progress)", null, null, offenceCoordinator,
                 lions.Plays(raiders).Where(c => c.Tag!.Distance <= 3));
+
+            context.SaveChanges();
+
+            // ----- Study time: two weeks of sign-ins, playbook reading and film watching by the players -----
+            // The film time is counted on the cutup that is shared with the whole team.
+            lions.AddStudyHistory(now, knightsFirstDowns);
 
             context.SaveChanges();
         }
@@ -837,6 +843,84 @@ namespace TheWarRoomAPI.Data
                         AssignedAt = _now
                     });
                 }
+            }
+
+            // ----- Study time -----
+
+            // Sign-ins and viewing time for the last two weeks, different for every player and every day.
+            // They follow from the jersey number and the day, so the demo data is the same on every run.
+            public void AddStudyHistory(DateTime now, Cutup filmForTheTeam)
+            {
+                foreach (var entry in _playersByJersey)
+                {
+                    int jerseyNumber = entry.Key;
+                    var player = entry.Value;
+
+                    // A player who has not signed in for the first time yet has no history
+                    if (player.MustChangePassword)
+                    {
+                        continue;
+                    }
+
+                    // The playbook of the first unit the player belongs to
+                    var unit = player.PlayerGroupAssignments!.First().PositionGroup!.Unit;
+                    var playbook = _context.Playbooks.Local.First(p => p.Team == Team && p.Unit == unit);
+
+                    for (int daysAgo = 13; daysAgo >= 1; daysAgo--)
+                    {
+                        var random = new Random(jerseyNumber * 100 + daysAgo);
+
+                        // Nobody signs in every day: about three days out of five
+                        if (random.Next(5) < 2)
+                        {
+                            continue;
+                        }
+
+                        // Signed in for 15 to 55 minutes, some hours before this time of day
+                        int loginMinutes = random.Next(15, 56);
+                        var startedAt = now.AddDays(-daysAgo).AddMinutes(-random.Next(0, 300));
+
+                        var login = new LoginSession
+                        {
+                            User = player,
+                            Token = Guid.NewGuid().ToString("N"),
+                            StartedAt = startedAt,
+                            LastSeenAt = startedAt.AddMinutes(loginMinutes),
+                            EndedAt = startedAt.AddMinutes(loginMinutes)
+                        };
+                        _context.LoginSessions.Add(login);
+
+                        // Part of that time went to the playbook and part to film; the rest was spent elsewhere on the site
+                        int playbookMinutes = random.Next(10) < 7 ? random.Next(3, loginMinutes / 3 + 1) : 0;
+                        int filmMinutes = random.Next(10) < 6 ? random.Next(4, loginMinutes / 2 + 1) : 0;
+
+                        if (playbookMinutes > 0)
+                        {
+                            AddViewing(login, ViewingKind.Playbook, startedAt.AddMinutes(1), playbookMinutes, playbook, null);
+                        }
+                        if (filmMinutes > 0)
+                        {
+                            AddViewing(login, ViewingKind.Film, startedAt.AddMinutes(2 + playbookMinutes), filmMinutes, null, filmForTheTeam);
+                        }
+                    }
+                }
+            }
+
+            private void AddViewing(LoginSession login, ViewingKind kind, DateTime startedAt, int minutes, Playbook? playbook, Cutup? cutup)
+            {
+                _context.ViewingSessions.Add(new ViewingSession
+                {
+                    Team = Team,
+                    User = login.User,
+                    Kind = kind,
+                    Playbook = playbook,
+                    Cutup = cutup,
+                    PageKey = Guid.NewGuid().ToString("N"),
+                    LoginSession = login,
+                    StartedAt = startedAt,
+                    LastCreditAt = startedAt.AddMinutes(minutes),
+                    ActiveMs = minutes * 60 * 1000
+                });
             }
 
             private Formation FindFormation(string name)

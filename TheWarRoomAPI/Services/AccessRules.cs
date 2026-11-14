@@ -143,6 +143,20 @@ namespace TheWarRoomAPI.Services
                 || (a.Audience == FilmAudience.Player && a.PlayerId == user.Id));
         }
 
+        // ---------- Study time ----------
+
+        // Seeing a player's login, film and playbook time: the player themself, the head coach,
+        // and a coach who has one of the player's groups in their scope.
+        public static bool CanSeeActivityOf(CurrentUser user, int playerId, IEnumerable<PositionGroup> playerGroups)
+        {
+            if (user.Id == playerId || user.IsHeadCoach)
+            {
+                return true;
+            }
+
+            return user.IsCoach && playerGroups.Any(group => GroupIsInScope(user, group));
+        }
+
         // Creating accounts, changing roles and permissions, deactivating, resetting passwords,
         // team settings, deleting a week: the head coach only.
         public static bool CanManageTeam(CurrentUser user)

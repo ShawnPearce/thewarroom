@@ -92,6 +92,17 @@ namespace TheWarRoomApp.Controllers
                 model.Cutups = (await cutupsResponse.Content.ReadFromJsonAsync<List<CutupDto>>())!;
             }
 
+            // A player sees what has been counted for them this week
+            if (model.Me.Role == UserRole.Player)
+            {
+                var activityResponse = await _client.GetAsync("api/Activity/me?weeks=1");
+                if (activityResponse.IsSuccessStatusCode)
+                {
+                    var activity = await activityResponse.Content.ReadFromJsonAsync<PlayerActivityDto>();
+                    model.MyWeek = activity!.Weeks.FirstOrDefault();
+                }
+            }
+
             return View(model);   // Dashboard View
         }
 

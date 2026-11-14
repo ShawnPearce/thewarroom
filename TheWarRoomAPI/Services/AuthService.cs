@@ -8,6 +8,9 @@ namespace TheWarRoomAPI.Services
 {
     public class AuthService : IAuthService
     {
+        // A sign-in that has seen no request for this long is over
+        public static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(30);
+
         private readonly AppDbContext _context;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly TimeProvider _clock;
@@ -161,8 +164,18 @@ namespace TheWarRoomAPI.Services
                     return null;
                 }
 
-                // Record that the user is still active, at most once a minute
                 var now = _clock.GetUtcNow().UtcDateTime;
+
+                // Business rule: a session ends by signing out or after 30 minutes without a request.
+                // It ended at its last request, so that is the moment kept, and login time stops there.
+                if (now - session.LastSeenAt > IdleTimeout)
+                {
+                    session.EndedAt = session.LastSeenAt;
+                    await _context.SaveChangesAsync();
+                    return null;
+                }
+
+                // Record that the user is still active, at most once a minute
                 if (now - session.LastSeenAt >= TimeSpan.FromMinutes(1))
                 {
                     session.LastSeenAt = now;

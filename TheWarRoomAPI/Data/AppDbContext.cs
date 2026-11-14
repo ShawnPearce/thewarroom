@@ -48,6 +48,9 @@ namespace TheWarRoomAPI.Data
         public DbSet<CutupClip> CutupClips { get; set; }
         public DbSet<FilmAssignment> FilmAssignments { get; set; }
 
+        // Study time
+        public DbSet<ViewingSession> ViewingSessions { get; set; }
+
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
             // Every DateTime in the model is stored and read back as UTC
@@ -180,6 +183,13 @@ namespace TheWarRoomAPI.Data
                 .WithMany()
                 .HasForeignKey(a => a.PositionGroupId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // A player's film time is kept when the cutup that was watched is deleted: the record just stops pointing at it
+            modelBuilder.Entity<ViewingSession>()
+                .HasOne(v => v.Cutup)
+                .WithMany()
+                .HasForeignKey(v => v.CutupId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // The history of playbook changes is kept when the formation or play it was about is deleted:
             // the request just stops pointing at it.

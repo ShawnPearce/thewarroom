@@ -62,6 +62,10 @@
                                 <li><a class="dropdown-item" asp-area="" asp-controller="Roster" asp-action="Index">Roster</a></li>
                                 <li><a class="dropdown-item" asp-area="" asp-controller="Staff" asp-action="Index">Coaching staff</a></li>
                                 <li><a class="dropdown-item" asp-area="" asp-controller="Groups" asp-action="Index">Groups and positions</a></li>
+                                @if (User.IsCoach())
+                                {
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Activity" asp-action="Index">Study time</a></li>
+                                }
                                 @if (User.IsHeadCoach())
                                 {
                                     <li><hr class="dropdown-divider"/></li>
@@ -78,6 +82,10 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><span class="dropdown-item-text small text-muted">@User.GetRoleLabel()<br/>@User.GetTeamName()</span></li>
                                 <li><hr class="dropdown-divider"/></li>
+                                @if (User.IsPlayer())
+                                {
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Activity" asp-action="Mine">My study time</a></li>
+                                }
                                 <li><a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="ChangePassword">Change password</a></li>
                                 <li>
                                     <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
@@ -130,6 +138,11 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
+@if (User.IsPlayer())
+{
+    @* The study timer. It does nothing on a page without a timer (see the _StudyTimer partial). *@
+    <script src="~/js/study/view-tracker.js" asp-append-version="true"></script>
+}
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

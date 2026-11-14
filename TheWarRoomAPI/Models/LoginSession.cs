@@ -24,7 +24,8 @@ namespace TheWarRoomAPI.Models
         // Updated as requests arrive, at most once a minute
         public DateTime LastSeenAt { get; set; }
 
-        // Set when the user signs out; empty when the session simply went quiet
+        // Set when the user signs out, or when a request arrives after 30 minutes of silence
+        // (then it is the time of the last request). Empty while the session is open.
         public DateTime? EndedAt { get; set; }
     }
 }

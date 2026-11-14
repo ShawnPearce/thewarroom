@@ -9,6 +9,8 @@
     new PageLink(Model.PlaybookName, Url.Action("Details", new { id = Model.PlaybookId })),
     new PageLink(Model.Name, null) })" />
 
+<partial name="_StudyTimer" model="@(new StudyTimerViewModel { Kind = ViewingKind.Playbook, PlaybookId = Model.PlaybookId })" />
+
 <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
     <h1 class="h3 mb-0">@Model.Name <small class="text-muted fs-6">formation</small></h1>
     @if (Model.CanChange)

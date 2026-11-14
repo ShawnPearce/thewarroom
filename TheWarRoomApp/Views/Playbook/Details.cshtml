@@ -6,6 +6,8 @@
 
 <partial name="_Trail" model="@(new List<PageLink> { new PageLink("Playbook", Url.Action("Index")), new PageLink(Model.Name, null) })" />
 
+<partial name="_StudyTimer" model="@(new StudyTimerViewModel { Kind = ViewingKind.Playbook, PlaybookId = Model.Id })" />
+
 <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
     <h1 class="h3 mb-0">@Model.Name</h1>
     @if (Model.CanChange)

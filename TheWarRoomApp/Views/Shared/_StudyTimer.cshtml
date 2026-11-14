@@ -1,0 +1,24 @@
+@model StudyTimerViewModel
+
+@* The study timer, shown to players on film and playbook pages. The script view-tracker.js attaches itself to it,
+   counts the time the player is actively viewing, and reports it. Coaches are not timed, so they get nothing here. *@
+@if (User.IsPlayer())
+{
+    <div class="wr-study-timer" data-study-timer data-kind="@Model.Kind" data-playbook-id="@Model.PlaybookId"
+         data-cutup-id="@Model.CutupId" data-video="@Model.VideoSelector" data-report-url="@Url.Action("Report", "Study")">
+        @Html.AntiForgeryToken()
+        <span class="badge text-bg-secondary" role="status" data-role="study-state">Study timer paused</span>
+        <span class="small text-muted" data-role="study-total"></span>
+        <span class="small text-muted">
+            @if (Model.Kind == ViewingKind.Film)
+            {
+                <text>Counts while the video is playing in this tab.</text>
+            }
+            else
+            {
+                <text>Counts while this page is in front of you and you are using it.</text>
+            }
+            Your coaches see the total.
+        </span>
+    </div>
+}

@@ -67,6 +67,8 @@ namespace TheWarRoomAPI
             builder.Services.AddScoped<IClipService, ClipService>();
             builder.Services.AddScoped<ICutupService, CutupService>();
             builder.Services.AddScoped<ITendencyService, TendencyService>();
+            builder.Services.AddScoped<IStudyTimeService, StudyTimeService>();
+            builder.Services.AddScoped<IActivityService, ActivityService>();
 
             var app = builder.Build();
 
