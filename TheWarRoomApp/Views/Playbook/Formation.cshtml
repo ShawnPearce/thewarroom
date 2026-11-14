@@ -1,0 +1,74 @@
+@model FormationDto
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Playbook", Url.Action("Index")),
+    new PageLink(Model.PlaybookName, Url.Action("Details", new { id = Model.PlaybookId })),
+    new PageLink(Model.Name, null) })" />
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">@Model.Name <small class="text-muted fs-6">formation</small></h1>
+    @if (Model.CanChange)
+    {
+        <div>
+            <a asp-action="NewPlay" asp-route-formationId="@Model.Id" class="btn btn-primary">New play</a>
+            @if (Model.PendingRequestId == null)
+            {
+                <a asp-action="EditFormation" asp-route-id="@Model.Id" class="btn btn-outline-primary">Edit formation</a>
+                @if (Model.Plays.Count == 0)
+                {
+                    <a asp-action="DeleteFormation" asp-route-id="@Model.Id" class="btn btn-outline-danger">Delete</a>
+                }
+            }
+        </div>
+    }
+</div>
+
+@if (Model.PendingRequestId != null)
+{
+    <div class="alert alert-warning" role="status">
+        A change to this formation is waiting for the head coach's approval. Until it is decided, the formation cannot be changed again.
+        <a asp-controller="Approvals" asp-action="Details" asp-route-id="@Model.PendingRequestId" class="alert-link">See the request</a>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="wr-diagram-scroll">
+            <canvas class="wr-diagram" data-diagram="@Model.DiagramJson" role="img" aria-label="Diagram of the @Model.Name formation"></canvas>
+        </div>
+    </div>
+</div>
+
+<h2 class="h5 mt-4">Plays (@Model.Plays.Count)</h2>
+@if (Model.Plays.Count == 0)
+{
+    <p class="text-muted">No plays have been drawn on this formation yet.</p>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var play in Model.Plays)
+        {
+            <div class="col-sm-6 col-lg-4">
+                <a asp-action="Play" asp-route-id="@play.Id" class="card wr-diagram-card text-decoration-none">
+                    <canvas class="wr-diagram" data-diagram="@play.DiagramJson" data-mode="thumb" aria-hidden="true"></canvas>
+                    <div class="card-body py-2">
+                        <span class="fw-semibold">@play.Name</span>
+                        @if (play.HasPendingChange)
+                        {
+                            <span class="badge text-bg-warning">Change waiting</span>
+                        }
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <partial name="_DiagramScripts" />
+}

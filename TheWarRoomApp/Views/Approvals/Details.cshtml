@@ -1,0 +1,183 @@
+@model ApprovalRequestDetailDto
+
+@{
+    string change = DisplayText.Change(Model.Action, Model.TargetType);
+    ViewData["Title"] = $"{change}: {Model.TargetName}";
+
+    bool isPlay = Model.TargetType == PlaybookTargetType.Play;
+    bool isDelete = Model.Action == PlaybookChangeAction.Delete;
+    bool isNewPlay = isPlay && Model.Action == PlaybookChangeAction.Create;
+    bool approved = Model.Status == ApprovalStatus.Approved;
+    bool hasBefore = !string.IsNullOrEmpty(Model.BeforeJson);
+    bool hasAfter = !string.IsNullOrEmpty(Model.ProposedJson);
+
+    // What the two drawings are, in words
+    string beforeHeading = isNewPlay ? "The formation it is drawn on"
+        : approved ? (isDelete ? "What was deleted" : "Before the change")
+        : isDelete ? "Would be deleted"
+        : "Current version";
+    string afterHeading = approved ? (isNewPlay || !hasBefore ? "What was added" : "After the change") : "Proposed";
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Playbook changes", Url.Action("Index")),
+    new PageLink($"{change}: {Model.TargetName}", null) })" />
+
+<h1 class="h3">
+    @change: @Model.TargetName
+    <span class="badge text-bg-@DisplayText.StatusColour(Model.Status)">@DisplayText.Status(Model)</span>
+</h1>
+<hr />
+
+<dl class="row">
+    <dt class="col-sm-3">Playbook</dt>
+    <dd class="col-sm-9">
+        <a asp-controller="Playbook" asp-action="Details" asp-route-id="@Model.PlaybookId">@Model.PlaybookName</a>
+    </dd>
+    @if (isPlay && Model.FormationName != null)
+    {
+        <dt class="col-sm-3">Formation</dt>
+        <dd class="col-sm-9">
+            <a asp-controller="Playbook" asp-action="Formation" asp-route-id="@Model.FormationId">@Model.FormationName</a>
+        </dd>
+    }
+    <dt class="col-sm-3">@(Model.AutoApproved ? "Published by" : "Requested by")</dt>
+    <dd class="col-sm-9">@Model.RequestedBy, @DisplayText.When(Model.RequestedAt)</dd>
+    @if (Model.AutoApproved)
+    {
+        <dt class="col-sm-3">Approval</dt>
+        <dd class="col-sm-9">Not needed: this coach is allowed to publish changes to this playbook.</dd>
+    }
+    else if (Model.Status == ApprovalStatus.Approved || Model.Status == ApprovalStatus.Rejected)
+    {
+        <dt class="col-sm-3">@(approved ? "Approved by" : "Rejected by")</dt>
+        <dd class="col-sm-9">
+            @Model.ReviewedBy@if (Model.ReviewedAt != null)
+            {<text>, @DisplayText.When(Model.ReviewedAt.Value)</text>}
+        </dd>
+    }
+    else if (Model.Status == ApprovalStatus.Withdrawn && Model.ReviewedAt != null)
+    {
+        <dt class="col-sm-3">Withdrawn</dt>
+        <dd class="col-sm-9">@DisplayText.When(Model.ReviewedAt.Value)</dd>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.ReviewNote))
+    {
+        <dt class="col-sm-3">Head coach's note</dt>
+        <dd class="col-sm-9 wr-notes">@Model.ReviewNote</dd>
+    }
+</dl>
+
+@if (Model.IsStale)
+{
+    <div class="alert alert-warning" role="alert">
+        @Model.TargetName has changed since this request was made, so the request can no longer be approved.
+        It can be rejected or withdrawn, and the change made again on the current version.
+    </div>
+}
+
+@* The two drawings side by side. diagram-view.js rings the players that differ between them. *@
+<div class="row g-4" data-diagram-compare="@(isNewPlay ? "addition" : "change")">
+    @if (hasBefore)
+    {
+        <div class="col-lg-6">
+            <h2 class="h5">@beforeHeading</h2>
+            <p class="mb-2 fw-semibold">@Model.BeforeName</p>
+            <div class="wr-diagram-scroll">
+                <canvas class="wr-diagram" data-role="before" data-diagram="@Model.BeforeJson" role="img" aria-label="@beforeHeading"></canvas>
+            </div>
+            @if (isPlay && !isNewPlay)
+            {
+                <p class="small text-muted mt-2 mb-0">Coaching notes</p>
+                <p class="wr-notes">@(string.IsNullOrWhiteSpace(Model.BeforeNotes) ? "None" : Model.BeforeNotes)</p>
+            }
+        </div>
+    }
+    @if (hasAfter)
+    {
+        <div class="col-lg-6">
+            <h2 class="h5">@afterHeading</h2>
+            <p class="mb-2 fw-semibold">
+                @Model.ProposedName
+                @if (!isNewPlay && hasBefore && Model.BeforeName != null && Model.BeforeName != Model.ProposedName)
+                {
+                    <span class="badge text-bg-info">New name</span>
+                }
+            </p>
+            <div class="wr-diagram-scroll">
+                <canvas class="wr-diagram" data-role="after" data-diagram="@Model.ProposedJson" role="img" aria-label="@afterHeading"></canvas>
+            </div>
+            @if (isPlay)
+            {
+                <p class="small text-muted mt-2 mb-0">Coaching notes</p>
+                <p class="wr-notes">@(string.IsNullOrWhiteSpace(Model.ProposedNotes) ? "None" : Model.ProposedNotes)</p>
+            }
+        </div>
+    }
+</div>
+
+@if (hasBefore && hasAfter)
+{
+    <p class="small text-muted mt-2">
+        @if (isNewPlay)
+        {
+            <span class="wr-ring wr-ring-after"></span><text> has a route, a block or a motion in the new play, or was moved</text>
+        }
+        else
+        {
+            <span class="wr-ring wr-ring-after"></span><text> new or changed in the right-hand drawing</text>
+            <span class="wr-ring wr-ring-before ms-3"></span><text> what it replaces or removes</text>
+        }
+    </p>
+}
+@if (!hasBefore && !hasAfter)
+{
+    <p class="text-muted">The @(isPlay ? "play" : "formation") this request was about is no longer in the playbook.</p>
+}
+
+@if (Model.CanReview)
+{
+    <div class="card mt-4">
+        <div class="card-header">Your decision</div>
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group">
+                    <label for="Note" class="control-label">Note for the coach</label>
+                    <textarea id="Note" name="Note" class="form-control" rows="2" maxlength="500"></textarea>
+                    <div class="form-text">Optional. The coach sees it with your decision.</div>
+                </div>
+                <button type="submit" asp-action="Approve" asp-route-id="@Model.Id" class="btn btn-success" disabled="@Model.IsStale">Approve</button>
+                <button type="submit" asp-action="Reject" asp-route-id="@Model.Id" class="btn btn-outline-danger">Reject</button>
+            </form>
+        </div>
+    </div>
+}
+
+@if (Model.CanRevise)
+{
+    <div class="mt-4">
+        @if (!isDelete)
+        {
+            <a asp-action="Revise" asp-route-id="@Model.Id" class="btn btn-primary">Revise the drawing</a>
+        }
+        <form asp-action="Withdraw" asp-route-id="@Model.Id" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-danger">Withdraw the request</button>
+        </form>
+    </div>
+}
+
+<div class="mt-4">
+    @if (Model.PlayId != null)
+    {
+        <a asp-controller="Playbook" asp-action="Play" asp-route-id="@Model.PlayId">Open the play</a><text> | </text>
+    }
+    else if (!isPlay && Model.FormationId != null)
+    {
+        <a asp-controller="Playbook" asp-action="Formation" asp-route-id="@Model.FormationId">Open the formation</a><text> | </text>
+    }
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    <partial name="_DiagramScripts" />
+}

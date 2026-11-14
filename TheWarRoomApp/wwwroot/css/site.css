@@ -122,3 +122,77 @@ a {
   background-color: #6c757d;
   color: #fff;
 }
+
+/* ---------- Playbook ---------- */
+
+/* A diagram takes the width it is given; the script sets its height from how much of the field it shows */
+.wr-diagram {
+  display: block;
+  width: 100%;
+  border-radius: 0.375rem;
+}
+
+/* On a narrow screen a full diagram keeps a readable size and scrolls sideways instead of shrinking */
+.wr-diagram-scroll {
+  overflow-x: auto;
+}
+
+.wr-diagram-scroll > .wr-diagram {
+  min-width: 440px;
+}
+
+/* A formation or play shown as a small drawing that can be clicked */
+.wr-diagram-card {
+  color: inherit;
+  height: 100%;
+  overflow: hidden;
+}
+
+.wr-diagram-card .wr-diagram {
+  border-radius: 0;
+}
+
+.wr-diagram-card:hover, .wr-diagram-card:focus {
+  border-color: var(--wr-navy-light);
+  box-shadow: 0 0 0 0.15rem rgba(30, 58, 102, 0.2);
+}
+
+/* The play designer */
+.wr-diagram-edit {
+  touch-action: none; /* dragging on the field moves a player instead of scrolling the page */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.wr-diagram-edit:focus-visible {
+  outline: 2px solid var(--wr-gold);
+  outline-offset: 2px;
+}
+
+/* Notes keep the line breaks they were typed with */
+.wr-notes {
+  white-space: pre-line;
+}
+
+.wr-legend svg {
+  vertical-align: middle;
+  margin-right: 0.35rem;
+}
+
+/* The rings that mark what differs between two versions of a diagram */
+.wr-ring {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  border: 3px solid;
+  vertical-align: middle;
+}
+
+.wr-ring-after {
+  border-color: #198754;
+}
+
+.wr-ring-before {
+  border-color: #dc3545;
+}

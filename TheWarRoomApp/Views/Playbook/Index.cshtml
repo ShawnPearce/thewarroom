@@ -1,0 +1,45 @@
+@model List<PlaybookDto>
+
+@{
+    ViewData["Title"] = "Playbook";
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">Playbook</h1>
+    @if (User.IsCoach())
+    {
+        <a asp-controller="Approvals" asp-action="Index" class="btn btn-outline-primary">Playbook changes</a>
+    }
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">
+        No playbook is shared with you yet. A playbook is shared with the players of its unit's position groups,
+        so ask your coach to add you to your group.
+    </p>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var playbook in Model)
+        {
+            <div class="col-md-4">
+                <div class="card wr-feature">
+                    <div class="card-body">
+                        <h2 class="h5 card-title">@playbook.Name</h2>
+                        <p class="card-text">
+                            @DisplayText.Count(playbook.FormationCount, "formation", "formations") &middot;
+                            @DisplayText.Count(playbook.PlayCount, "play", "plays")
+                        </p>
+                        @if (User.IsCoach())
+                        {
+                            <p class="card-text small text-muted">@DisplayText.PlaybookRights(playbook)</p>
+                        }
+                        <a asp-action="Details" asp-route-id="@playbook.Id" class="btn btn-primary">Open</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

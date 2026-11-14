@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using TheWarRoomAPI.Diagrams;
 using TheWarRoomAPI.Models;
 using TheWarRoomAPI.Services;
 
@@ -46,9 +47,9 @@ namespace TheWarRoomAPI.Data
             lions.AddCoach("Darnell", "Brooks", UserRole.Coordinator, TeamUnit.Defence);
             lions.AddCoach("Priya", "Nair", UserRole.Coordinator, TeamUnit.SpecialTeams, "Specialists");
 
-            lions.AddCoach("Tom", "Gallagher", UserRole.PositionCoach, null, "Receivers", "Tight Ends");
-            lions.AddCoach("Sam", "Whitaker", UserRole.PositionCoach, null, "Offensive Line");
-            lions.AddCoach("Andre", "Mitchell", UserRole.PositionCoach, null, "Defensive Line", "Linebackers");
+            var receiversCoach = lions.AddCoach("Tom", "Gallagher", UserRole.PositionCoach, null, "Receivers", "Tight Ends");
+            var lineCoach = lions.AddCoach("Sam", "Whitaker", UserRole.PositionCoach, null, "Offensive Line");
+            var frontSevenCoach = lions.AddCoach("Andre", "Mitchell", UserRole.PositionCoach, null, "Defensive Line", "Linebackers");
 
             var defensiveBacksCoach = lions.AddCoach("Kenji", "Sato", UserRole.PositionCoach, null, "Defensive Backs");
             defensiveBacksCoach.CanEditDepthChart = false;   // switched off by the head coach, to show that the switch works
@@ -173,6 +174,122 @@ namespace TheWarRoomAPI.Data
             }
 
             context.SaveChanges();
+
+            // ----- Playbook: a few approved plays, and change requests in each state -----
+            // The base formations are already there (TeamDefaults). A play starts as a copy of its formation's
+            // players; routes, blocks and motion are then added as [x, y] offsets from each player, in yards.
+
+            var slantFlat = lions.AddPlay("Shotgun Spread", "Slant Flat", "Quick game. Read the flat defender: throw the slant if he widens.",
+                diagram =>
+                {
+                    Route(diagram, "X", new[] { 0, 3.0 }, new[] { 6, 8.0 });
+                    Route(diagram, "Z", new[] { 0, 3.0 }, new[] { -6, 8.0 });
+                    Route(diagram, "H", new[] { -3, 2.0 }, new[] { -10, 3.0 });
+                    Route(diagram, "Y", new[] { 3, 2.0 }, new[] { 10, 3.0 });
+                    Block(diagram, "RB", new[] { 1.5, 2.5 });
+                    foreach (var lineman in new[] { "LT", "LG", "C", "RG", "RT" })
+                    {
+                        Block(diagram, lineman, new[] { 0, 1.5 });
+                    }
+                });
+
+            // Published directly by the offence coordinator, who has the publish right
+            lions.AddPlay("Shotgun Spread", "Four Verticals", "Stretch the deep coverage. Inside receivers bend to the hashes.",
+                diagram =>
+                {
+                    Route(diagram, "X", new[] { 0, 18.0 });
+                    Route(diagram, "Z", new[] { 0, 18.0 });
+                    Route(diagram, "H", new[] { 1, 19.0 });
+                    Route(diagram, "Y", new[] { -1, 19.0 });
+                    Route(diagram, "RB", new[] { 4, -1.0 }, new[] { 9, 2.0 });
+                }, publishedBy: offenceCoordinator);
+
+            lions.AddPlay("I-Form", "Power Right", "Gap scheme to the tight end side. The backside guard pulls and leads through the hole.",
+                diagram =>
+                {
+                    Route(diagram, "RB", new[] { 1, 3.0 }, new[] { 5, 7.0 }, new[] { 7, 11.0 });
+                    Block(diagram, "FB", new[] { 4, 4.5 });
+                    Block(diagram, "LG", new[] { 2, -1.5 }, new[] { 6, 0.0 }, new[] { 7, 2.0 });
+                    Block(diagram, "TE", new[] { 1, 2.0 });
+                    foreach (var lineman in new[] { "LT", "C", "RG", "RT" })
+                    {
+                        Block(diagram, lineman, new[] { -1, 1.5 });
+                    }
+                });
+
+            var coverThree = lions.AddPlay("4-3", "Cover 3", "Three deep, four under. Corners and the free safety take the deep thirds.",
+                diagram =>
+                {
+                    Route(diagram, "LCB", new[] { 0, 10.0 });
+                    Route(diagram, "RCB", new[] { 0, 10.0 });
+                    Route(diagram, "FS", new[] { 6, 5.0 });
+                    Route(diagram, "SS", new[] { 6, -4.0 });
+                    Route(diagram, "SLB", new[] { 4, 3.0 });
+                    Route(diagram, "MLB", new[] { 0, 4.0 });
+                    Route(diagram, "WLB", new[] { -6, 3.0 });
+                    foreach (var rusher in new[] { "LE", "DT", "NT", "RE" })
+                    {
+                        Route(diagram, rusher, new[] { 0, -4.0 });
+                    }
+                });
+
+            context.SaveChanges();
+
+            // Waiting for the head coach: the receivers coach wants deeper slants (players still see the version above)
+            lions.AddUpdateRequest(slantFlat, receiversCoach, "Slant Flat", slantFlat.Notes, diagram =>
+            {
+                ReplaceRoute(diagram, "X", new[] { 0, 5.0 }, new[] { 8, 11.0 });
+                ReplaceRoute(diagram, "Z", new[] { 0, 5.0 }, new[] { -8, 11.0 });
+                diagram.Drawings.Add(new DiagramDrawing { Id = "t1", Type = "text", X = -25, Y = 16, Text = "Slants break at 5" });
+            });
+
+            // Waiting for the head coach: a new play from the offensive line coach
+            lions.AddNewPlayRequest("I-Form", lineCoach, "Counter Left", "Misdirection off Power. Both backs step right, then the ball goes left.",
+                diagram =>
+                {
+                    Route(diagram, "RB", new[] { 2, 1.0 }, new[] { -4, 6.0 }, new[] { -7, 11.0 });
+                    Block(diagram, "FB", new[] { -4, 4.5 });
+                    Block(diagram, "RG", new[] { -2, -1.5 }, new[] { -6, 0.0 }, new[] { -7, 2.0 });
+                    foreach (var lineman in new[] { "LT", "LG", "C", "RT", "TE" })
+                    {
+                        Block(diagram, lineman, new[] { 1, 1.5 });
+                    }
+                });
+
+            // Already decided: the head coach turned this one down, so Cover 3 is unchanged
+            var rejected = lions.AddUpdateRequest(coverThree, frontSevenCoach, "Cover 3", coverThree.Notes, diagram =>
+            {
+                ReplaceRoute(diagram, "MLB", new[] { 0, 8.0 });
+            });
+            rejected.Status = ApprovalStatus.Rejected;
+            rejected.ReviewedBy = lions.HeadCoach;
+            rejected.ReviewedAt = now;
+            rejected.ReviewNote = "Keep the middle linebacker's drop short for now. Bring it back after the bye week.";
+
+            context.SaveChanges();
+        }
+
+        // ----- Small helpers for writing plays -----
+
+        private static void Route(DiagramDocument diagram, string label, params double[][] points)
+        {
+            AddPath(diagram, label, "route", points);
+        }
+
+        private static void Block(DiagramDocument diagram, string label, params double[][] points)
+        {
+            AddPath(diagram, label, "block", points);
+        }
+
+        private static void ReplaceRoute(DiagramDocument diagram, string label, params double[][] points)
+        {
+            diagram.Players.First(p => p.Label == label).Paths.Clear();
+            AddPath(diagram, label, "route", points);
+        }
+
+        private static void AddPath(DiagramDocument diagram, string label, string kind, double[][] points)
+        {
+            diagram.Players.First(p => p.Label == label).Paths.Add(new DiagramPath { Kind = kind, Pts = points.ToList() });
         }
 
         // A second, small team. It exists to show that one team can never see another team's data.
@@ -224,8 +341,8 @@ namespace TheWarRoomAPI.Data
                 Team = new Team { Name = name, CreatedAt = now };
                 context.Teams.Add(Team);
 
-                // The same groups and positions a newly registered team gets
-                TeamDefaults.AddTo(Team, context);
+                // The same groups, positions and playbooks a newly registered team gets
+                TeamDefaults.AddTo(Team, context, now);
                 context.SaveChanges();
             }
 
@@ -339,6 +456,110 @@ namespace TheWarRoomAPI.Data
                         RecordedAt = recordedAt
                     });
                 }
+            }
+
+            // An approved play, drawn on top of one of the team's formations.
+            // When publishedBy is given, the history shows that coach publishing it directly.
+            public Play AddPlay(string formationName, string name, string notes, Action<DiagramDocument> draw, User? publishedBy = null)
+            {
+                var formation = FindFormation(formationName);
+                var diagram = DiagramValidator.Parse(formation.DiagramJson);
+                draw(diagram);
+
+                var play = new Play
+                {
+                    Team = Team,
+                    Formation = formation,
+                    Name = name,
+                    DiagramJson = DiagramValidator.Normalize(DiagramValidator.Serialize(diagram), diagram.Unit, isFormation: false),
+                    Notes = notes,
+                    Version = 1,
+                    UpdatedAt = _now
+                };
+                _context.Plays.Add(play);
+
+                if (publishedBy != null)
+                {
+                    _context.ApprovalRequests.Add(new ApprovalRequest
+                    {
+                        Team = Team,
+                        Playbook = formation.Playbook,
+                        TargetType = PlaybookTargetType.Play,
+                        Action = PlaybookChangeAction.Create,
+                        Formation = formation,
+                        Play = play,
+                        TargetName = name,
+                        ProposedName = name,
+                        ProposedJson = play.DiagramJson,
+                        ProposedNotes = notes,
+                        Status = ApprovalStatus.Approved,
+                        AutoApproved = true,
+                        RequestedBy = publishedBy,
+                        RequestedAt = _now,
+                        ReviewedBy = publishedBy,
+                        ReviewedAt = _now
+                    });
+                }
+
+                return play;
+            }
+
+            // A pending request to change an existing play
+            public ApprovalRequest AddUpdateRequest(Play play, User requestedBy, string name, string? notes, Action<DiagramDocument> change)
+            {
+                var diagram = DiagramValidator.Parse(play.DiagramJson);
+                change(diagram);
+
+                var request = new ApprovalRequest
+                {
+                    Team = Team,
+                    Playbook = play.Formation!.Playbook,
+                    TargetType = PlaybookTargetType.Play,
+                    Action = PlaybookChangeAction.Update,
+                    Formation = play.Formation,
+                    Play = play,
+                    BaseVersion = play.Version,
+                    TargetName = play.Name,
+                    ProposedName = name,
+                    ProposedJson = DiagramValidator.Normalize(DiagramValidator.Serialize(diagram), diagram.Unit, isFormation: false),
+                    ProposedNotes = notes,
+                    Status = ApprovalStatus.Pending,
+                    RequestedBy = requestedBy,
+                    RequestedAt = _now
+                };
+                _context.ApprovalRequests.Add(request);
+                return request;
+            }
+
+            // A pending request for a play that does not exist yet
+            public ApprovalRequest AddNewPlayRequest(string formationName, User requestedBy, string name, string notes, Action<DiagramDocument> draw)
+            {
+                var formation = FindFormation(formationName);
+                var diagram = DiagramValidator.Parse(formation.DiagramJson);
+                draw(diagram);
+
+                var request = new ApprovalRequest
+                {
+                    Team = Team,
+                    Playbook = formation.Playbook,
+                    TargetType = PlaybookTargetType.Play,
+                    Action = PlaybookChangeAction.Create,
+                    Formation = formation,
+                    TargetName = name,
+                    ProposedName = name,
+                    ProposedJson = DiagramValidator.Normalize(DiagramValidator.Serialize(diagram), diagram.Unit, isFormation: false),
+                    ProposedNotes = notes,
+                    Status = ApprovalStatus.Pending,
+                    RequestedBy = requestedBy,
+                    RequestedAt = _now
+                };
+                _context.ApprovalRequests.Add(request);
+                return request;
+            }
+
+            private Formation FindFormation(string name)
+            {
+                return _context.Formations.Local.First(f => f.Team == Team && f.Name == name);
             }
 
             private User NewUser(string firstName, string lastName, UserRole role, TeamUnit? coordinatorUnit)

@@ -98,6 +98,65 @@
 
     <div class="col-md-6">
         <div class="card">
+            <div class="card-header">Playbook</div>
+            <div class="card-body">
+                @if (Model.Playbooks.Count == 0)
+                {
+                    <p class="mb-0 text-muted">No playbook is shared with you yet.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var playbook in Model.Playbooks)
+                        {
+                            <li class="mb-1">
+                                <a asp-controller="Playbook" asp-action="Details" asp-route-id="@playbook.Id">@playbook.Name</a>
+                                <span class="small text-muted">
+                                    @DisplayText.Count(playbook.FormationCount, "formation", "formations"),
+                                    @DisplayText.Count(playbook.PlayCount, "play", "plays")
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Me.Role != UserRole.Player)
+    {
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Playbook changes</div>
+                <div class="card-body">
+                    @if (Model.WaitingChanges.Count == 0)
+                    {
+                        <p class="text-muted">Nothing is waiting for approval.</p>
+                    }
+                    else
+                    {
+                        <p>
+                            @DisplayText.Count(Model.WaitingChanges.Count, "change is", "changes are") waiting for
+                            @(Model.Me.Role == UserRole.HeadCoach ? "your decision." : "the head coach.")
+                        </p>
+                        <ul class="list-unstyled mb-3">
+                            @foreach (var request in Model.WaitingChanges.Take(3))
+                            {
+                                <li class="mb-1">
+                                    <a asp-controller="Approvals" asp-action="Details" asp-route-id="@request.Id">@DisplayText.Change(request.Action, request.TargetType): @request.TargetName</a>
+                                    <span class="small text-muted">@request.RequestedBy</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    <a asp-controller="Approvals" asp-action="Index">See all playbook changes</a>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="col-md-6">
+        <div class="card">
             <div class="card-header">Your account</div>
             <div class="card-body">
                 <dl class="row mb-0">

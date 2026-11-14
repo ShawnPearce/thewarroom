@@ -1,4 +1,50 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+// Small behaviours shared by every page of The War Room.
+(function () {
+    'use strict';
 
-// Write your JavaScript code.
+    document.addEventListener('DOMContentLoaded', function () {
+        showLocalTimes();
+        clearSavedDrafts();
+        bindAutoSubmit();
+    });
+
+    // The server writes a moment in time as <time datetime="..." data-local>. It is sent as UTC
+    // and shown here in the time zone of the person who is looking at the page.
+    function showLocalTimes() {
+        var times = document.querySelectorAll('time[data-local]');
+
+        Array.prototype.forEach.call(times, function (element) {
+            var moment = new Date(element.getAttribute('datetime'));
+            if (!isNaN(moment.getTime())) {
+                element.textContent = moment.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+            }
+        });
+    }
+
+    // After a drawing was saved, the copy the play designer kept in this browser is no longer needed.
+    // The page that follows a successful save names it in data-clear-draft.
+    function clearSavedDrafts() {
+        var markers = document.querySelectorAll('[data-clear-draft]');
+
+        Array.prototype.forEach.call(markers, function (marker) {
+            try {
+                window.localStorage.removeItem('warroom.draft.' + marker.getAttribute('data-clear-draft'));
+            } catch (error) {
+                // The browser's storage is switched off: there was no copy to remove
+            }
+        });
+    }
+
+    // A drop-down marked data-auto-submit sends its form as soon as another choice is made
+    function bindAutoSubmit() {
+        var inputs = document.querySelectorAll('[data-auto-submit]');
+
+        Array.prototype.forEach.call(inputs, function (input) {
+            input.addEventListener('change', function () {
+                if (input.form) {
+                    input.form.submit();
+                }
+            });
+        });
+    }
+})();

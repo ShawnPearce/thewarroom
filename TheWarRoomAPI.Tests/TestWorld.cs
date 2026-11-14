@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TheWarRoomAPI.Data;
+using TheWarRoomAPI.Diagrams;
 using TheWarRoomAPI.Models;
 using TheWarRoomAPI.Services;
 
@@ -43,6 +44,8 @@ namespace TheWarRoomAPI.Tests
         public ScheduleService Schedule(AppDbContext context) => new ScheduleService(context, Clock);
         public AttendanceService Attendance(AppDbContext context) => new AttendanceService(context, Schedule(context), Clock);
         public TeamService Teams(AppDbContext context) => new TeamService(context, Auth(context), PasswordHasher, Clock);
+        public PlaybookService Playbooks(AppDbContext context) => new PlaybookService(context, new PlaybookChangeApplier(context, Clock), Clock);
+        public ApprovalService Approvals(AppDbContext context) => new ApprovalService(context, new PlaybookChangeApplier(context, Clock), Clock);
 
         // ---------- Setting up data ----------
 
@@ -56,7 +59,7 @@ namespace TheWarRoomAPI.Tests
             headCoach.CanPublishPlaybook = true;
 
             context.Users.Add(headCoach);
-            TeamDefaults.AddTo(team, context);
+            TeamDefaults.AddTo(team, context, Clock.GetUtcNow().UtcDateTime);
             await context.SaveChangesAsync();
 
             return await AsAsync(headCoach.Id);
@@ -175,6 +178,47 @@ namespace TheWarRoomAPI.Tests
                 .Where(p => p.TeamId == teamMember.TeamId && p.Code == code)
                 .Select(p => p.Id)
                 .SingleAsync();
+        }
+
+        public async Task<int> PlaybookIdAsync(CurrentUser teamMember, TeamUnit unit)
+        {
+            using var context = NewContext();
+            return await context.Playbooks
+                .Where(p => p.TeamId == teamMember.TeamId && p.Unit == unit)
+                .Select(p => p.Id)
+                .SingleAsync();
+        }
+
+        public async Task<int> FormationIdAsync(CurrentUser teamMember, string name)
+        {
+            using var context = NewContext();
+            return await context.Formations
+                .Where(f => f.TeamId == teamMember.TeamId && f.Name == name)
+                .Select(f => f.Id)
+                .SingleAsync();
+        }
+
+        // The diagram of one of the team's formations, with a route added to the named players.
+        // This is what the play designer would send for a simple play.
+        public async Task<string> DiagramAsync(CurrentUser teamMember, string formationName, params string[] labelsWithARoute)
+        {
+            using var context = NewContext();
+            string json = await context.Formations
+                .Where(f => f.TeamId == teamMember.TeamId && f.Name == formationName)
+                .Select(f => f.DiagramJson)
+                .SingleAsync();
+
+            var diagram = DiagramValidator.Parse(json);
+            foreach (var label in labelsWithARoute)
+            {
+                diagram.Players.First(p => p.Label == label).Paths.Add(new DiagramPath
+                {
+                    Kind = "route",
+                    Pts = new List<double[]> { new[] { 0.0, 5.0 } }
+                });
+            }
+
+            return DiagramValidator.Serialize(diagram);
         }
 
         private User NewUser(Team? team, UserRole role, string firstName, string lastName)

@@ -1,0 +1,49 @@
+@model PlayDto
+
+@{
+    ViewData["Title"] = "Delete play";
+}
+
+<h1 class="h3">Delete play</h1>
+
+<h3 class="h5">Are you sure you want to delete this?</h3>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class="col-sm-2">Formation</dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FormationName)
+        </dd>
+        <dt class="col-sm-2">Playbook</dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.PlaybookName)
+        </dd>
+    </dl>
+    <div class="row mb-3">
+        <div class="col-lg-6">
+            <canvas class="wr-diagram" data-diagram="@Model.DiagramJson" role="img" aria-label="Diagram of the play @Model.Name"></canvas>
+        </div>
+    </div>
+    @if (!Model.CanPublish)
+    {
+        <div class="alert alert-info" role="status">
+            Your request to delete is sent to the head coach. Players keep seeing the play until it is approved.
+        </div>
+    }
+    <form asp-action="DeletePlay">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" name="formationId" value="@Model.FormationId" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <a asp-action="Play" asp-route-id="@Model.Id">Back to the play</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_DiagramScripts" />
+}

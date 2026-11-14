@@ -68,6 +68,23 @@ namespace TheWarRoomApp.Controllers
                 model.NextEvents = upcoming!.Take(3).ToList();
             }
 
+            // The playbooks this user can open
+            var playbooksResponse = await _client.GetAsync("api/Playbook");
+            if (playbooksResponse.IsSuccessStatusCode)
+            {
+                model.Playbooks = (await playbooksResponse.Content.ReadFromJsonAsync<List<PlaybookDto>>())!;
+            }
+
+            // Coaches see the playbook changes that are waiting for the head coach
+            if (model.Me.Role != UserRole.Player)
+            {
+                var waitingResponse = await _client.GetAsync($"api/ApprovalRequest?status={ApprovalStatus.Pending}");
+                if (waitingResponse.IsSuccessStatusCode)
+                {
+                    model.WaitingChanges = (await waitingResponse.Content.ReadFromJsonAsync<List<ApprovalRequestDto>>())!;
+                }
+            }
+
             return View(model);   // Dashboard View
         }
 

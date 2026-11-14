@@ -13,5 +13,11 @@ namespace TheWarRoomApp.Models
 
         // The next few events on the schedule
         public List<ScheduledEventDto> NextEvents { get; set; } = new List<ScheduledEventDto>();
+
+        // The playbooks this user can open
+        public List<PlaybookDto> Playbooks { get; set; } = new List<PlaybookDto>();
+
+        // For coaches: the playbook changes that are waiting for the head coach
+        public List<ApprovalRequestDto> WaitingChanges { get; set; } = new List<ApprovalRequestDto>();
     }
 }

@@ -1,0 +1,53 @@
+@model PlaybookDetailDto
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<partial name="_Trail" model="@(new List<PageLink> { new PageLink("Playbook", Url.Action("Index")), new PageLink(Model.Name, null) })" />
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 mb-0">@Model.Name</h1>
+    @if (Model.CanChange)
+    {
+        <a asp-action="NewFormation" asp-route-playbookId="@Model.Id" class="btn btn-primary">New formation</a>
+    }
+</div>
+<p class="text-muted">
+    @DisplayText.Count(Model.FormationCount, "formation", "formations") &middot; @DisplayText.Count(Model.PlayCount, "play", "plays")
+    @if (User.IsCoach())
+    {
+        <text>&middot; @DisplayText.PlaybookRights(Model)</text>
+    }
+</p>
+
+@if (Model.Formations.Count == 0)
+{
+    <p class="text-muted">This playbook has no formations yet.</p>
+}
+else
+{
+    @* Each formation is a small drawing that opens the formation and its plays *@
+    <div class="row g-3">
+        @foreach (var formation in Model.Formations)
+        {
+            <div class="col-6 col-md-4 col-lg-3">
+                <a asp-action="Formation" asp-route-id="@formation.Id" class="card wr-diagram-card text-decoration-none">
+                    <canvas class="wr-diagram" data-diagram="@formation.DiagramJson" data-mode="thumb" aria-hidden="true"></canvas>
+                    <div class="card-body py-2">
+                        <div class="fw-semibold">@formation.Name</div>
+                        <div class="small text-muted">@DisplayText.Count(formation.PlayCount, "play", "plays")</div>
+                        @if (formation.HasPendingChange)
+                        {
+                            <span class="badge text-bg-warning">Change waiting</span>
+                        }
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <partial name="_DiagramScripts" />
+}

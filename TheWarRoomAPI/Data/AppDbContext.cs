@@ -32,6 +32,12 @@ namespace TheWarRoomAPI.Data
         public DbSet<ScheduledEvent> ScheduledEvents { get; set; }
         public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
 
+        // Playbook
+        public DbSet<Playbook> Playbooks { get; set; }
+        public DbSet<Formation> Formations { get; set; }
+        public DbSet<Play> Plays { get; set; }
+        public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
+
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
             // Every DateTime in the model is stored and read back as UTC
@@ -71,6 +77,17 @@ namespace TheWarRoomAPI.Data
                 entity.HasOne(a => a.RecordedBy).WithMany().HasForeignKey(a => a.RecordedById);
             });
 
+            // Formation and play names are unique without regard to upper/lower case
+            modelBuilder.Entity<Formation>().Property(f => f.Name).UseCollation("NOCASE");
+            modelBuilder.Entity<Play>().Property(p => p.Name).UseCollation("NOCASE");
+
+            // A change request points at two users: who asked for it and who decided on it
+            modelBuilder.Entity<ApprovalRequest>(entity =>
+            {
+                entity.HasOne(r => r.RequestedBy).WithMany().HasForeignKey(r => r.RequestedById);
+                entity.HasOne(r => r.ReviewedBy).WithMany().HasForeignKey(r => r.ReviewedById);
+            });
+
             // Deleting a record never silently deletes the records that point to it.
             // A relationship that should cascade is switched on explicitly below this loop.
             foreach (var foreignKey in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
@@ -99,6 +116,20 @@ namespace TheWarRoomAPI.Data
                 .HasOne(a => a.ScheduledEvent)
                 .WithMany(e => e.AttendanceRecords)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // The history of playbook changes is kept when the formation or play it was about is deleted:
+            // the request just stops pointing at it.
+            modelBuilder.Entity<ApprovalRequest>()
+                .HasOne(r => r.Formation)
+                .WithMany()
+                .HasForeignKey(r => r.FormationId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ApprovalRequest>()
+                .HasOne(r => r.Play)
+                .WithMany()
+                .HasForeignKey(r => r.PlayId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

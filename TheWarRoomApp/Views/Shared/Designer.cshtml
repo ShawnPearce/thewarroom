@@ -1,0 +1,212 @@
+@model DesignerViewModel
+
+@{
+    var info = Model.Page;
+    ViewData["Title"] = info.Heading;
+
+    string thing = info.IsFormation ? "formation" : "play";
+    string saveLabel = info.IsRevision ? "Save my changes" : info.CanPublish ? "Save and publish" : "Send for approval";
+}
+
+<partial name="_Trail" model="info.Trail" />
+
+<h1 class="h3">@info.Heading</h1>
+<p class="text-muted">
+    @if (info.IsRevision)
+    {
+        <text>Your request is still waiting for the head coach. Saving here replaces what you proposed.</text>
+    }
+    else if (info.CanPublish)
+    {
+        <text>Saving publishes the @thing at once: everyone who can read this playbook sees it.</text>
+    }
+    else
+    {
+        <text>Saving sends the @thing to the head coach. Players keep seeing the approved playbook until it is approved.</text>
+    }
+</p>
+@if (info.IsFormation)
+{
+    <p class="text-muted">
+        A formation holds the players only. Routes, blocks and motion are drawn on its plays, and plays that are already drawn keep their own drawing.
+    </p>
+}
+
+@if (info.NewFormationPlaybookId != null && info.StartingPoints.Count > 0)
+{
+    @* A new formation can start as a copy of one the playbook already has. Choosing one reloads the page. *@
+    <form asp-action="NewFormation" method="get" class="row g-2 align-items-center mb-3">
+        <input type="hidden" name="playbookId" value="@info.NewFormationPlaybookId" />
+        <div class="col-auto">
+            <label for="startFrom" class="col-form-label">Start from</label>
+        </div>
+        <div class="col-auto">
+            <select id="startFrom" name="startFrom" class="form-select" data-auto-submit>
+                <option value="">An empty field</option>
+                @foreach (var formation in info.StartingPoints)
+                {
+                    <option value="@formation.Id" selected="@(formation.Id == info.StartFrom)">@formation.Name</option>
+                }
+            </select>
+        </div>
+    </form>
+}
+
+@* The designer script (diagram-editor.js) attaches itself to this element *@
+<div data-designer data-form="designerForm" data-formation="@(info.IsFormation ? "true" : "false")"
+     data-draft-key="@Model.DraftKey" data-dirty="@(ViewData.ModelState.IsValid ? "false" : "true")">
+
+    <div class="alert alert-info d-none" role="status" data-role="draft-notice">
+        This browser still holds a drawing that was not saved, from <strong data-role="draft-time"></strong>.
+        <button type="button" class="btn btn-sm btn-primary ms-2" data-role="draft-restore">Bring it back</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-role="draft-discard">Discard it</button>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-9">
+            <div class="btn-toolbar gap-2 mb-2" role="toolbar" aria-label="Drawing tools">
+                <div class="btn-group btn-group-sm" role="group" aria-label="Tools">
+                    <button type="button" class="btn btn-outline-primary" data-tool="select" title="Select and move (V)">Select</button>
+                    <button type="button" class="btn btn-outline-primary" data-tool="own" title="Add one of your players (P)">Player</button>
+                    <button type="button" class="btn btn-outline-primary" data-tool="opp" title="Add an opponent (O)">Opponent</button>
+                    @if (!info.IsFormation)
+                    {
+                        <button type="button" class="btn btn-outline-primary" data-tool="route" title="Draw a route (R)">Route</button>
+                        <button type="button" class="btn btn-outline-primary" data-tool="block" title="Draw a block (B)">Block</button>
+                        <button type="button" class="btn btn-outline-primary" data-tool="motion" title="Draw a motion before the snap (M)">Motion</button>
+                        <button type="button" class="btn btn-outline-primary" data-tool="text" title="Add a text label (T)">Text</button>
+                    }
+                </div>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Undo, redo and delete">
+                    <button type="button" class="btn btn-outline-secondary" data-command="undo" title="Undo (Ctrl+Z)">Undo</button>
+                    <button type="button" class="btn btn-outline-secondary" data-command="redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
+                    <button type="button" class="btn btn-outline-danger" data-command="delete" title="Delete what is selected (Delete)">Delete</button>
+                </div>
+            </div>
+
+            <div class="wr-diagram-scroll">
+                <canvas class="wr-diagram wr-diagram-edit" tabindex="0" aria-label="The field. Use the tools above it to draw."></canvas>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between gap-2 mt-2">
+                <div>
+                    <div class="small text-muted" data-role="hint"></div>
+                    <div class="small text-danger" data-role="message" role="status"></div>
+                </div>
+                <div class="small text-muted text-end">
+                    <div>Field shown: <span data-role="view-label"></span></div>
+                    <div class="mt-1">
+                        Behind the line
+                        <span class="btn-group btn-group-sm" role="group" aria-label="Field shown behind the line of scrimmage">
+                            <button type="button" class="btn btn-outline-secondary" data-command="view-backfield-less" title="Show 5 yards less behind the line of scrimmage">&minus;</button>
+                            <button type="button" class="btn btn-outline-secondary" data-command="view-backfield-more" title="Show 5 yards more behind the line of scrimmage">+</button>
+                        </span>
+                        <span class="ms-2">Past the line</span>
+                        <span class="btn-group btn-group-sm" role="group" aria-label="Field shown past the line of scrimmage">
+                            <button type="button" class="btn btn-outline-secondary" data-command="view-downfield-less" title="Show 5 yards less past the line of scrimmage">&minus;</button>
+                            <button type="button" class="btn btn-outline-secondary" data-command="view-downfield-more" title="Show 5 yards more past the line of scrimmage">+</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            @* Saving is an ordinary form post: the drawing travels in the hidden DiagramJson field *@
+            <form method="post" id="designerForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="DiagramJson" />
+                <input type="hidden" asp-for="Version" />
+                <input type="hidden" asp-for="DraftKey" />
+                <span asp-validation-for="DiagramJson" class="text-danger"></span>
+
+                <div class="form-group">
+                    <label asp-for="Name" class="control-label"></label>
+                    <input asp-for="Name" class="form-control" autocomplete="off" data-draft-field />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                @if (!info.IsFormation)
+                {
+                    <div class="form-group">
+                        <label asp-for="Notes" class="control-label"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="4" data-draft-field></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+                }
+                <div class="form-group d-grid gap-2">
+                    <input type="submit" value="@saveLabel" class="btn btn-primary" />
+                    @if (info.SaveAsNewUrl != null)
+                    {
+                        <button type="submit" class="btn btn-outline-primary" formaction="@info.SaveAsNewUrl"
+                                title="Leaves this formation as it is and adds the drawing to the playbook under the name above">
+                            Save as new formation
+                        </button>
+                    }
+                </div>
+            </form>
+            <div>
+                <a href="@info.CancelUrl">Cancel</a>
+            </div>
+
+            @* What is selected on the field. These boxes are outside the form, so they are not posted. *@
+            <div class="card mt-3">
+                <div class="card-header">Selected</div>
+                <div class="card-body">
+                    <div class="small text-muted" data-panel="none">
+                        Nothing is selected. Click @(info.IsFormation ? "a player" : "a player, a route or a text") on the field.
+                    </div>
+
+                    <div class="d-none" data-panel="player">
+                        <p class="small text-muted mb-2" data-role="player-side"></p>
+                        <div class="form-group">
+                            <label for="playerLabel" class="control-label">Label</label>
+                            <input id="playerLabel" class="form-control form-control-sm" maxlength="4" autocomplete="off" data-prop="label" />
+                        </div>
+                        <div class="form-group">
+                            <label for="playerShape" class="control-label">Shape</label>
+                            <select id="playerShape" class="form-select form-select-sm" data-prop="shape">
+                                <option value="circle">Circle</option>
+                                <option value="square">Square</option>
+                                <option value="triangle">Triangle</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary d-none" data-command="clear-paths">Remove its routes</button>
+                    </div>
+
+                    <div class="d-none" data-panel="path">
+                        <div class="form-group">
+                            <label for="pathKind" class="control-label">Drawn as</label>
+                            <select id="pathKind" class="form-select form-select-sm" data-prop="kind">
+                                <option value="route">Route</option>
+                                <option value="block">Block</option>
+                                <option value="motion">Motion</option>
+                            </select>
+                        </div>
+                        <p class="small text-muted mb-0">Drag its square points to reshape it.</p>
+                    </div>
+
+                    <div class="d-none" data-panel="drawing">
+                        <div class="form-group mb-0">
+                            <label for="drawingText" class="control-label">Text</label>
+                            <input id="drawingText" class="form-control form-control-sm" maxlength="60" autocomplete="off" data-prop="text" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!info.IsFormation)
+            {
+                <div class="mt-3">
+                    <partial name="_DiagramLegend" />
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/field/diagram-model.js" asp-append-version="true"></script>
+    <script src="~/js/field/diagram-renderer.js" asp-append-version="true"></script>
+    <script src="~/js/field/diagram-editor.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,59 @@
+@model PlayDto
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Playbook", Url.Action("Index")),
+    new PageLink(Model.PlaybookName, Url.Action("Details", new { id = Model.PlaybookId })),
+    new PageLink(Model.FormationName, Url.Action("Formation", new { id = Model.FormationId })),
+    new PageLink(Model.Name, null) })" />
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 mb-0">@Model.Name</h1>
+    @if (Model.CanChange && Model.PendingRequestId == null)
+    {
+        <div>
+            <a asp-action="EditPlay" asp-route-id="@Model.Id" class="btn btn-primary">Edit play</a>
+            <a asp-action="DeletePlay" asp-route-id="@Model.Id" class="btn btn-outline-danger">Delete</a>
+        </div>
+    }
+</div>
+<p class="text-muted">
+    @Model.FormationName formation &middot; version @Model.Version &middot; last changed @DisplayText.When(Model.UpdatedAt)
+</p>
+
+@if (Model.PendingRequestId != null)
+{
+    <div class="alert alert-warning" role="status">
+        A change to this play is waiting for the head coach's approval. This page shows the approved version, which is what players see.
+        <a asp-controller="Approvals" asp-action="Details" asp-route-id="@Model.PendingRequestId" class="alert-link">See the request</a>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="wr-diagram-scroll">
+            <canvas class="wr-diagram" data-diagram="@Model.DiagramJson" role="img" aria-label="Diagram of the play @Model.Name"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <h2 class="h5">Coaching notes</h2>
+        @if (string.IsNullOrWhiteSpace(Model.Notes))
+        {
+            <p class="text-muted">There are no notes for this play.</p>
+        }
+        else
+        {
+            <p class="wr-notes">@Model.Notes</p>
+        }
+
+        <h2 class="h6 mt-4">Reading the diagram</h2>
+        <partial name="_DiagramLegend" />
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_DiagramScripts" />
+}

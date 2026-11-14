@@ -1,0 +1,18 @@
+@model List<PageLink>
+
+@* The links from the top of a section down to the page being shown. The entry without a link is the page itself. *@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        @foreach (var link in Model)
+        {
+            if (link.Url != null)
+            {
+                <li class="breadcrumb-item"><a href="@link.Url">@link.Text</a></li>
+            }
+            else
+            {
+                <li class="breadcrumb-item active" aria-current="page">@link.Text</li>
+            }
+        }
+    </ol>
+</nav>

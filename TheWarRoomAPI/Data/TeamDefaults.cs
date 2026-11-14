@@ -1,13 +1,56 @@
+using TheWarRoomAPI.Diagrams;
 using TheWarRoomAPI.Models;
 
 namespace TheWarRoomAPI.Data
 {
-    // What every new team starts with: a standard set of position groups and depth-chart positions.
+    // What every new team starts with: a standard set of position groups and depth-chart positions,
+    // and a playbook for each unit holding the base formations.
     // Used when a team registers and when the demo teams are created, so both get the same setup.
-    // Coaches can add, rename and remove groups and positions afterwards.
+    // Coaches can change all of it afterwards.
     public static class TeamDefaults
     {
-        public static void AddTo(Team team, AppDbContext context)
+        public static void AddTo(Team team, AppDbContext context, DateTime now)
+        {
+            AddGroupsAndPositions(team, context);
+            AddPlaybooks(team, context, now);
+        }
+
+        // One playbook per unit, each starting with a copy of the base formations for that unit
+        private static void AddPlaybooks(Team team, AppDbContext context, DateTime now)
+        {
+            var templates = FormationTemplates.All();
+
+            AddPlaybook(TeamUnit.Offence, "Offence playbook");
+            AddPlaybook(TeamUnit.Defence, "Defence playbook");
+            AddPlaybook(TeamUnit.SpecialTeams, "Special teams playbook");
+
+            void AddPlaybook(TeamUnit unit, string name)
+            {
+                var playbook = new Playbook
+                {
+                    Team = team,
+                    Unit = unit,
+                    Name = name,
+                    Formations = new List<Formation>()
+                };
+
+                foreach (var template in templates.Where(t => t.Unit == unit))
+                {
+                    playbook.Formations.Add(new Formation
+                    {
+                        Team = team,
+                        Name = template.Name,
+                        DiagramJson = DiagramValidator.Serialize(template.Diagram),
+                        Version = 1,
+                        UpdatedAt = now
+                    });
+                }
+
+                context.Playbooks.Add(playbook);
+            }
+        }
+
+        private static void AddGroupsAndPositions(Team team, AppDbContext context)
         {
             int groupOrder = 0;
             int positionOrder = 0;

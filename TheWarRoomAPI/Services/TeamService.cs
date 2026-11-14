@@ -56,8 +56,8 @@ namespace TheWarRoomAPI.Services
 
             _context.Users.Add(headCoach);   // the team is saved with it through the navigation property
 
-            // Every new team starts with the standard position groups and positions
-            TeamDefaults.AddTo(team, _context);
+            // Every new team starts with the standard position groups, positions and playbooks
+            TeamDefaults.AddTo(team, _context, now);
 
             await _context.SaveChangesAsync();
 

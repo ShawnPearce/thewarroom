@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Html;
 using TheWarRoomApp.Models;
 
 namespace TheWarRoomApp.Infrastructure
@@ -105,6 +106,71 @@ namespace TheWarRoomApp.Infrastructure
         public static string Player(int? jerseyNumber, string firstName, string lastName)
         {
             return jerseyNumber != null ? $"#{jerseyNumber} {firstName} {lastName}" : $"{firstName} {lastName}";
+        }
+
+        // "3 plays", "1 play"
+        public static string Count(int number, string singular, string plural)
+        {
+            return number == 1 ? $"1 {singular}" : $"{number} {plural}";
+        }
+
+        // A moment in time. The API sends it as UTC; the page's script (site.js) rewrites it in the
+        // viewer's own time zone, and the text written here is what shows until it has.
+        public static IHtmlContent When(DateTime utc)
+        {
+            var moment = DateTime.SpecifyKind(utc, DateTimeKind.Utc);
+            return new HtmlString($"<time datetime=\"{moment:yyyy-MM-ddTHH:mm:ssZ}\" data-local>{moment.ToLocalTime():MMM d, yyyy h:mm tt}</time>");
+        }
+
+        // ---------- Playbook changes ----------
+
+        // "New play", "Change to formation", "Delete play"
+        public static string Change(PlaybookChangeAction action, PlaybookTargetType target)
+        {
+            string thing = target == PlaybookTargetType.Formation ? "formation" : "play";
+            return action switch
+            {
+                PlaybookChangeAction.Create => $"New {thing}",
+                PlaybookChangeAction.Update => $"Change to {thing}",
+                _ => $"Delete {thing}"
+            };
+        }
+
+        // A change that a coach with the publish right made is shown as published, not as approved by someone
+        public static string Status(ApprovalRequestDto request)
+        {
+            return request.Status switch
+            {
+                ApprovalStatus.Pending => "Waiting for approval",
+                ApprovalStatus.Approved => request.AutoApproved ? "Published" : "Approved",
+                ApprovalStatus.Rejected => "Rejected",
+                _ => "Withdrawn"
+            };
+        }
+
+        // The Bootstrap colour used for each status
+        public static string StatusColour(ApprovalStatus status)
+        {
+            return status switch
+            {
+                ApprovalStatus.Pending => "warning",
+                ApprovalStatus.Approved => "success",
+                ApprovalStatus.Rejected => "danger",
+                _ => "secondary"
+            };
+        }
+
+        // What a coach's changes to a playbook lead to, shown next to the playbook's name
+        public static string PlaybookRights(PlaybookDto playbook)
+        {
+            if (!playbook.CanChange)
+            {
+                return "You can read this playbook.";
+            }
+
+            return playbook.CanPublish
+                ? "Your changes go live as soon as you save them."
+                : "Your changes are sent to the head coach for approval.";
         }
     }
 }

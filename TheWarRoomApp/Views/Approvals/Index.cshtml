@@ -1,0 +1,78 @@
+@model ApprovalsViewModel
+
+@{
+    ViewData["Title"] = "Playbook changes";
+    bool history = Model.Show == "history";
+    var rows = history ? Model.History : Model.Waiting;
+}
+
+<h1 class="h3">Playbook changes</h1>
+<p class="text-muted">
+    @if (User.IsHeadCoach())
+    {
+        <text>Changes from your coaches wait here until you approve or reject them. Players keep seeing the approved playbook in the meantime.</text>
+    }
+    else
+    {
+        <text>The changes you sent to the head coach, and the changes made in the playbooks you coach.</text>
+    }
+</p>
+
+@* Waiting / history are links that reload the page *@
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(history ? "" : "active")" asp-action="Index">Waiting (@Model.Waiting.Count)</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(history ? "active" : "")" asp-action="Index" asp-route-show="history">History</a>
+    </li>
+</ul>
+
+@if (rows.Count == 0)
+{
+    <p class="text-muted">@(history ? "No playbook changes have been made yet." : "Nothing is waiting for approval.")</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Change</th>
+                    <th>Playbook</th>
+                    <th>By</th>
+                    <th>When</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var item in rows) {
+                <tr>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id">@DisplayText.Change(item.Action, item.TargetType): @item.TargetName</a>
+                    </td>
+                    <td>@item.PlaybookName</td>
+                    <td>@item.RequestedBy</td>
+                    <td class="text-nowrap">@DisplayText.When(item.RequestedAt)</td>
+                    <td><span class="badge text-bg-@DisplayText.StatusColour(item.Status)">@DisplayText.Status(item)</span></td>
+                    <td class="text-nowrap">
+                        @if (item.CanReview)
+                        {
+                            <a asp-action="Details" asp-route-id="@item.Id">Review</a>
+                        }
+                        else if (item.CanRevise)
+                        {
+                            <span class="small text-muted">Your request</span>
+                        }
+                    </td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+    @if (history)
+    {
+        <p class="small text-muted">The most recent changes are shown. A change that a coach was allowed to publish directly shows as published.</p>
+    }
+}

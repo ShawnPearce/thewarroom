@@ -77,6 +77,49 @@ namespace TheWarRoomAPI.Services
             return user.IsHeadCoach || (user.IsCoach && user.CanRecordAttendance);
         }
 
+        // ---------- Playbook ----------
+
+        // Reading a unit's playbook: every coach; a player only for the units of the groups they are in.
+        public static bool CanReadPlaybook(CurrentUser user, TeamUnit unit)
+        {
+            return user.IsCoach || user.Groups.Any(g => g.Unit == unit);
+        }
+
+        // Proposing changes to a unit's playbook (the "authorized playbook scope"):
+        // the head coach, the coordinator of that unit, and any coach assigned to a group of that unit.
+        public static bool CanChangePlaybook(CurrentUser user, TeamUnit unit)
+        {
+            if (!user.IsCoach)
+            {
+                return false;
+            }
+
+            if (user.IsHeadCoach)
+            {
+                return true;
+            }
+
+            if (user.IsCoordinator && user.CoordinatorUnit == unit)
+            {
+                return true;
+            }
+
+            return user.Groups.Any(g => g.Unit == unit);
+        }
+
+        // Publishing a change without waiting for approval: the head coach always;
+        // another coach only inside their scope and only when the head coach has granted the right.
+        public static bool CanPublishPlaybook(CurrentUser user, TeamUnit unit)
+        {
+            return user.IsHeadCoach || (user.CanPublishPlaybook && CanChangePlaybook(user, unit));
+        }
+
+        // Approving or rejecting playbook changes: the head coach only.
+        public static bool CanReviewPlaybookChanges(CurrentUser user)
+        {
+            return user.IsHeadCoach;
+        }
+
         // Creating accounts, changing roles and permissions, deactivating, resetting passwords,
         // team settings, deleting a week: the head coach only.
         public static bool CanManageTeam(CurrentUser user)

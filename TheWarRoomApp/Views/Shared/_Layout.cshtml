@@ -32,6 +32,15 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Schedule" asp-action="Index">Schedule</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Playbook" asp-action="Index">Playbook</a>
+                        </li>
+                        @if (User.IsCoach())
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Approvals" asp-action="Index">Approvals</a>
+                            </li>
+                        }
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Team</a>
                             <ul class="dropdown-menu">
@@ -88,6 +97,11 @@
         @if (TempData["Error"] is string error)
         {
             <div class="alert alert-danger" role="alert">@error</div>
+        }
+        @if (TempData["ClearDraft"] is string savedDraft)
+        {
+            @* A drawing was just saved: site.js removes the copy the play designer kept in this browser *@
+            <div hidden data-clear-draft="@savedDraft"></div>
         }
         @RenderBody()
     </main>
