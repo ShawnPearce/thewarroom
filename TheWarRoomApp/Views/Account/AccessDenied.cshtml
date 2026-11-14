@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Not allowed";
+    var reason = TempData["AccessDeniedMessage"] as string;
+}
+
+<h1 class="h3 text-danger">You are not allowed to do that</h1>
+
+@if (!string.IsNullOrWhiteSpace(reason))
+{
+    <p>@reason</p>
+}
+else
+{
+    <p>Your role on this team does not include that page or action.</p>
+}
+
+<p class="text-muted">If you think this is a mistake, ask your head coach to check your role and permissions.</p>
+
+<div>
+    <a asp-controller="Home" asp-action="Index">Back to home</a>
+</div>

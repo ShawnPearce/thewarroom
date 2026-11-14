@@ -1,0 +1,91 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+/* ---------- The War Room colours ---------- */
+
+:root {
+  --wr-navy: #13233f;
+  --wr-navy-light: #1e3a66;
+  --wr-gold: #f2a900;
+}
+
+a {
+  color: var(--wr-navy-light);
+}
+
+.wr-navbar {
+  background-color: var(--wr-navy);
+  border-bottom: 3px solid var(--wr-gold);
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--wr-navy);
+  --bs-btn-border-color: var(--wr-navy);
+  --bs-btn-hover-bg: var(--wr-navy-light);
+  --bs-btn-hover-border-color: var(--wr-navy-light);
+  --bs-btn-active-bg: #0d182c;
+  --bs-btn-active-border-color: #0d182c;
+  --bs-btn-disabled-bg: var(--wr-navy);
+  --bs-btn-disabled-border-color: var(--wr-navy);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--wr-navy);
+  --bs-btn-border-color: var(--wr-navy);
+  --bs-btn-hover-bg: var(--wr-navy);
+  --bs-btn-hover-border-color: var(--wr-navy);
+  --bs-btn-active-bg: var(--wr-navy);
+  --bs-btn-active-border-color: var(--wr-navy);
+}
+
+/* Forms built in the scaffold style get some space between their rows */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* ---------- Landing page ---------- */
+
+.wr-hero {
+  background: linear-gradient(135deg, var(--wr-navy) 0%, var(--wr-navy-light) 100%);
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 3rem 2rem;
+}
+
+.wr-hero .lead {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.wr-feature {
+  border-top: 3px solid var(--wr-gold);
+  height: 100%;
+}

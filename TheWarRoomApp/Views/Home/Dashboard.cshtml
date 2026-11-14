@@ -1,0 +1,55 @@
+@model CurrentUserDto
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1 class="h3">Welcome, @Model.FirstName</h1>
+<p class="text-muted">@User.GetRoleLabel() &middot; @Model.TeamName</p>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Your account</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Name</dt>
+                    <dd class="col-sm-8">@Model.FirstName @Model.LastName</dd>
+                    <dt class="col-sm-4">
+                        @Html.DisplayNameFor(model => model.Email)
+                    </dt>
+                    <dd class="col-sm-8">
+                        @Html.DisplayFor(model => model.Email)
+                    </dd>
+                    <dt class="col-sm-4">Role</dt>
+                    <dd class="col-sm-8">@User.GetRoleLabel()</dd>
+                    <dt class="col-sm-4">
+                        @Html.DisplayNameFor(model => model.TeamName)
+                    </dt>
+                    <dd class="col-sm-8">
+                        @Html.DisplayFor(model => model.TeamName)
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Role != UserRole.Player)
+    {
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Your permissions</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-8">Publish playbook changes without approval</dt>
+                        <dd class="col-sm-4">@(Model.CanPublishPlaybook ? "Yes" : "No")</dd>
+                        <dt class="col-sm-8">Edit the depth chart</dt>
+                        <dd class="col-sm-4">@(Model.CanEditDepthChart ? "Yes" : "No")</dd>
+                        <dt class="col-sm-8">Record attendance</dt>
+                        <dd class="col-sm-4">@(Model.CanRecordAttendance ? "Yes" : "No")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    }
+</div>

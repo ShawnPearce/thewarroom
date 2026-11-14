@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="The War Room (API + Client)" type="CompoundRunConfigurationType">
+    <toRun name="TheWarRoomAPI: http" type="LaunchSettings" />
+    <toRun name="TheWarRoomApp: http" type="LaunchSettings" />
+    <method v="2" />
+  </configuration>
+</component>

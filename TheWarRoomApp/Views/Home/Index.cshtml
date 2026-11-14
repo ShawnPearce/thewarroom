@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Football team management and film study";
+}
+
+<section class="wr-hero">
+    <div class="row">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold">The War Room</h1>
+            <p class="lead">
+                One place for your football program's depth charts, playbook, game film and schedule.
+            </p>
+            <a class="btn btn-warning btn-lg me-2 mb-2" asp-controller="Account" asp-action="Register">Register your team</a>
+            <a class="btn btn-outline-light btn-lg mb-2" asp-controller="Account" asp-action="Login">Sign in</a>
+            <p class="small mt-3 mb-0">Registration is free. Each team works in its own private workspace.</p>
+        </div>
+    </div>
+</section>
+
+<div class="row g-4 mt-1">
+    <div class="col-md-6 col-lg-3">
+        <div class="card wr-feature">
+            <div class="card-body">
+                <h2 class="h5 card-title">Team and depth charts</h2>
+                <p class="card-text">Rosters, coaching groups and a depth chart for every week. Players see where they stand at each position.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card wr-feature">
+            <div class="card-body">
+                <h2 class="h5 card-title">Playbook</h2>
+                <p class="card-text">Draw formations and plays on the field. Changes reach players once the head coach approves them.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card wr-feature">
+            <div class="card-body">
+                <h2 class="h5 card-title">Film and tendencies</h2>
+                <p class="card-text">Cut a game into plays, tag them, share them with the right players and chart run and pass tendencies.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card wr-feature">
+            <div class="card-body">
+                <h2 class="h5 card-title">Schedule and study time</h2>
+                <p class="card-text">Practices, games and meetings in one list, with attendance and time spent on film and the playbook.</p>
+            </div>
+        </div>
+    </div>
+</div>
