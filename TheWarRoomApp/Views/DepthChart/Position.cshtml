@@ -1,0 +1,124 @@
+@model DepthChartSlotDto
+
+@{
+    ViewData["Title"] = $"{Model.Code} depth chart";
+}
+
+<h1 class="h3">@Model.Name <span class="text-muted fw-normal">(@Model.Code)</span></h1>
+<p class="text-muted">@Model.GroupName &middot; @DisplayText.Unit(Model.Unit) &middot; @DisplayText.WeekOf(Model.Week)</p>
+<hr />
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <h2 class="h5">Order</h2>
+        @if (Model.Players.Count == 0)
+        {
+            <p class="text-muted">Nobody is listed at this position yet.</p>
+        }
+        else
+        {
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Rank</th>
+                        <th>Player</th>
+                        @if (Model.CanEdit)
+                        {
+                            <th></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+        @foreach (var player in Model.Players) {
+                    <tr>
+                        <td>
+                            @DisplayText.Ordinal(player.Rank)
+                            @if (player.Rank == 1)
+                            {
+                                <span class="badge text-bg-success">Starter</span>
+                            }
+                        </td>
+                        <td>
+                            @DisplayText.Player(player.JerseyNumber, player.FirstName, player.LastName)
+                            @if (!player.IsActive || player.Status == RosterStatus.Inactive)
+                            {
+                                <span class="badge text-bg-secondary">Inactive</span>
+                            }
+                            else if (player.Status == RosterStatus.Injured)
+                            {
+                                <span class="badge text-bg-warning">Injured</span>
+                            }
+                        </td>
+                        @if (Model.CanEdit)
+                        {
+                            <td class="text-nowrap text-end">
+                                @* Each button is its own small form; the page comes back with the new order *@
+                                <form asp-action="Move" method="post" class="d-inline">
+                                    <input type="hidden" name="weekId" value="@Model.Week.Id" />
+                                    <input type="hidden" name="positionId" value="@Model.PositionId" />
+                                    <input type="hidden" name="placementId" value="@player.PlacementId" />
+                                    <input type="hidden" name="direction" value="@MoveDirection.Up" />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@(player.Rank == 1)"
+                                            title="Move up" aria-label="Move @player.FirstName @player.LastName up">&uarr;</button>
+                                </form>
+                                <form asp-action="Move" method="post" class="d-inline">
+                                    <input type="hidden" name="weekId" value="@Model.Week.Id" />
+                                    <input type="hidden" name="positionId" value="@Model.PositionId" />
+                                    <input type="hidden" name="placementId" value="@player.PlacementId" />
+                                    <input type="hidden" name="direction" value="@MoveDirection.Down" />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@(player.Rank == Model.Players.Count)"
+                                            title="Move down" aria-label="Move @player.FirstName @player.LastName down">&darr;</button>
+                                </form>
+                                <form asp-action="Remove" method="post" class="d-inline">
+                                    <input type="hidden" name="weekId" value="@Model.Week.Id" />
+                                    <input type="hidden" name="positionId" value="@Model.PositionId" />
+                                    <input type="hidden" name="placementId" value="@player.PlacementId" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                </form>
+                            </td>
+                        }
+                    </tr>
+        }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    @if (Model.CanEdit)
+    {
+        <div class="col-lg-5">
+            <h2 class="h5">Add a player</h2>
+            @if (Model.EligiblePlayers.Count == 0)
+            {
+                <p class="text-muted">Every active player of the @Model.GroupName group is already listed here.</p>
+            }
+            else
+            {
+                <form asp-action="AddPlayer" method="post">
+                    <input type="hidden" name="weekId" value="@Model.Week.Id" />
+                    <input type="hidden" name="positionId" value="@Model.PositionId" />
+                    <div class="form-group">
+                        <label for="playerId" class="control-label">Player</label>
+                        <select id="playerId" name="playerId" class="form-select">
+                            @foreach (var player in Model.EligiblePlayers)
+                            {
+                                <option value="@player.Id">@DisplayText.Player(player.JerseyNumber, player.FirstName, player.LastName)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Add to the bottom" class="btn btn-primary" />
+                    </div>
+                </form>
+            }
+            <p class="small text-muted">
+                Only players in the <a asp-controller="Groups" asp-action="Details" asp-route-id="@Model.GroupId">@Model.GroupName</a> group
+                can be placed at @Model.Code. The same player can also be listed at other positions.
+            </p>
+        </div>
+    }
+</div>
+
+<div>
+    <a asp-action="Index" asp-route-weekId="@Model.Week.Id" asp-route-unit="@Model.Unit" asp-fragment="pos-@Model.PositionId">Back to the depth chart</a>
+</div>

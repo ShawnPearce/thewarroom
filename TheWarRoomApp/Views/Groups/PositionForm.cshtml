@@ -1,0 +1,45 @@
+@model PositionFormViewModel
+
+@{
+    bool isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Add a position" : "Edit position";
+}
+
+<h1 class="h3">@(isNew ? "Add a position" : "Edit position")</h1>
+<p class="text-muted">@Model.GroupName</p>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="@(isNew ? "CreatePosition" : "EditPosition")" asp-route-id="@(isNew ? null : Model.Id)">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="GroupName" />
+            <input type="hidden" asp-for="Position.PositionGroupId" />
+
+            <div class="form-group">
+                <label asp-for="Position.Code" class="control-label"></label>
+                <input asp-for="Position.Code" class="form-control" />
+                <span asp-validation-for="Position.Code" class="text-danger"></span>
+                <div class="form-text">The short label on the depth chart, for example X or MLB. Each code is used once per team.</div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Position.Name" class="control-label"></label>
+                <input asp-for="Position.Name" class="form-control" />
+                <span asp-validation-for="Position.Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="@(isNew ? "Add position" : "Save")" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Details" asp-route-id="@Model.Position.PositionGroupId">Back to group</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,94 @@
+@model PlayerCreateViewModel
+
+@{
+    ViewData["Title"] = "Add a player";
+}
+
+<h1 class="h3">Add a player</h1>
+<p class="text-muted">
+    The player gets a temporary password, shown to you once on the next page, and chooses their own at first sign-in.
+</p>
+<hr />
+<form asp-action="Create">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label asp-for="Player.FirstName" class="control-label"></label>
+                    <input asp-for="Player.FirstName" class="form-control" />
+                    <span asp-validation-for="Player.FirstName" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-6">
+                    <label asp-for="Player.LastName" class="control-label"></label>
+                    <input asp-for="Player.LastName" class="form-control" />
+                    <span asp-validation-for="Player.LastName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Player.Email" class="control-label"></label>
+                <input asp-for="Player.Email" class="form-control" />
+                <span asp-validation-for="Player.Email" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label asp-for="Player.JerseyNumber" class="control-label"></label>
+                    <input asp-for="Player.JerseyNumber" class="form-control" />
+                    <span asp-validation-for="Player.JerseyNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-6">
+                    <label asp-for="Player.Grade" class="control-label"></label>
+                    <input asp-for="Player.Grade" class="form-control" />
+                    <span asp-validation-for="Player.Grade" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label asp-for="Player.HeightInches" class="control-label"></label>
+                    <input asp-for="Player.HeightInches" class="form-control" />
+                    <span asp-validation-for="Player.HeightInches" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-6">
+                    <label asp-for="Player.WeightLbs" class="control-label"></label>
+                    <input asp-for="Player.WeightLbs" class="form-control" />
+                    <span asp-validation-for="Player.WeightLbs" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <h2 class="h5">Position groups</h2>
+            <p class="small text-muted">A player can be in several groups, on offence, defence and special teams.</p>
+            @foreach (var unit in Model.Groups.GroupBy(g => g.Unit))
+            {
+                <div class="mb-3">
+                    <div class="fw-semibold">@DisplayText.Unit(unit.Key)</div>
+                    @foreach (var group in unit)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Player.GroupIds" value="@group.Id" id="group-@group.Id"
+                                   @(Model.Player.GroupIds.Contains(group.Id) ? "checked" : "") />
+                            <label class="form-check-label" for="group-@group.Id">@group.Name</label>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Add player" class="btn btn-primary" />
+    </div>
+</form>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

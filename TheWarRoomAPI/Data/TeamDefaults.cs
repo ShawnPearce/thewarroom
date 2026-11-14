@@ -1,0 +1,62 @@
+using TheWarRoomAPI.Models;
+
+namespace TheWarRoomAPI.Data
+{
+    // What every new team starts with: a standard set of position groups and depth-chart positions.
+    // Used when a team registers and when the demo teams are created, so both get the same setup.
+    // Coaches can add, rename and remove groups and positions afterwards.
+    public static class TeamDefaults
+    {
+        public static void AddTo(Team team, AppDbContext context)
+        {
+            int groupOrder = 0;
+            int positionOrder = 0;
+
+            // Offence
+            AddGroup(TeamUnit.Offence, "Quarterbacks", ("QB", "Quarterback"));
+            AddGroup(TeamUnit.Offence, "Running Backs", ("RB", "Running Back"), ("FB", "Fullback"));
+            AddGroup(TeamUnit.Offence, "Receivers", ("X", "X Receiver"), ("Y", "Y Receiver"), ("Z", "Z Receiver"));
+            AddGroup(TeamUnit.Offence, "Tight Ends", ("TE", "Tight End"));
+            AddGroup(TeamUnit.Offence, "Offensive Line",
+                ("LT", "Left Tackle"), ("LG", "Left Guard"), ("C", "Centre"), ("RG", "Right Guard"), ("RT", "Right Tackle"));
+
+            // Defence (4-3 base)
+            AddGroup(TeamUnit.Defence, "Defensive Line",
+                ("LE", "Left End"), ("DT", "Defensive Tackle"), ("NT", "Nose Tackle"), ("RE", "Right End"));
+            AddGroup(TeamUnit.Defence, "Linebackers",
+                ("SLB", "Strong-side Linebacker"), ("MLB", "Middle Linebacker"), ("WLB", "Weak-side Linebacker"));
+            AddGroup(TeamUnit.Defence, "Defensive Backs",
+                ("LCB", "Left Cornerback"), ("RCB", "Right Cornerback"), ("FS", "Free Safety"), ("SS", "Strong Safety"));
+
+            // Special teams
+            AddGroup(TeamUnit.SpecialTeams, "Specialists",
+                ("K", "Kicker"), ("P", "Punter"), ("LS", "Long Snapper"), ("H", "Holder"),
+                ("KR", "Kick Returner"), ("PR", "Punt Returner"));
+
+            void AddGroup(TeamUnit unit, string name, params (string Code, string Name)[] positions)
+            {
+                var group = new PositionGroup
+                {
+                    Team = team,
+                    Unit = unit,
+                    Name = name,
+                    SortOrder = ++groupOrder,
+                    Positions = new List<Position>()
+                };
+
+                foreach (var position in positions)
+                {
+                    group.Positions.Add(new Position
+                    {
+                        Team = team,
+                        Code = position.Code,
+                        Name = position.Name,
+                        SortOrder = ++positionOrder
+                    });
+                }
+
+                context.PositionGroups.Add(group);
+            }
+        }
+    }
+}

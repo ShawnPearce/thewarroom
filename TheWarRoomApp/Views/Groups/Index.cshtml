@@ -1,0 +1,58 @@
+@model IEnumerable<PositionGroupDto>
+
+@{
+    ViewData["Title"] = "Groups and positions";
+}
+
+<h1 class="h3">Groups and positions</h1>
+<p class="text-muted">
+    Coaches and players are assigned to position groups. A coach manages the depth chart of their groups,
+    and a player can be placed at the positions of the groups they are in.
+</p>
+
+@foreach (var unit in Model.GroupBy(g => g.Unit))
+{
+    <div class="d-flex align-items-center mt-4 mb-2">
+        <h2 class="h5 mb-0 me-3">@DisplayText.Unit(unit.Key)</h2>
+        @if (unit.First().CanManage)
+        {
+            <a asp-action="Create" asp-route-unit="@unit.Key" class="btn btn-outline-primary btn-sm">Add a group</a>
+        }
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th style="width: 20%">Group</th>
+                    <th style="width: 30%">Positions</th>
+                    <th style="width: 30%">Coaches</th>
+                    <th>Players</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var item in unit) {
+                <tr>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id">@item.Name</a>
+                    </td>
+                    <td>
+                        @foreach (var position in item.Positions)
+                        {
+                            <span class="badge text-bg-light" title="@position.Name">@position.Code</span>
+                        }
+                    </td>
+                    <td>
+                        @string.Join(", ", item.Coaches.Select(c => $"{c.FirstName} {c.LastName}"))
+                    </td>
+                    <td>@item.Players.Count</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                    </td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+}

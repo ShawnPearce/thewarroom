@@ -1,0 +1,113 @@
+@model RosterDetailsViewModel
+
+@{
+    ViewData["Title"] = $"{Model.Player.FirstName} {Model.Player.LastName}";
+    var player = Model.Player;
+}
+
+<h1 class="h3">@DisplayText.Player(player.JerseyNumber, player.FirstName, player.LastName)</h1>
+<p>
+    @if (!player.IsActive)
+    {
+        <span class="badge text-bg-secondary">Deactivated</span>
+    }
+    else if (player.Status == RosterStatus.Injured)
+    {
+        <span class="badge text-bg-warning">Injured</span>
+    }
+    else if (player.Status == RosterStatus.Inactive)
+    {
+        <span class="badge text-bg-secondary">Inactive</span>
+    }
+</p>
+<hr />
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <h2 class="h5">Roster details</h2>
+        <dl class="row">
+            <dt class="col-sm-4">
+                @Html.DisplayNameFor(model => model.Player.JerseyNumber)
+            </dt>
+            <dd class="col-sm-8">
+                @Html.DisplayFor(model => model.Player.JerseyNumber)
+            </dd>
+            <dt class="col-sm-4">
+                @Html.DisplayNameFor(model => model.Player.Grade)
+            </dt>
+            <dd class="col-sm-8">
+                @Html.DisplayFor(model => model.Player.Grade)
+            </dd>
+            <dt class="col-sm-4">Height</dt>
+            <dd class="col-sm-8">@DisplayText.Height(player.HeightInches)</dd>
+            <dt class="col-sm-4">Weight</dt>
+            <dd class="col-sm-8">@(player.WeightLbs != null ? $"{player.WeightLbs} lbs" : "")</dd>
+            <dt class="col-sm-4">
+                @Html.DisplayNameFor(model => model.Player.Status)
+            </dt>
+            <dd class="col-sm-8">
+                @Html.DisplayFor(model => model.Player.Status)
+            </dd>
+            @if (player.Email != null)
+            {
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Player.Email)
+                </dt>
+                <dd class="col-sm-8">
+                    @Html.DisplayFor(model => model.Player.Email)
+                </dd>
+            }
+        </dl>
+
+        <h2 class="h5">Position groups</h2>
+        @if (player.Groups.Count == 0)
+        {
+            <p class="text-muted">Not in any group yet. A player has to be in a position's group before they can go on its depth chart.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var group in player.Groups)
+                {
+                    <li>
+                        <a asp-controller="Groups" asp-action="Details" asp-route-id="@group.Id">@group.Name</a>
+                        <span class="text-muted">(@DisplayText.Unit(group.Unit))</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <div class="col-md-6">
+        @if (Model.Coaches != null)
+        {
+            <h2 class="h5">Coaches</h2>
+            <ul class="list-unstyled">
+                @foreach (var coach in Model.Coaches)
+                {
+                    <li>@coach.FirstName @coach.LastName <span class="text-muted">&middot; @coach.Title</span></li>
+                }
+            </ul>
+        }
+
+        @if (User.IsHeadCoach())
+        {
+            <h2 class="h5 mt-4">Account</h2>
+            <form asp-action="ResetPassword" asp-route-id="@player.PlayerId" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-primary btn-sm">Reset password</button>
+            </form>
+            <form asp-action="SetActive" asp-route-id="@player.PlayerId" method="post" class="d-inline">
+                <input type="hidden" name="isActive" value="@(player.IsActive ? "false" : "true")" />
+                <button type="submit" class="btn btn-outline-secondary btn-sm">@(player.IsActive ? "Deactivate account" : "Reactivate account")</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="mt-3">
+    @if (User.IsHeadCoach() || User.IsInRole(nameof(UserRole.Coordinator)))
+    {
+        <a asp-action="Edit" asp-route-id="@player.PlayerId">Edit</a><text> | </text>
+    }
+    <a asp-action="Index">Back to List</a>
+</div>

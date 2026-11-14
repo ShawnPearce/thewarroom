@@ -1,0 +1,137 @@
+@model StaffEditViewModel
+
+@{
+    ViewData["Title"] = "Edit coach";
+}
+
+<h1 class="h3">@Model.FirstName @Model.LastName</h1>
+<p class="text-muted">
+    @DisplayText.Role(Model.Role, Model.CoordinatorUnit)
+    @if (!Model.IsActive)
+    {
+        <span class="badge text-bg-secondary">Deactivated</span>
+    }
+    @if (Model.MustChangePassword)
+    {
+        <span class="badge text-bg-warning">Has a temporary password</span>
+    }
+</p>
+<hr />
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <h2 class="h5">Account</h2>
+        <form asp-action="Edit" asp-route-id="@Model.Id">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label asp-for="FirstName" class="control-label"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-6">
+                    <label asp-for="LastName" class="control-label"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            @if (Model.IsHeadCoachAccount)
+            {
+                @* The head coach's role never changes *@
+                <input type="hidden" asp-for="Role" />
+            }
+            else
+            {
+                <div class="row">
+                    <div class="form-group col-sm-6">
+                        <label asp-for="Role" class="control-label"></label>
+                        <select asp-for="Role" class="form-select">
+                            <option value="@UserRole.PositionCoach">Position coach</option>
+                            <option value="@UserRole.Coordinator">Coordinator</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label asp-for="CoordinatorUnit" class="control-label"></label>
+                        <select asp-for="CoordinatorUnit" class="form-select">
+                            <option value="">(position coaches have none)</option>
+                            <option value="@TeamUnit.Offence">Offence</option>
+                            <option value="@TeamUnit.Defence">Defence</option>
+                            <option value="@TeamUnit.SpecialTeams">Special teams</option>
+                        </select>
+                    </div>
+                </div>
+            }
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        @if (!Model.IsHeadCoachAccount)
+        {
+            <h2 class="h5">Permissions</h2>
+            <form asp-action="Permissions" asp-route-id="@Model.Id" method="post">
+                <div class="form-check">
+                    <input asp-for="Permissions.CanPublishPlaybook" class="form-check-input" />
+                    <label asp-for="Permissions.CanPublishPlaybook" class="form-check-label"></label>
+                    <div class="form-text">Off by default: this coach's playbook changes wait for your approval.</div>
+                </div>
+                <div class="form-check mt-2">
+                    <input asp-for="Permissions.CanEditDepthChart" class="form-check-input" />
+                    <label asp-for="Permissions.CanEditDepthChart" class="form-check-label"></label>
+                    <div class="form-text">Applies to the groups this coach is responsible for.</div>
+                </div>
+                <div class="form-check mt-2">
+                    <input asp-for="Permissions.CanRecordAttendance" class="form-check-input" />
+                    <label asp-for="Permissions.CanRecordAttendance" class="form-check-label"></label>
+                </div>
+                <div class="form-group mt-3">
+                    <input type="submit" value="Save permissions" class="btn btn-outline-primary" />
+                </div>
+            </form>
+        }
+        else
+        {
+            <h2 class="h5">Permissions</h2>
+            <p class="text-muted">The head coach always has every permission.</p>
+        }
+
+        <h2 class="h5 mt-4">Position groups</h2>
+        @if (Model.Groups.Count == 0)
+        {
+            <p class="text-muted">Not assigned to any group.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var group in Model.Groups)
+                {
+                    <li>
+                        <a asp-controller="Groups" asp-action="Details" asp-route-id="@group.Id">@group.Name</a>
+                        <span class="text-muted">(@DisplayText.Unit(group.Unit))</span>
+                    </li>
+                }
+            </ul>
+        }
+        <p class="small text-muted">Groups are assigned on the <a asp-controller="Groups" asp-action="Index">Groups and positions</a> page.</p>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

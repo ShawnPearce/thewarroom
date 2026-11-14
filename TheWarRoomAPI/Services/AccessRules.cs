@@ -1,0 +1,74 @@
+using TheWarRoomAPI.Models;
+
+namespace TheWarRoomAPI.Services
+{
+    // The permission rules that depend on a user's role, unit and assigned groups.
+    // They are kept together here so every service applies exactly the same rules,
+    // and so they can be tested on their own.
+    //
+    //   Head coach      - everything on the team
+    //   Coordinator     - the groups in their unit, plus any group they are assigned to
+    //   Position coach  - the groups they are assigned to
+    //   Player          - can view, never edit
+    public static class AccessRules
+    {
+        // Is this group inside the part of the team the coach is responsible for?
+        public static bool GroupIsInScope(CurrentUser user, PositionGroup group)
+        {
+            if (!user.IsCoach)
+            {
+                return false;
+            }
+
+            if (user.IsHeadCoach)
+            {
+                return true;
+            }
+
+            if (user.IsCoordinator && user.CoordinatorUnit == group.Unit)
+            {
+                return true;
+            }
+
+            return user.IsInGroup(group.Id);
+        }
+
+        // Adding, renaming and removing groups and positions, and choosing a group's players:
+        // the head coach, or the coordinator of the group's unit.
+        public static bool CanManageUnit(CurrentUser user, TeamUnit unit)
+        {
+            return user.IsHeadCoach || (user.IsCoordinator && user.CoordinatorUnit == unit);
+        }
+
+        // Choosing which coaches coach a group: the head coach only.
+        public static bool CanAssignCoaches(CurrentUser user)
+        {
+            return user.IsHeadCoach;
+        }
+
+        // Changing the depth chart at a position of this group:
+        // the group must be in the coach's scope, and the head coach must not have switched the permission off.
+        public static bool CanEditDepthChart(CurrentUser user, PositionGroup group)
+        {
+            if (user.IsHeadCoach)
+            {
+                return true;
+            }
+
+            return user.IsCoach && user.CanEditDepthChart && GroupIsInScope(user, group);
+        }
+
+        // Creating a new week's depth chart: the head coach and coordinators.
+        public static bool CanCreateDepthChartWeek(CurrentUser user)
+        {
+            return user.IsHeadCoach || user.IsCoordinator;
+        }
+
+        // Creating accounts, changing roles and permissions, deactivating, resetting passwords,
+        // team settings, deleting a week: the head coach only.
+        public static bool CanManageTeam(CurrentUser user)
+        {
+            return user.IsHeadCoach;
+        }
+    }
+}

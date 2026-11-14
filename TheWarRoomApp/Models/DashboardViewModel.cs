@@ -1,0 +1,14 @@
+namespace TheWarRoomApp.Models
+{
+    // What the dashboard shows after signing in
+    public class DashboardViewModel
+    {
+        public CurrentUserDto Me { get; set; } = new CurrentUserDto();
+
+        // This week's depth chart, when the team has one
+        public DepthChartWeekDto? Week { get; set; }
+
+        // A player's own spots on this week's chart
+        public List<MyPlacementDto> MyPlacements { get; set; } = new List<MyPlacementDto>();
+    }
+}

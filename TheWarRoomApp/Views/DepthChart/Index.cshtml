@@ -1,0 +1,155 @@
+@model DepthChartViewModel
+
+@{
+    ViewData["Title"] = "Depth chart";
+    var chart = Model.Chart;
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 mb-0">Depth chart</h1>
+    @if (chart == null ? User.IsHeadCoach() || User.IsInRole(nameof(UserRole.Coordinator)) : chart.CanCreateWeek)
+    {
+        <a asp-action="NewWeek" class="btn btn-primary">New week</a>
+    }
+</div>
+
+@if (chart == null)
+{
+    <p class="text-muted">The team has no depth chart yet.</p>
+}
+else
+{
+    @* Week picker: choosing a week reloads the page for that week *@
+    <form asp-action="Index" method="get" class="row g-2 align-items-center mb-3">
+        <input type="hidden" name="unit" value="@Model.SelectedUnit" />
+        <div class="col-auto">
+            <label for="weekId" class="col-form-label">Week</label>
+        </div>
+        <div class="col-auto">
+            <select id="weekId" name="weekId" class="form-select" onchange="this.form.submit()">
+                @foreach (var week in Model.Weeks)
+                {
+                    <option value="@week.Id" selected="@(week.Id == chart.Week.Id)">@DisplayText.WeekOf(week)</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <noscript><input type="submit" value="Show" class="btn btn-outline-primary" /></noscript>
+        </div>
+    </form>
+
+    @if (User.IsPlayer())
+    {
+        <div class="card mb-3">
+            <div class="card-header">Your spots this week</div>
+            <div class="card-body">
+                @if (Model.MyPlacements.Count == 0)
+                {
+                    <p class="mb-0 text-muted">You are not listed on this week's depth chart.</p>
+                }
+                else
+                {
+                    <ul class="list-inline mb-0">
+                        @foreach (var placement in Model.MyPlacements)
+                        {
+                            <li class="list-inline-item me-4">
+                                <strong>@placement.PositionName</strong>:
+                                @DisplayText.Ordinal(placement.Rank) of @placement.PlayersAtPosition
+                                @if (placement.Rank == 1)
+                                {
+                                    <span class="badge text-bg-success">Starter</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    }
+
+    @* One tab per unit; each tab is a link that reloads the page for that unit *@
+    <ul class="nav nav-tabs mb-3">
+        @foreach (var unit in new[] { TeamUnit.Offence, TeamUnit.Defence, TeamUnit.SpecialTeams })
+        {
+            <li class="nav-item">
+                <a class="nav-link @(unit == Model.SelectedUnit ? "active" : "")"
+                   asp-action="Index" asp-route-weekId="@chart.Week.Id" asp-route-unit="@unit">@DisplayText.Unit(unit)</a>
+            </li>
+        }
+    </ul>
+
+    var groups = chart.Groups.Where(g => g.Unit == Model.SelectedUnit).ToList();
+    int deepest = Math.Max(2, groups.SelectMany(g => g.Positions).Select(p => p.Players.Count).DefaultIfEmpty(0).Max());
+
+    @if (groups.Count == 0)
+    {
+        <p class="text-muted">This unit has no position groups.</p>
+    }
+
+    @foreach (var group in groups)
+    {
+        <h2 class="h5 mt-4">@group.GroupName</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle wr-depth-chart">
+                <thead>
+                    <tr>
+                        <th style="width: 14%">Position</th>
+                        @for (int rank = 1; rank <= deepest; rank++)
+                        {
+                            <th>@DisplayText.Ordinal(rank)</th>
+                        }
+                        @if (group.CanEdit)
+                        {
+                            <th style="width: 8%"></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+        @foreach (var position in group.Positions) {
+                    <tr id="pos-@position.PositionId">
+                        <td>
+                            <strong>@position.Code</strong>
+                            <div class="small text-muted">@position.Name</div>
+                        </td>
+                        @for (int rank = 1; rank <= deepest; rank++)
+                        {
+                            var player = position.Players.FirstOrDefault(p => p.Rank == rank);
+                            <td>
+                                @if (player != null)
+                                {
+                                    <a asp-controller="Roster" asp-action="Details" asp-route-id="@player.PlayerId" class="text-decoration-none">
+                                        @DisplayText.Player(player.JerseyNumber, player.FirstName, player.LastName)
+                                    </a>
+                                    @if (!player.IsActive || player.Status == RosterStatus.Inactive)
+                                    {
+                                        <span class="badge text-bg-secondary">Inactive</span>
+                                    }
+                                    else if (player.Status == RosterStatus.Injured)
+                                    {
+                                        <span class="badge text-bg-warning">Injured</span>
+                                    }
+                                }
+                            </td>
+                        }
+                        @if (group.CanEdit)
+                        {
+                            <td>
+                                <a asp-action="Position" asp-route-weekId="@chart.Week.Id" asp-route-positionId="@position.PositionId">Edit</a>
+                            </td>
+                        }
+                    </tr>
+        }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (chart.CanDeleteWeek)
+    {
+        <form asp-action="DeleteWeek" method="post" class="mt-4"
+              onsubmit="return confirm('Delete the depth chart for this week? This cannot be undone.');">
+            <input type="hidden" name="weekId" value="@chart.Week.Id" />
+            <button type="submit" class="btn btn-outline-danger btn-sm">Delete this week's depth chart</button>
+        </form>
+    }
+}

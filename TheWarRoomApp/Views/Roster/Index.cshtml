@@ -1,0 +1,81 @@
+@model IEnumerable<RosterEntryDto>
+
+@{
+    ViewData["Title"] = "Roster";
+}
+
+<h1 class="h3">Roster</h1>
+
+@if (User.IsHeadCoach())
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Add a player</a>
+    </p>
+}
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.JerseyNumber)
+                </th>
+                <th>Name</th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Grade)
+                </th>
+                <th>Groups</th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Status)
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+@foreach (var item in Model.OrderBy(p => p.JerseyNumber ?? 999)) {
+            <tr class="@(item.IsActive ? "" : "text-muted")">
+                <td>
+                    @Html.DisplayFor(modelItem => item.JerseyNumber)
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.PlayerId">@item.FirstName @item.LastName</a>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Grade)
+                </td>
+                <td>
+                    @foreach (var group in item.Groups)
+                    {
+                        <span class="badge text-bg-light">@group.Name</span>
+                    }
+                </td>
+                <td>
+                    @if (!item.IsActive)
+                    {
+                        <span class="badge text-bg-secondary">Deactivated</span>
+                    }
+                    else if (item.Status == RosterStatus.Injured)
+                    {
+                        <span class="badge text-bg-warning">Injured</span>
+                    }
+                    else if (item.Status == RosterStatus.Inactive)
+                    {
+                        <span class="badge text-bg-secondary">Inactive</span>
+                    }
+                    else
+                    {
+                        <span>Active</span>
+                    }
+                </td>
+                <td class="text-nowrap">
+                    <a asp-action="Details" asp-route-id="@item.PlayerId">Details</a>
+                    @if (User.IsHeadCoach() || User.IsInRole(nameof(UserRole.Coordinator)))
+                    {
+                        <text>| </text><a asp-action="Edit" asp-route-id="@item.PlayerId">Edit</a>
+                    }
+                </td>
+            </tr>
+}
+        </tbody>
+    </table>
+</div>

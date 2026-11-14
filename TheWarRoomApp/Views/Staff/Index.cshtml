@@ -1,0 +1,101 @@
+@model IEnumerable<UserDto>
+
+@{
+    ViewData["Title"] = "Coaching staff";
+}
+
+<h1 class="h3">Coaching staff</h1>
+
+@if (User.IsHeadCoach())
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Add a coach</a>
+    </p>
+}
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Groups</th>
+                @if (User.IsCoach())
+                {
+                    <th>Email</th>
+                }
+                @if (User.IsHeadCoach())
+                {
+                    <th>Permissions</th>
+                    <th></th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+@foreach (var item in Model) {
+            <tr class="@(item.IsActive ? "" : "text-muted")">
+                <td>
+                    @item.FirstName @item.LastName
+                    @if (!item.IsActive)
+                    {
+                        <span class="badge text-bg-secondary">Deactivated</span>
+                    }
+                </td>
+                <td>@DisplayText.Role(item.Role, item.CoordinatorUnit)</td>
+                <td>
+                    @foreach (var group in item.Groups)
+                    {
+                        <a asp-controller="Groups" asp-action="Details" asp-route-id="@group.Id" class="badge text-bg-light text-decoration-none">@group.Name</a>
+                    }
+                </td>
+                @if (User.IsCoach())
+                {
+                    <td>@item.Email</td>
+                }
+                @if (User.IsHeadCoach())
+                {
+                    <td class="small">
+                        @if (item.Role == UserRole.HeadCoach)
+                        {
+                            <span class="text-muted">All</span>
+                        }
+                        else
+                        {
+                            @* Only what differs from a new coach's settings is called out *@
+                            @if (item.CanPublishPlaybook)
+                            {
+                                <span class="badge text-bg-success">Publishes playbook</span>
+                            }
+                            @if (!item.CanEditDepthChart)
+                            {
+                                <span class="badge text-bg-secondary">No depth chart editing</span>
+                            }
+                            @if (!item.CanRecordAttendance)
+                            {
+                                <span class="badge text-bg-secondary">No attendance</span>
+                            }
+                            @if (!item.CanPublishPlaybook && item.CanEditDepthChart && item.CanRecordAttendance)
+                            {
+                                <span class="text-muted">Standard</span>
+                            }
+                        }
+                    </td>
+                    <td class="text-nowrap">
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        @if (item.Role != UserRole.HeadCoach)
+                        {
+                            <form asp-action="ResetPassword" asp-route-id="@item.Id" method="post" class="d-inline">
+                                | <button type="submit" class="btn btn-link p-0 align-baseline">Reset password</button>
+                            </form>
+                            <form asp-action="SetActive" asp-route-id="@item.Id" method="post" class="d-inline">
+                                <input type="hidden" name="isActive" value="@(item.IsActive ? "false" : "true")" />
+                                | <button type="submit" class="btn btn-link p-0 align-baseline">@(item.IsActive ? "Deactivate" : "Reactivate")</button>
+                            </form>
+                        }
+                    </td>
+                }
+            </tr>
+}
+        </tbody>
+    </table>
+</div>

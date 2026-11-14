@@ -1,0 +1,73 @@
+@model CreateCoachDto
+
+@{
+    ViewData["Title"] = "Add a coach";
+}
+
+<h1 class="h3">Add a coach</h1>
+<p class="text-muted">
+    The coach gets a temporary password, shown to you once on the next page, and chooses their own at first sign-in.
+</p>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label asp-for="FirstName" class="control-label"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-6">
+                    <label asp-for="LastName" class="control-label"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label asp-for="Role" class="control-label"></label>
+                    <select asp-for="Role" class="form-select">
+                        <option value="@UserRole.PositionCoach">Position coach</option>
+                        <option value="@UserRole.Coordinator">Coordinator</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-6">
+                    <label asp-for="CoordinatorUnit" class="control-label"></label>
+                    <select asp-for="CoordinatorUnit" class="form-select">
+                        <option value="">(position coaches have none)</option>
+                        <option value="@TeamUnit.Offence">Offence</option>
+                        <option value="@TeamUnit.Defence">Defence</option>
+                        <option value="@TeamUnit.SpecialTeams">Special teams</option>
+                    </select>
+                    <span asp-validation-for="CoordinatorUnit" class="text-danger"></span>
+                </div>
+            </div>
+            <p class="small text-muted">
+                A coordinator runs one unit. A position coach is given position groups afterwards, on the Groups and positions page.
+            </p>
+
+            <div class="form-group">
+                <input type="submit" value="Add coach" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
