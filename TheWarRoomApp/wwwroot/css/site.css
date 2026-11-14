@@ -42,6 +42,13 @@ a {
   color: var(--wr-navy-light);
 }
 
+/* A button that is styled as a link (a small Delete inside a table row) looks like the links next to it */
+.btn-link {
+  --bs-btn-color: var(--wr-navy-light);
+  --bs-btn-hover-color: var(--wr-navy);
+  --bs-btn-active-color: var(--wr-navy);
+}
+
 .wr-navbar {
   background-color: var(--wr-navy);
   border-bottom: 3px solid var(--wr-gold);
@@ -195,4 +202,17 @@ a {
 
 .wr-ring-before {
   border-color: #dc3545;
+}
+
+/* ---------- Film ---------- */
+
+/* Runs and passes keep the same two colours wherever plays are listed */
+.wr-play-run {
+  background-color: var(--wr-navy-light);
+  color: #fff;
+}
+
+.wr-play-pass {
+  background-color: var(--wr-gold);
+  color: #212529;
 }

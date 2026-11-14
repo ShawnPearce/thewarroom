@@ -38,6 +38,16 @@ namespace TheWarRoomAPI.Data
         public DbSet<Play> Plays { get; set; }
         public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
 
+        // Film
+        public DbSet<ScoutedTeam> ScoutedTeams { get; set; }
+        public DbSet<Game> Games { get; set; }
+        public DbSet<Video> Videos { get; set; }
+        public DbSet<Clip> Clips { get; set; }
+        public DbSet<PlayTag> PlayTags { get; set; }
+        public DbSet<Cutup> Cutups { get; set; }
+        public DbSet<CutupClip> CutupClips { get; set; }
+        public DbSet<FilmAssignment> FilmAssignments { get; set; }
+
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
             // Every DateTime in the model is stored and read back as UTC
@@ -88,6 +98,31 @@ namespace TheWarRoomAPI.Data
                 entity.HasOne(r => r.ReviewedBy).WithMany().HasForeignKey(r => r.ReviewedById);
             });
 
+            // The names of the teams on film are unique without regard to upper/lower case
+            modelBuilder.Entity<ScoutedTeam>().Property(t => t.Name).UseCollation("NOCASE");
+
+            // A game points at two teams on film: the home team and the away team
+            modelBuilder.Entity<Game>(entity =>
+            {
+                entity.HasOne(g => g.HomeTeam).WithMany().HasForeignKey(g => g.HomeTeamId);
+                entity.HasOne(g => g.AwayTeam).WithMany().HasForeignKey(g => g.AwayTeamId);
+            });
+
+            // One tag per clip (One-to-One)
+            modelBuilder.Entity<PlayTag>(entity =>
+            {
+                entity.HasOne(t => t.Clip)
+                    .WithOne(c => c.Tag)
+                    .HasForeignKey<PlayTag>(t => t.ClipId);
+            });
+
+            // A film assignment points at two users: the player it is shared with and the coach who shared it
+            modelBuilder.Entity<FilmAssignment>(entity =>
+            {
+                entity.HasOne(a => a.Player).WithMany().HasForeignKey(a => a.PlayerId);
+                entity.HasOne(a => a.AssignedBy).WithMany().HasForeignKey(a => a.AssignedById);
+            });
+
             // Deleting a record never silently deletes the records that point to it.
             // A relationship that should cascade is switched on explicitly below this loop.
             foreach (var foreignKey in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
@@ -115,6 +150,35 @@ namespace TheWarRoomAPI.Data
             modelBuilder.Entity<AttendanceRecord>()
                 .HasOne(a => a.ScheduledEvent)
                 .WithMany(e => e.AttendanceRecords)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Film: a video's clips, a clip's tag, and a cutup's plays and sharing only exist as part of their parent.
+            // (A clip that is used in a cutup still cannot be deleted: the cutup's play points at it without cascade.)
+            modelBuilder.Entity<Clip>()
+                .HasOne(c => c.Video)
+                .WithMany(v => v.Clips)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PlayTag>()
+                .HasOne(t => t.Clip)
+                .WithOne(c => c.Tag)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CutupClip>()
+                .HasOne(c => c.Cutup)
+                .WithMany(c => c.Clips)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FilmAssignment>()
+                .HasOne(a => a.Cutup)
+                .WithMany(c => c.Assignments)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // When a position group is deleted, film simply stops being shared with it
+            modelBuilder.Entity<FilmAssignment>()
+                .HasOne(a => a.PositionGroup)
+                .WithMany()
+                .HasForeignKey(a => a.PositionGroupId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // The history of playbook changes is kept when the formation or play it was about is deleted:

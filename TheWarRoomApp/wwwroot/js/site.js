@@ -6,6 +6,7 @@
         showLocalTimes();
         clearSavedDrafts();
         bindAutoSubmit();
+        bindCheckAll();
     });
 
     // The server writes a moment in time as <time datetime="..." data-local>. It is sent as UTC
@@ -32,6 +33,23 @@
             } catch (error) {
                 // The browser's storage is switched off: there was no copy to remove
             }
+        });
+    }
+
+    // A tick box marked data-check-all ticks or clears every other tick box of its form that can be changed
+    function bindCheckAll() {
+        var switches = document.querySelectorAll('[data-check-all]');
+
+        Array.prototype.forEach.call(switches, function (all) {
+            all.addEventListener('change', function () {
+                var boxes = all.form ? all.form.querySelectorAll('input[type="checkbox"]:not([data-check-all])') : [];
+
+                Array.prototype.forEach.call(boxes, function (box) {
+                    if (!box.disabled) {
+                        box.checked = all.checked;
+                    }
+                });
+            });
         });
     }
 

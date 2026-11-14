@@ -46,6 +46,11 @@ namespace TheWarRoomAPI.Tests
         public TeamService Teams(AppDbContext context) => new TeamService(context, Auth(context), PasswordHasher, Clock);
         public PlaybookService Playbooks(AppDbContext context) => new PlaybookService(context, new PlaybookChangeApplier(context, Clock), Clock);
         public ApprovalService Approvals(AppDbContext context) => new ApprovalService(context, new PlaybookChangeApplier(context, Clock), Clock);
+        public ScoutedTeamService ScoutedTeams(AppDbContext context) => new ScoutedTeamService(context);
+        public GameService Games(AppDbContext context) => new GameService(context, Clock);
+        public ClipService Clips(AppDbContext context) => new ClipService(context, Clock);
+        public VideoService Videos(AppDbContext context) => new VideoService(context, Clips(context));
+        public CutupService Cutups(AppDbContext context) => new CutupService(context, Clock);
 
         // ---------- Setting up data ----------
 
@@ -150,6 +155,119 @@ namespace TheWarRoomAPI.Tests
             var team = await context.Teams.SingleAsync(t => t.Id == teamMember.TeamId);
             team.AttendanceTrackingEnabled = enabled;
             await context.SaveChangesAsync();
+        }
+
+        // ---------- Film ----------
+
+        // What most film tests start from: a game between the team (at home) and one opponent,
+        // with a video that is ready and one hour long
+        public record TestFilm(int OwnTeamId, int OpponentId, int GameId, int VideoId);
+
+        public const int OneHourMs = 60 * 60 * 1000;
+
+        public async Task<TestFilm> AddFilmAsync(CurrentUser teamMember, string opponent = "Riverside Raiders")
+        {
+            int ownTeamId = await OwnTeamOnFilmIdAsync(teamMember);
+            int opponentId = await AddOpponentAsync(teamMember, opponent);
+            int gameId = await AddGameAsync(teamMember, ownTeamId, opponentId);
+            int videoId = await AddVideoAsync(teamMember, gameId);
+
+            return new TestFilm(ownTeamId, opponentId, gameId, videoId);
+        }
+
+        // The team's own entry among the teams on film (every team is given one)
+        public async Task<int> OwnTeamOnFilmIdAsync(CurrentUser teamMember)
+        {
+            using var context = NewContext();
+            return await context.ScoutedTeams
+                .Where(t => t.TeamId == teamMember.TeamId && t.IsOwnTeam)
+                .Select(t => t.Id)
+                .SingleAsync();
+        }
+
+        public async Task<int> AddOpponentAsync(CurrentUser teamMember, string name)
+        {
+            using var context = NewContext();
+
+            var opponent = new ScoutedTeam { TeamId = teamMember.TeamId, Name = name };
+            context.ScoutedTeams.Add(opponent);
+            await context.SaveChangesAsync();
+
+            return opponent.Id;
+        }
+
+        public async Task<int> AddGameAsync(CurrentUser teamMember, int homeTeamId, int awayTeamId, DateOnly? date = null)
+        {
+            using var context = NewContext();
+
+            var game = new Game
+            {
+                TeamId = teamMember.TeamId,
+                GameDate = date ?? Today.AddDays(-5),
+                HomeTeamId = homeTeamId,
+                AwayTeamId = awayTeamId,
+                CreatedById = teamMember.Id,
+                CreatedAt = Clock.GetUtcNow().UtcDateTime
+            };
+            context.Games.Add(game);
+            await context.SaveChangesAsync();
+
+            return game.Id;
+        }
+
+        public async Task<int> AddVideoAsync(CurrentUser teamMember, int gameId, VideoStatus status = VideoStatus.Ready, int? durationMs = OneHourMs)
+        {
+            using var context = NewContext();
+
+            var video = new Video
+            {
+                TeamId = teamMember.TeamId,
+                GameId = gameId,
+                Title = "Full game",
+                Status = status,
+                DurationMs = durationMs,
+                UploadedById = teamMember.Id,
+                CreatedAt = Clock.GetUtcNow().UtcDateTime
+            };
+            context.Videos.Add(video);
+            await context.SaveChangesAsync();
+
+            return video.Id;
+        }
+
+        // A clip written straight to the database. It is tagged when a team on offence is given.
+        public async Task<int> AddClipAsync(CurrentUser teamMember, int videoId, int startSeconds, int endSeconds,
+            int? offenceTeamId = null, PlayType playType = PlayType.Run, int down = 1, int distance = 10)
+        {
+            using var context = NewContext();
+            var now = Clock.GetUtcNow().UtcDateTime;
+
+            var clip = new Clip
+            {
+                TeamId = teamMember.TeamId,
+                VideoId = videoId,
+                StartMs = startSeconds * 1000,
+                EndMs = endSeconds * 1000,
+                CreatedById = teamMember.Id,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            if (offenceTeamId != null)
+            {
+                clip.Tag = new PlayTag
+                {
+                    TeamId = teamMember.TeamId,
+                    PlayType = playType,
+                    Down = down,
+                    Distance = distance,
+                    OffenceTeamId = offenceTeamId.Value
+                };
+            }
+
+            context.Clips.Add(clip);
+            await context.SaveChangesAsync();
+
+            return clip.Id;
         }
 
         // ---------- Looking things up ----------

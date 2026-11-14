@@ -1,0 +1,107 @@
+@model VideoDetailDto
+
+@{
+    ViewData["Title"] = Model.Title;
+    string matchup = $"{Model.AwayTeamName} at {Model.HomeTeamName}";
+    bool ready = Model.Status == VideoStatus.Ready && Model.DurationMs != null;
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Game film", Url.Action("Index")),
+    new PageLink(matchup, Url.Action("Game", new { id = Model.GameId })),
+    new PageLink(Model.Title, null) })" />
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 mb-0">@Model.Title</h1>
+    @if (ready)
+    {
+        <a asp-action="CreateClip" asp-route-videoId="@Model.Id" class="btn btn-primary">Add a play</a>
+    }
+</div>
+<p class="text-muted">
+    @matchup, @DisplayText.Date(Model.GameDate) &middot;
+    @DisplayText.VideoState(Model.Status)@if (Model.DurationMs != null)
+    {<text>, @TimeText.Format(Model.DurationMs.Value) long</text>}
+    &middot; added by @Model.UploadedBy
+</p>
+
+@if (!Model.HasFile)
+{
+    <div class="alert alert-info" role="status">
+        There is no video file behind this record, so it cannot be played here.
+        Its plays can still be listed, tagged, charted and put in cutups.
+    </div>
+}
+
+<h2 class="h5">Plays (@Model.Clips.Count)</h2>
+@if (Model.Clips.Count == 0)
+{
+    <p class="text-muted">No plays have been cut from this video yet.</p>
+}
+else
+{
+    <p class="small text-muted">
+        @Model.TaggedClipCount of @Model.ClipCount are tagged. Only tagged plays count in the tendency charts.
+    </p>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Length</th>
+                    <th>Down</th>
+                    <th>Play</th>
+                    <th>Offence</th>
+                    <th>Note</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+    @{ int number = 0; }
+    @foreach (var clip in Model.Clips) {
+                number++;
+                <tr>
+                    <td class="text-muted">@number</td>
+                    <td>@TimeText.Format(clip.StartMs)</td>
+                    <td>@TimeText.Format(clip.EndMs)</td>
+                    <td>@TimeText.Length(clip.EndMs - clip.StartMs)</td>
+                    @if (clip.Tag != null)
+                    {
+                        <td class="text-nowrap">@DisplayText.DownAndDistance(clip.Tag)</td>
+                        <td><span class="badge @(clip.Tag.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@clip.Tag.PlayType</span></td>
+                        <td>@clip.Tag.OffenceTeamName</td>
+                    }
+                    else
+                    {
+                        <td colspan="3" class="text-muted">Not tagged</td>
+                    }
+                    <td>@clip.Title</td>
+                    <td class="text-nowrap text-end">
+                        <a asp-action="EditClip" asp-route-id="@clip.Id">Edit</a>
+                        @if (clip.CutupCount > 0)
+                        {
+                            <span class="small text-muted" title="A play that is used in a cutup cannot be deleted">
+                                | in @DisplayText.Count(clip.CutupCount, "cutup", "cutups")
+                            </span>
+                        }
+                        else
+                        {
+                            <form asp-action="DeleteClip" asp-route-id="@clip.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete this play? This cannot be undone.');">
+                                <input type="hidden" name="videoId" value="@Model.Id" />
+                                | <button type="submit" class="btn btn-link p-0 align-baseline">Delete</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+}
+
+<div>
+    <a asp-action="Game" asp-route-id="@Model.GameId">Back to the game</a>
+</div>

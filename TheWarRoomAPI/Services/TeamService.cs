@@ -91,7 +91,24 @@ namespace TheWarRoomAPI.Services
                 return false;
             }
 
-            team.Name = dto.Name.Trim();
+            var name = dto.Name.Trim();
+
+            // The team's own entry among the teams on film carries the same name.
+            // Business rule: two teams on film cannot share a name, so an opponent may not already have it.
+            bool takenByOpponent = await _context.ScoutedTeams
+                .AnyAsync(s => s.TeamId == team.Id && !s.IsOwnTeam && s.Name == name);
+            if (takenByOpponent)
+            {
+                throw new InvalidOperationException($"An opponent on film is already called {name}. Rename or remove that opponent first.");
+            }
+
+            var ownTeamOnFilm = await _context.ScoutedTeams.FirstOrDefaultAsync(s => s.TeamId == team.Id && s.IsOwnTeam);
+            if (ownTeamOnFilm != null)
+            {
+                ownTeamOnFilm.Name = name;
+            }
+
+            team.Name = name;
             team.AttendanceTrackingEnabled = dto.AttendanceTrackingEnabled;
             await _context.SaveChangesAsync();
             return true;

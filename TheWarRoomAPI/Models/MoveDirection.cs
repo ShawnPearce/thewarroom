@@ -2,7 +2,8 @@ using System.Text.Json.Serialization;
 
 namespace TheWarRoomAPI.Models
 {
-    // Which way a player is moved on a depth chart: Up is towards the starter's spot
+    // Which way something is moved in an ordered list: Up is towards the top.
+    // On a depth chart that is towards the starter's spot; in a cutup, towards the first play.
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum MoveDirection
     {

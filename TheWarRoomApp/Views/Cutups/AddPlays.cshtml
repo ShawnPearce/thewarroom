@@ -1,0 +1,135 @@
+@model CutupAddPlaysViewModel
+
+@{
+    ViewData["Title"] = "Add plays";
+    var game = Model.Game;
+
+    // The clips that are already in the cutup are shown ticked and cannot be added twice
+    var alreadyIn = Model.Cutup.Plays.Where(p => p.ClipId != null).Select(p => p.ClipId!.Value).ToHashSet();
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Cutups", Url.Action("Index")),
+    new PageLink(Model.Cutup.Name, Url.Action("Details", new { id = Model.Cutup.Id })),
+    new PageLink("Add plays", null) })" />
+
+<h1 class="h3">Add plays to @Model.Cutup.Name</h1>
+
+@if (game == null)
+{
+    <p class="text-muted">
+        No game on film has plays yet. Plays are cut on a video's page, under
+        <a asp-controller="Film" asp-action="Index">Game film</a>.
+    </p>
+}
+else
+{
+    <p class="text-muted">
+        Choose a game, narrow its plays if you like, and tick the ones to add.
+        They go to the end of the cutup in the order they are listed; the order can be changed afterwards.
+    </p>
+
+    @* Choosing a game reloads the page; the other filters are applied with the Show button *@
+    <form asp-action="AddPlays" asp-route-id="@Model.Cutup.Id" method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-md-4">
+            <label for="gameId" class="form-label">Game</label>
+            <select id="gameId" name="gameId" class="form-select" data-auto-submit>
+                @foreach (var item in Model.Games)
+                {
+                    <option value="@item.Id" selected="@(item.Id == game.Id)">@item.GameDate.ToString("MMM d"): @DisplayText.Matchup(item)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="offenceTeamId" class="form-label">Team on offence</label>
+            <select id="offenceTeamId" name="offenceTeamId" class="form-select">
+                <option value="">Either team</option>
+                <option value="@game.AwayTeamId" selected="@(Model.OffenceTeamId == game.AwayTeamId)">@game.AwayTeamName</option>
+                <option value="@game.HomeTeamId" selected="@(Model.OffenceTeamId == game.HomeTeamId)">@game.HomeTeamName</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="playType" class="form-label">Play</label>
+            <select id="playType" name="playType" class="form-select">
+                <option value="">Any</option>
+                <option value="@PlayType.Run" selected="@(Model.PlayType == PlayType.Run)">Runs</option>
+                <option value="@PlayType.Pass" selected="@(Model.PlayType == PlayType.Pass)">Passes</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="down" class="form-label">Down</label>
+            <select id="down" name="down" class="form-select">
+                <option value="">Any</option>
+                @for (int down = 1; down <= 4; down++)
+                {
+                    <option value="@down" selected="@(Model.Down == down)">@DisplayText.Ordinal(down)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-outline-primary w-100">Show</button>
+        </div>
+    </form>
+
+    @if (Model.Clips.Count == 0)
+    {
+        <p class="text-muted">No plays of this game match.</p>
+    }
+    else
+    {
+        <form asp-action="AddPlays" asp-route-id="@Model.Cutup.Id" method="post">
+            <input type="hidden" name="gameId" value="@game.Id" />
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input class="form-check-input" type="checkbox" data-check-all aria-label="Tick every play in the list" />
+                            </th>
+                            <th>In the video</th>
+                            <th>Length</th>
+                            <th>Down</th>
+                            <th>Play</th>
+                            <th>Offence</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            @foreach (var clip in Model.Clips) {
+                        bool used = alreadyIn.Contains(clip.Id);
+                        <tr class="@(used ? "text-muted" : "")">
+                            <td>
+                                <input class="form-check-input" type="checkbox" name="clipIds" value="@clip.Id" id="clip-@clip.Id"
+                                       checked="@used" disabled="@used" aria-label="Add the play at @TimeText.Format(clip.StartMs)" />
+                            </td>
+                            <td><label for="clip-@clip.Id">@TimeText.Format(clip.StartMs)</label></td>
+                            <td>@TimeText.Length(clip.EndMs - clip.StartMs)</td>
+                            @if (clip.Tag != null)
+                            {
+                                <td class="text-nowrap">@DisplayText.DownAndDistance(clip.Tag)</td>
+                                <td><span class="badge @(clip.Tag.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@clip.Tag.PlayType</span></td>
+                                <td>@clip.Tag.OffenceTeamName</td>
+                            }
+                            else
+                            {
+                                <td colspan="3" class="text-muted">Not tagged</td>
+                            }
+                            <td>
+                                @clip.Title
+                                @if (used)
+                                {
+                                    <span class="small">Already in the cutup</span>
+                                }
+                            </td>
+                        </tr>
+            }
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Add the ticked plays" class="btn btn-primary" /> |
+                <a asp-action="Details" asp-route-id="@Model.Cutup.Id">Back to the cutup</a>
+            </div>
+        </form>
+    }
+}

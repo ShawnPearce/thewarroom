@@ -1,0 +1,27 @@
+@model GameFormViewModel
+
+@{
+    ViewData["Title"] = "Add a game";
+}
+
+<h1 class="h3">Add a game</h1>
+<hr />
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="CreateGame">
+            <partial name="_GameFields" />
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

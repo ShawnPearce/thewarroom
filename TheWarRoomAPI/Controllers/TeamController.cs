@@ -47,6 +47,10 @@ namespace TheWarRoomAPI.Controllers
             {
                 return Forbidden(ex.Message);   // 403 Forbidden
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);   // 409 Conflict (an opponent on film already has the new name)
+            }
         }
 
         // POST: api/Team/register

@@ -61,6 +61,11 @@ namespace TheWarRoomAPI
             builder.Services.AddScoped<PlaybookChangeApplier>();
             builder.Services.AddScoped<IPlaybookService, PlaybookService>();
             builder.Services.AddScoped<IApprovalService, ApprovalService>();
+            builder.Services.AddScoped<IScoutedTeamService, ScoutedTeamService>();
+            builder.Services.AddScoped<IGameService, GameService>();
+            builder.Services.AddScoped<IVideoService, VideoService>();
+            builder.Services.AddScoped<IClipService, ClipService>();
+            builder.Services.AddScoped<ICutupService, CutupService>();
 
             var app = builder.Build();
 

@@ -1,0 +1,69 @@
+@model CutupSharingViewModel
+
+@{
+    ViewData["Title"] = $"Share {Model.CutupName}";
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Cutups", Url.Action("Index")),
+    new PageLink(Model.CutupName, Url.Action("Details", new { id = Model.CutupId })),
+    new PageLink("Share", null) })" />
+
+<h1 class="h3">Share @Model.CutupName</h1>
+<p class="text-muted">
+    A player sees this film when it is shared with the whole team, with a position group the player is in, or with the player directly.
+    Coaches always see it.
+</p>
+<hr />
+
+<form asp-action="Sharing" asp-route-id="@Model.CutupId" method="post">
+    <div class="form-check mb-4">
+        <input class="form-check-input" type="checkbox" name="wholeTeam" value="true" id="wholeTeam" checked="@Model.WholeTeam" />
+        <label class="form-check-label fw-semibold" for="wholeTeam">The whole team</label>
+        <div class="form-text">Every player on the team, including players who join later.</div>
+    </div>
+
+    <h2 class="h5">Position groups</h2>
+    <div class="row mb-4">
+        @foreach (var choice in Model.Groups)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="groupIds" value="@choice.Id" id="group-@choice.Id" checked="@choice.IsSelected" />
+                    <label class="form-check-label" for="group-@choice.Id">
+                        @choice.Name
+                        <span class="text-muted small">&middot; @choice.Detail</span>
+                    </label>
+                </div>
+            </div>
+        }
+    </div>
+
+    <h2 class="h5">Single players</h2>
+    @if (Model.Players.Count == 0)
+    {
+        <p class="text-muted">The team has no active players yet.</p>
+    }
+    <div class="row">
+        @foreach (var choice in Model.Players)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="playerIds" value="@choice.Id" id="player-@choice.Id" checked="@choice.IsSelected" />
+                    <label class="form-check-label" for="player-@choice.Id">
+                        @choice.Name
+                        @if (!string.IsNullOrEmpty(choice.Detail))
+                        {
+                            <span class="text-muted small">&middot; @choice.Detail</span>
+                        }
+                    </label>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="form-group mt-3">
+        <input type="submit" value="Save" class="btn btn-primary" /> |
+        <a asp-action="Details" asp-route-id="@Model.CutupId">Back to the cutup</a>
+    </div>
+</form>

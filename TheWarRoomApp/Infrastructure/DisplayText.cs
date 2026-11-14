@@ -160,6 +160,61 @@ namespace TheWarRoomApp.Infrastructure
             };
         }
 
+        // ---------- Film ----------
+
+        // "Riverside Raiders at Lakeshore Lions"
+        public static string Matchup(GameDto game)
+        {
+            return $"{game.AwayTeamName} at {game.HomeTeamName}";
+        }
+
+        // "1st & 10"
+        public static string DownAndDistance(PlayTagDto tag)
+        {
+            return $"{Ordinal(tag.Down)} & {tag.Distance}";
+        }
+
+        public static string VideoState(VideoStatus status)
+        {
+            return status switch
+            {
+                VideoStatus.Uploading => "Uploading",
+                VideoStatus.Processing => "Being checked",
+                VideoStatus.Ready => "Ready",
+                _ => "Could not be used"
+            };
+        }
+
+        public static string CutupState(CutupStatus status)
+        {
+            return status switch
+            {
+                CutupStatus.Draft => "Draft",
+                CutupStatus.Queued => "Waiting to be made into a video",
+                CutupStatus.Rendering => "Being made into a video",
+                CutupStatus.Ready => "Video ready",
+                _ => "The video could not be made"
+            };
+        }
+
+        // The Bootstrap colour used for each cutup status
+        public static string CutupStateColour(CutupStatus status)
+        {
+            return status switch
+            {
+                CutupStatus.Draft => "secondary",
+                CutupStatus.Ready => "success",
+                CutupStatus.Failed => "danger",
+                _ => "info"
+            };
+        }
+
+        // "Week of Nov 16, 2026"
+        public static string WeekOf(DateOnly monday)
+        {
+            return $"Week of {monday:MMM d, yyyy}";
+        }
+
         // What a coach's changes to a playbook lead to, shown next to the playbook's name
         public static string PlaybookRights(PlaybookDto playbook)
         {

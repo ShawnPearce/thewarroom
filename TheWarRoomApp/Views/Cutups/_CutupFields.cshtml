@@ -1,0 +1,24 @@
+@model SaveCutupDto
+
+@* The fields shared by the new and edit cutup pages *@
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<div class="form-group">
+    <label asp-for="Name" class="control-label"></label>
+    <input asp-for="Name" class="form-control" />
+    <span asp-validation-for="Name" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label asp-for="Description" class="control-label"></label>
+    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="Description" class="text-danger"></span>
+    <div class="form-text">Optional. Players see it with the film: say what to look for.</div>
+</div>
+
+<div class="form-group">
+    <label asp-for="ForWeekOf" class="control-label"></label>
+    <input asp-for="ForWeekOf" type="date" class="form-control" style="max-width: 14rem" />
+    <span asp-validation-for="ForWeekOf" class="text-danger"></span>
+    <div class="form-text">Optional. Any day of the week the film is meant for; it is kept as that week's Monday.</div>
+</div>

@@ -1,0 +1,106 @@
+@model ClipFormViewModel
+
+@{
+    bool isNew = Model.Id == 0;
+    var video = Model.Video;
+    string matchup = $"{video.AwayTeamName} at {video.HomeTeamName}";
+    ViewData["Title"] = isNew ? "Add a play" : "Edit play";
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Game film", Url.Action("Index")),
+    new PageLink(matchup, Url.Action("Game", new { id = video.GameId })),
+    new PageLink(video.Title, Url.Action("Video", new { id = video.Id })),
+    new PageLink(isNew ? "Add a play" : "Edit play", null) })" />
+
+<h1 class="h3">@(isNew ? "Add a play" : "Edit play")</h1>
+<p class="text-muted">
+    @video.Title of @matchup@if (video.DurationMs != null)
+    {<text>. The video is @TimeText.Format(video.DurationMs.Value) long, and a play has to lie inside it.</text>}
+</p>
+<hr />
+<div class="row">
+    <div class="col-md-8 col-lg-6">
+        <form asp-action="@(isNew ? "CreateClip" : "EditClip")" asp-route-id="@(isNew ? null : Model.Id.ToString())">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="VideoId" />
+
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label asp-for="Start" class="control-label"></label>
+                    <input asp-for="Start" class="form-control" placeholder="12:34" autocomplete="off" />
+                    <span asp-validation-for="Start" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-6">
+                    <label asp-for="End" class="control-label"></label>
+                    <input asp-for="End" class="form-control" placeholder="12:42" autocomplete="off" />
+                    <span asp-validation-for="End" class="text-danger"></span>
+                </div>
+            </div>
+            <p class="form-text mt-n2">Minutes and seconds from the start of the video, for example 12:34 or 1:02:03.</p>
+
+            <div class="form-group">
+                <label asp-for="Title" class="control-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+                <div class="form-text">Optional, for example "Touchdown" or "Missed block"</div>
+            </div>
+
+            <fieldset class="border rounded p-3 mb-3">
+                <legend class="h6 float-none w-auto px-2 mb-0">Tag</legend>
+                <p class="form-text mt-0">A tagged play counts in the tendency charts. Leave the play as "Not tagged" for kicks and anything else that is neither a run nor a pass.</p>
+                <div class="row">
+                    <div class="form-group col-sm-6">
+                        <label asp-for="PlayType" class="control-label"></label>
+                        <select asp-for="PlayType" class="form-select">
+                            <option value="">Not tagged</option>
+                            <option value="@PlayType.Run">Run</option>
+                            <option value="@PlayType.Pass">Pass</option>
+                        </select>
+                        <span asp-validation-for="PlayType" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label asp-for="OffenceTeamId" class="control-label"></label>
+                        <select asp-for="OffenceTeamId" class="form-select">
+                            <option value="">Choose a team</option>
+                            <option value="@video.AwayTeamId">@video.AwayTeamName</option>
+                            <option value="@video.HomeTeamId">@video.HomeTeamName</option>
+                        </select>
+                        <span asp-validation-for="OffenceTeamId" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-sm-6 mb-0">
+                        <label asp-for="Down" class="control-label"></label>
+                        <select asp-for="Down" class="form-select">
+                            <option value="">Choose the down</option>
+                            @for (int down = 1; down <= 4; down++)
+                            {
+                                <option value="@down">@DisplayText.Ordinal(down)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Down" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-sm-6 mb-0">
+                        <label asp-for="Distance" class="control-label"></label>
+                        <input asp-for="Distance" type="number" min="1" max="99" class="form-control" />
+                        <span asp-validation-for="Distance" class="text-danger"></span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="form-group">
+                <input type="submit" value="@(isNew ? "Create" : "Save")" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Video" asp-route-id="@video.Id">Back to the video</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

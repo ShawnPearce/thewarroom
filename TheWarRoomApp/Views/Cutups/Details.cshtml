@@ -1,0 +1,165 @@
+@model CutupDetailDto
+
+@{
+    ViewData["Title"] = Model.Name;
+    bool coach = Model.CanManage;
+    bool draft = Model.Status == CutupStatus.Draft;
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink(coach ? "Cutups" : "My film", Url.Action("Index")),
+    new PageLink(Model.Name, null) })" />
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 mb-0">
+        @Model.Name
+        @if (coach)
+        {
+            <span class="badge text-bg-@DisplayText.CutupStateColour(Model.Status)">@DisplayText.CutupState(Model.Status)</span>
+        }
+    </h1>
+    @if (coach)
+    {
+        <div>
+            @if (draft)
+            {
+                <a asp-action="AddPlays" asp-route-id="@Model.Id" class="btn btn-primary">Add plays</a>
+            }
+            <a asp-action="Sharing" asp-route-id="@Model.Id" class="btn btn-outline-primary">Share</a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Edit</a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">Delete</a>
+        </div>
+    }
+</div>
+<p class="text-muted">
+    @if (Model.ForWeekOf != null)
+    {
+        <text>@DisplayText.WeekOf(Model.ForWeekOf.Value) &middot;</text>
+    }
+    @DisplayText.Count(Model.PlayCount, "play", "plays") &middot; @TimeText.Length(Model.DurationMs) &middot; from @Model.CreatedBy
+</p>
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
+    <p class="wr-notes">@Model.Description</p>
+}
+
+@if (coach && Model.Sharing != null)
+{
+    <p>
+        <strong>Shared with:</strong>
+        @if (Model.SharedWith.Count == 0)
+        {
+            <span class="text-muted">nobody yet, so only coaches see it.</span>
+        }
+        else
+        {
+            @string.Join(", ", Model.SharedWith)
+        }
+    </p>
+}
+
+@if (!Model.HasVideo)
+{
+    <div class="alert alert-info" role="status">
+        @if (!coach)
+        {
+            <text>The video for this film is not ready yet. These are the plays that will be in it.</text>
+        }
+        else if (draft)
+        {
+            <text>This cutup is a draft: plays can be added, taken out and put in another order. It has not been made into a video yet.</text>
+        }
+        else
+        {
+            <text>The plays of this cutup are fixed. Its video is not available yet.</text>
+        }
+    </div>
+}
+
+<h2 class="h5">Plays</h2>
+@if (Model.Plays.Count == 0)
+{
+    <p class="text-muted">This cutup has no plays yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Starts at</th>
+                    <th>Length</th>
+                    @if (coach)
+                    {
+                        <th>Down</th>
+                        <th>Play</th>
+                        <th>Offence</th>
+                    }
+                    <th>Game</th>
+                    <th>Note</th>
+                    @if (coach && draft)
+                    {
+                        <th></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var play in Model.Plays) {
+                <tr>
+                    <td class="text-muted">@play.Position</td>
+                    <td>@TimeText.Format(play.OffsetMs)</td>
+                    <td>@TimeText.Length(play.DurationMs)</td>
+                    @if (coach)
+                    {
+                        @if (play.Tag != null)
+                        {
+                            <td class="text-nowrap">@DisplayText.DownAndDistance(play.Tag)</td>
+                            <td><span class="badge @(play.Tag.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@play.Tag.PlayType</span></td>
+                            <td>@play.Tag.OffenceTeamName</td>
+                        }
+                        else
+                        {
+                            <td colspan="3" class="text-muted">Not tagged</td>
+                        }
+                    }
+                    <td>@play.Matchup <span class="small text-muted">@play.GameDate.ToString("MMM d")</span></td>
+                    <td>@play.Title</td>
+                    @if (coach && draft)
+                    {
+                        <td class="text-nowrap text-end">
+                            @* Each button is its own small form; the page comes back with the new order *@
+                            <form asp-action="Move" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="playId" value="@play.Id" />
+                                <input type="hidden" name="direction" value="@MoveDirection.Up" />
+                                <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@(play.Position == 1)"
+                                        title="Play it earlier" aria-label="Move play @play.Position earlier">&uarr;</button>
+                            </form>
+                            <form asp-action="Move" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="playId" value="@play.Id" />
+                                <input type="hidden" name="direction" value="@MoveDirection.Down" />
+                                <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@(play.Position == Model.Plays.Count)"
+                                        title="Play it later" aria-label="Move play @play.Position later">&darr;</button>
+                            </form>
+                            <form asp-action="Remove" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="playId" value="@play.Id" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Take out</button>
+                            </form>
+                        </td>
+                    }
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+    <p class="small text-muted">
+        "Starts at" is where each play begins in the cutup: every play starts where the one before it ends.
+    </p>
+}
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

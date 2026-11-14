@@ -1,0 +1,28 @@
+@model SaveCutupDto
+
+@{
+    ViewData["Title"] = "New cutup";
+}
+
+<h1 class="h3">New cutup</h1>
+<p class="text-muted">Give it a name first. The plays are chosen on the next page.</p>
+<hr />
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="Create">
+            <partial name="_CutupFields" />
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

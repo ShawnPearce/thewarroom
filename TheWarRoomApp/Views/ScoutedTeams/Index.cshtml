@@ -1,0 +1,61 @@
+@model List<ScoutedTeamDto>
+
+@{
+    ViewData["Title"] = "Teams on film";
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 mb-0">Teams on film</h1>
+    <div>
+        <a asp-controller="Film" asp-action="Index" class="btn btn-outline-primary">Games</a>
+        <a asp-action="Create" class="btn btn-primary">Add an opponent</a>
+    </div>
+</div>
+<p class="text-muted">
+    Your own team and the opponents you have film of. Every game on film is played between two of these teams,
+    and every tagged play says which of them had the ball.
+</p>
+
+<table class="table align-middle">
+    <thead>
+        <tr>
+            <th>Team</th>
+            <th>Games on film</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @item.Name
+                @if (item.IsOwnTeam)
+                {
+                    <span class="badge text-bg-primary">Your team</span>
+                }
+            </td>
+            <td>
+                @if (item.GameCount > 0)
+                {
+                    <a asp-controller="Film" asp-action="Index" asp-route-teamId="@item.Id">@item.GameCount</a>
+                }
+                else
+                {
+                    <span class="text-muted">0</span>
+                }
+            </td>
+            <td class="text-nowrap">
+                @if (item.IsOwnTeam)
+                {
+                    <span class="small text-muted">Renamed in the team settings</span>
+                }
+                else
+                {
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a><text> | </text>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

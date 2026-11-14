@@ -148,6 +148,51 @@ namespace TheWarRoomAPI.Migrations
                     b.ToTable("AttendanceRecords");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.Clip", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AnnotationsJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EndMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StartMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VideoId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("Clips");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.CoachGroupAssignment", b =>
                 {
                     b.Property<int>("Id")
@@ -168,6 +213,104 @@ namespace TheWarRoomAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("CoachGroupAssignments");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.Cutup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("ForWeekOf")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("Cutups");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.CutupClip", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AnnotationsJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ClipId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CutupId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EndMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StartMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VideoId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClipId");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("VideoId");
+
+                    b.HasIndex("CutupId", "ClipId")
+                        .IsUnique();
+
+                    b.ToTable("CutupClips");
                 });
 
             modelBuilder.Entity("TheWarRoomAPI.Models.DepthChartPlacement", b =>
@@ -232,6 +375,43 @@ namespace TheWarRoomAPI.Migrations
                     b.ToTable("DepthChartWeeks");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.FilmAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AssignedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Audience")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CutupId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PlayerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PositionGroupId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedById");
+
+                    b.HasIndex("CutupId");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasIndex("PositionGroupId");
+
+                    b.ToTable("FilmAssignments");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.Formation", b =>
                 {
                     b.Property<int>("Id")
@@ -268,6 +448,51 @@ namespace TheWarRoomAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("Formations");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.Game", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AwayTeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("GameDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HomeTeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AwayTeamId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("HomeTeamId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("Games");
                 });
 
             modelBuilder.Entity("TheWarRoomAPI.Models.LoginSession", b =>
@@ -343,6 +568,42 @@ namespace TheWarRoomAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("Plays");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.PlayTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ClipId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Distance")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Down")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OffenceTeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlayType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClipId")
+                        .IsUnique();
+
+                    b.HasIndex("OffenceTeamId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("PlayTags");
                 });
 
             modelBuilder.Entity("TheWarRoomAPI.Models.Playbook", b =>
@@ -544,6 +805,32 @@ namespace TheWarRoomAPI.Migrations
                     b.ToTable("ScheduledEvents");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.ScoutedTeam", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsOwnTeam")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ScoutedTeams");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.Team", b =>
                 {
                     b.Property<int>("Id")
@@ -629,6 +916,65 @@ namespace TheWarRoomAPI.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.Video", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UploadedById")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("UploadedById");
+
+                    b.ToTable("Videos");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.ApprovalRequest", b =>
                 {
                     b.HasOne("TheWarRoomAPI.Models.Formation", "Formation")
@@ -712,6 +1058,33 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.Clip", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Video", "Video")
+                        .WithMany("Clips")
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Team");
+
+                    b.Navigation("Video");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.CoachGroupAssignment", b =>
                 {
                     b.HasOne("TheWarRoomAPI.Models.User", "Coach")
@@ -729,6 +1102,60 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("Coach");
 
                     b.Navigation("PositionGroup");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.Cutup", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.CutupClip", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.Clip", "Clip")
+                        .WithMany("CutupClips")
+                        .HasForeignKey("ClipId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Cutup", "Cutup")
+                        .WithMany("Clips")
+                        .HasForeignKey("CutupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Clip");
+
+                    b.Navigation("Cutup");
+
+                    b.Navigation("Team");
+
+                    b.Navigation("Video");
                 });
 
             modelBuilder.Entity("TheWarRoomAPI.Models.DepthChartPlacement", b =>
@@ -777,6 +1204,39 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.FilmAssignment", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.User", "AssignedBy")
+                        .WithMany()
+                        .HasForeignKey("AssignedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Cutup", "Cutup")
+                        .WithMany("Assignments")
+                        .HasForeignKey("CutupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.User", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TheWarRoomAPI.Models.PositionGroup", "PositionGroup")
+                        .WithMany()
+                        .HasForeignKey("PositionGroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("AssignedBy");
+
+                    b.Navigation("Cutup");
+
+                    b.Navigation("Player");
+
+                    b.Navigation("PositionGroup");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.Formation", b =>
                 {
                     b.HasOne("TheWarRoomAPI.Models.Playbook", "Playbook")
@@ -792,6 +1252,41 @@ namespace TheWarRoomAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Playbook");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.Game", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.ScoutedTeam", "AwayTeam")
+                        .WithMany()
+                        .HasForeignKey("AwayTeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.ScoutedTeam", "HomeTeam")
+                        .WithMany()
+                        .HasForeignKey("HomeTeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AwayTeam");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("HomeTeam");
 
                     b.Navigation("Team");
                 });
@@ -822,6 +1317,33 @@ namespace TheWarRoomAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Formation");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.PlayTag", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.Clip", "Clip")
+                        .WithOne("Tag")
+                        .HasForeignKey("TheWarRoomAPI.Models.PlayTag", "ClipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.ScoutedTeam", "OffenceTeam")
+                        .WithMany()
+                        .HasForeignKey("OffenceTeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Clip");
+
+                    b.Navigation("OffenceTeam");
 
                     b.Navigation("Team");
                 });
@@ -924,6 +1446,17 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.ScoutedTeam", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.User", b =>
                 {
                     b.HasOne("TheWarRoomAPI.Models.Team", "Team")
@@ -935,6 +1468,47 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("TheWarRoomAPI.Models.Video", b =>
+                {
+                    b.HasOne("TheWarRoomAPI.Models.Game", "Game")
+                        .WithMany("Videos")
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TheWarRoomAPI.Models.User", "UploadedBy")
+                        .WithMany()
+                        .HasForeignKey("UploadedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Game");
+
+                    b.Navigation("Team");
+
+                    b.Navigation("UploadedBy");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.Clip", b =>
+                {
+                    b.Navigation("CutupClips");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.Cutup", b =>
+                {
+                    b.Navigation("Assignments");
+
+                    b.Navigation("Clips");
+                });
+
             modelBuilder.Entity("TheWarRoomAPI.Models.DepthChartWeek", b =>
                 {
                     b.Navigation("Placements");
@@ -943,6 +1517,11 @@ namespace TheWarRoomAPI.Migrations
             modelBuilder.Entity("TheWarRoomAPI.Models.Formation", b =>
                 {
                     b.Navigation("Plays");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.Game", b =>
+                {
+                    b.Navigation("Videos");
                 });
 
             modelBuilder.Entity("TheWarRoomAPI.Models.Playbook", b =>
@@ -976,6 +1555,11 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("PlayerGroupAssignments");
 
                     b.Navigation("RosterEntry");
+                });
+
+            modelBuilder.Entity("TheWarRoomAPI.Models.Video", b =>
+                {
+                    b.Navigation("Clips");
                 });
 #pragma warning restore 612, 618
         }

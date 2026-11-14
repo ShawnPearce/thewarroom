@@ -1,0 +1,27 @@
+@model SaveCutupDto
+
+@{
+    ViewData["Title"] = "Edit cutup";
+}
+
+<h1 class="h3">Edit cutup</h1>
+<hr />
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="Edit" asp-route-id="@ViewData["CutupId"]">
+            <partial name="_CutupFields" />
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Details" asp-route-id="@ViewData["CutupId"]">Back to the cutup</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

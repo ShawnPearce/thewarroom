@@ -85,6 +85,13 @@ namespace TheWarRoomApp.Controllers
                 }
             }
 
+            // Film: what was shared with a player, or the team's cutups for a coach
+            var cutupsResponse = await _client.GetAsync("api/Cutup");
+            if (cutupsResponse.IsSuccessStatusCode)
+            {
+                model.Cutups = (await cutupsResponse.Content.ReadFromJsonAsync<List<CutupDto>>())!;
+            }
+
             return View(model);   // Dashboard View
         }
 

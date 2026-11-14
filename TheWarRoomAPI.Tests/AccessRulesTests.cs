@@ -90,6 +90,33 @@ namespace TheWarRoomAPI.Tests
         }
 
         [Fact]
+        public void Film_IsWorkedOnByEveryCoach_AndWatchedByPlayersItIsSharedWith()
+        {
+            var positionCoach = User(UserRole.PositionCoach, null, true, Linebackers);
+            var receiver = User(UserRole.Player, null, true, Receivers);
+
+            var nobody = new List<FilmAssignment>();
+            var wholeTeam = new List<FilmAssignment> { new FilmAssignment { Audience = FilmAudience.Team } };
+            var receivers = new List<FilmAssignment> { new FilmAssignment { Audience = FilmAudience.Group, PositionGroupId = Receivers.Id } };
+            var linebackers = new List<FilmAssignment> { new FilmAssignment { Audience = FilmAudience.Group, PositionGroupId = Linebackers.Id } };
+            var thisPlayer = new List<FilmAssignment> { new FilmAssignment { Audience = FilmAudience.Player, PlayerId = receiver.Id } };
+            var anotherPlayer = new List<FilmAssignment> { new FilmAssignment { Audience = FilmAudience.Player, PlayerId = 99 } };
+
+            // A coach works with all film, whoever it is shared with
+            Assert.True(AccessRules.CanManageFilm(positionCoach));
+            Assert.True(AccessRules.CanWatchCutup(positionCoach, nobody));
+
+            // A player never works on film, and watches only what reaches them
+            Assert.False(AccessRules.CanManageFilm(receiver));
+            Assert.True(AccessRules.CanWatchCutup(receiver, wholeTeam));
+            Assert.True(AccessRules.CanWatchCutup(receiver, receivers));
+            Assert.True(AccessRules.CanWatchCutup(receiver, thisPlayer));
+            Assert.False(AccessRules.CanWatchCutup(receiver, nobody));
+            Assert.False(AccessRules.CanWatchCutup(receiver, linebackers));
+            Assert.False(AccessRules.CanWatchCutup(receiver, anotherPlayer));
+        }
+
+        [Fact]
         public void Player_CanChangeNothing_EvenInTheirOwnGroup()
         {
             var player = User(UserRole.Player, null, true, Receivers);

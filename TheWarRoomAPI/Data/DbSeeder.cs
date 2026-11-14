@@ -31,7 +31,8 @@ namespace TheWarRoomAPI.Data
             SeedNorthgateKnights(context, passwordHash, now, thisMonday);
         }
 
-        // The main demo team: a full staff, a roster, two weeks of depth charts, and a schedule with attendance
+        // The main demo team: a full staff, a roster, two weeks of depth charts, a schedule with attendance,
+        // a playbook with change requests, and game film with tagged plays and cutups
         private static void SeedLakeshoreLions(AppDbContext context, string passwordHash, DateTime now, DateOnly today, DateOnly thisMonday)
         {
             var lions = new DemoTeam(context, "Lakeshore Lions", "lakeshorelions.example", passwordHash, now);
@@ -44,7 +45,7 @@ namespace TheWarRoomAPI.Data
                 "Quarterbacks", "Running Backs");
             offenceCoordinator.CanPublishPlaybook = true;   // the head coach has given her the publish right
 
-            lions.AddCoach("Darnell", "Brooks", UserRole.Coordinator, TeamUnit.Defence);
+            var defenceCoordinator = lions.AddCoach("Darnell", "Brooks", UserRole.Coordinator, TeamUnit.Defence);
             lions.AddCoach("Priya", "Nair", UserRole.Coordinator, TeamUnit.SpecialTeams, "Specialists");
 
             var receiversCoach = lions.AddCoach("Tom", "Gallagher", UserRole.PositionCoach, null, "Receivers", "Tight Ends");
@@ -265,6 +266,104 @@ namespace TheWarRoomAPI.Data
             rejected.ReviewedBy = lions.HeadCoach;
             rejected.ReviewedAt = now;
             rejected.ReviewNote = "Keep the middle linebacker's drop short for now. Bring it back after the bye week.";
+
+            context.SaveChanges();
+
+            // ----- Film: four games, their plays cut and tagged, and cutups shared in different ways -----
+            // The video records have no file behind them: they are there so plays can be tagged and charted,
+            // and cutups built and shared, before any film has been uploaded.
+            var knights = lions.AddOpponent("Northgate Knights");    // this week's opponent
+            var raiders = lions.AddOpponent("Riverside Raiders");    // last week's opponent
+            var eagles = lions.AddOpponent("Eastview Eagles");
+            var ourselves = lions.OwnTeamOnFilm;
+
+            var lastFriday = thisMonday.AddDays(-3);
+            var theFridayBefore = thisMonday.AddDays(-10);
+
+            var atRiverside = lions.AddGameFilm(lastFriday, home: raiders, away: ourselves, "Week 7", offenceCoordinator);
+            var knightsAtEastview = lions.AddGameFilm(lastFriday, home: eagles, away: knights, "Scout film", defenceCoordinator);
+            var raidersAtNorthgate = lions.AddGameFilm(theFridayBefore, home: knights, away: raiders, "Scout film", defenceCoordinator);
+            var eastviewAtHome = lions.AddGameFilm(theFridayBefore, home: ourselves, away: eagles, "Week 6", offenceCoordinator);
+
+            // Each line: who has the ball, the down, the distances to go, then how many runs and how many passes.
+            // Northgate's two games together give 12 runs and 8 passes on first down: a 60% run tendency from 20 plays.
+            lions.AddPlays(knightsAtEastview, knights, 1, new[] { 10 }, runs: 6, passes: 4);
+            lions.AddPlays(knightsAtEastview, knights, 2, new[] { 2, 3 }, runs: 2, passes: 0);
+            lions.AddPlays(knightsAtEastview, knights, 2, new[] { 4, 5, 6 }, runs: 2, passes: 2);
+            lions.AddPlays(knightsAtEastview, knights, 2, new[] { 7, 8, 9, 10 }, runs: 1, passes: 3);
+            lions.AddPlays(knightsAtEastview, knights, 3, new[] { 1, 2 }, runs: 2, passes: 1);
+            lions.AddPlays(knightsAtEastview, knights, 3, new[] { 4, 5 }, runs: 0, passes: 2);
+            lions.AddPlays(knightsAtEastview, knights, 3, new[] { 7, 8, 9 }, runs: 0, passes: 3);
+            lions.AddPlays(knightsAtEastview, knights, 3, new[] { 12 }, runs: 0, passes: 1);
+            lions.AddPlays(knightsAtEastview, knights, 4, new[] { 1 }, runs: 1, passes: 0);
+            lions.AddPlays(knightsAtEastview, eagles, 1, new[] { 10 }, runs: 4, passes: 6);
+            lions.AddPlays(knightsAtEastview, eagles, 2, new[] { 3, 6, 9 }, runs: 3, passes: 4);
+            lions.AddPlays(knightsAtEastview, eagles, 3, new[] { 2, 5, 8, 11 }, runs: 1, passes: 5);
+
+            lions.AddPlays(raidersAtNorthgate, knights, 1, new[] { 10 }, runs: 6, passes: 4);
+            lions.AddPlays(raidersAtNorthgate, knights, 2, new[] { 1, 3 }, runs: 3, passes: 1);
+            lions.AddPlays(raidersAtNorthgate, knights, 2, new[] { 4, 5, 6 }, runs: 2, passes: 2);
+            lions.AddPlays(raidersAtNorthgate, knights, 2, new[] { 7, 8, 10 }, runs: 2, passes: 3);
+            lions.AddPlays(raidersAtNorthgate, knights, 2, new[] { 12, 15 }, runs: 0, passes: 2);
+            lions.AddPlays(raidersAtNorthgate, knights, 3, new[] { 1, 2, 3 }, runs: 2, passes: 1);
+            lions.AddPlays(raidersAtNorthgate, knights, 3, new[] { 4, 5, 6 }, runs: 1, passes: 3);
+            lions.AddPlays(raidersAtNorthgate, knights, 3, new[] { 7, 9, 10 }, runs: 1, passes: 3);
+            lions.AddPlays(raidersAtNorthgate, knights, 3, new[] { 13, 17 }, runs: 0, passes: 2);
+            lions.AddPlays(raidersAtNorthgate, knights, 4, new[] { 1, 2 }, runs: 1, passes: 1);
+            lions.AddPlays(raidersAtNorthgate, raiders, 1, new[] { 10 }, runs: 7, passes: 3);
+            lions.AddPlays(raidersAtNorthgate, raiders, 2, new[] { 2, 5, 8 }, runs: 5, passes: 3);
+            lions.AddPlays(raidersAtNorthgate, raiders, 3, new[] { 1, 4, 7, 10 }, runs: 3, passes: 4);
+
+            lions.AddPlays(atRiverside, ourselves, 1, new[] { 10 }, runs: 9, passes: 11);
+            lions.AddPlays(atRiverside, ourselves, 2, new[] { 2, 4, 6, 8, 10 }, runs: 6, passes: 8);
+            lions.AddPlays(atRiverside, ourselves, 3, new[] { 1, 3, 5, 7, 9, 12 }, runs: 3, passes: 8);
+            lions.AddPlays(atRiverside, ourselves, 4, new[] { 1, 2 }, runs: 1, passes: 1);
+            lions.AddPlays(atRiverside, raiders, 1, new[] { 10 }, runs: 8, passes: 4);
+            lions.AddPlays(atRiverside, raiders, 2, new[] { 3, 5, 7, 9 }, runs: 5, passes: 4);
+            lions.AddPlays(atRiverside, raiders, 3, new[] { 2, 4, 6, 8, 11 }, runs: 2, passes: 6);
+
+            lions.AddPlays(eastviewAtHome, ourselves, 1, new[] { 10 }, runs: 10, passes: 9);
+            lions.AddPlays(eastviewAtHome, ourselves, 2, new[] { 1, 3, 5, 7, 9 }, runs: 7, passes: 6);
+            lions.AddPlays(eastviewAtHome, ourselves, 3, new[] { 2, 4, 6, 8, 10 }, runs: 3, passes: 7);
+            lions.AddPlays(eastviewAtHome, eagles, 1, new[] { 10 }, runs: 5, passes: 7);
+            lions.AddPlays(eastviewAtHome, eagles, 2, new[] { 4, 6, 8 }, runs: 3, passes: 5);
+            lions.AddPlays(eastviewAtHome, eagles, 3, new[] { 3, 6, 9, 13 }, runs: 1, passes: 6);
+
+            // The plays are spread over each video in a mixed order, the way a game goes back and forth
+            int gameNumber = 0;
+            foreach (var video in new[] { atRiverside, knightsAtEastview, raidersAtNorthgate, eastviewAtHome })
+            {
+                lions.AddPlayWithoutTag(video, "Opening kickoff");
+                lions.AddPlayWithoutTag(video, "Punt");
+                lions.AddPlayWithoutTag(video, "Field goal");
+                lions.LayOutPlays(video, ++gameNumber);
+            }
+
+            // Cutups for this week's game against Northgate, each shared a different way
+            var knightsFirstDowns = lions.AddCutup("Northgate offence on first down",
+                "What Northgate does on 1st and 10. They run six times out of ten.", thisMonday, defenceCoordinator,
+                lions.Plays(knights, down: 1).Take(10));
+            lions.ShareWithTeam(knightsFirstDowns, defenceCoordinator);
+
+            var knightsThirdDowns = lions.AddCutup("Northgate passing on third down",
+                "They throw on third down unless it is short. Watch where the receivers line up.", thisMonday, defenceCoordinator,
+                lions.Plays(knights, down: 3, playType: PlayType.Pass));
+            lions.ShareWithGroups(knightsThirdDowns, defenceCoordinator, "Linebackers", "Defensive Backs");
+
+            var ourPassGame = lions.AddCutup("Our pass plays at Riverside",
+                "Every pass we threw on first and second down last week.", thisMonday, receiversCoach,
+                lions.Plays(ourselves, playType: PlayType.Pass, video: atRiverside).Where(c => c.Tag!.Down <= 2));
+            lions.ShareWithGroups(ourPassGame, receiversCoach, "Receivers", "Tight Ends");
+            lions.ShareWithPlayers(ourPassGame, receiversCoach, 7);   // and the starting quarterback
+
+            var thirdDownDecisions = lions.AddCutup("Jalen: third down decisions",
+                "Our third downs from the last two games.", thisMonday, offenceCoordinator,
+                lions.Plays(ourselves, down: 3));
+            lions.ShareWithPlayers(thirdDownDecisions, offenceCoordinator, 7);
+
+            // Not shared with anyone yet, so only coaches see it
+            lions.AddCutup("Riverside short yardage (in progress)", null, null, offenceCoordinator,
+                lions.Plays(raiders).Where(c => c.Tag!.Distance <= 3));
 
             context.SaveChanges();
         }
@@ -555,6 +654,189 @@ namespace TheWarRoomAPI.Data
                 };
                 _context.ApprovalRequests.Add(request);
                 return request;
+            }
+
+            // ----- Film -----
+
+            // Plays that have been described for a video but not yet placed on its timeline (see LayOutPlays)
+            private readonly Dictionary<Video, List<Clip>> _playsToLayOut = new Dictionary<Video, List<Clip>>();
+
+            // The team's own entry among the teams on film (TeamDefaults adds it)
+            public ScoutedTeam OwnTeamOnFilm => _context.ScoutedTeams.Local.First(t => t.Team == Team && t.IsOwnTeam);
+
+            public ScoutedTeam AddOpponent(string name)
+            {
+                var opponent = new ScoutedTeam { Team = Team, Name = name };
+                _context.ScoutedTeams.Add(opponent);
+                return opponent;
+            }
+
+            // A game on film with one video of the whole game. The video is ready to be cut, but has no file.
+            public Video AddGameFilm(DateOnly date, ScoutedTeam home, ScoutedTeam away, string label, User uploadedBy)
+            {
+                var game = new Game
+                {
+                    Team = Team,
+                    GameDate = date,
+                    HomeTeam = home,
+                    AwayTeam = away,
+                    Label = label,
+                    CreatedBy = uploadedBy,
+                    CreatedAt = _now
+                };
+
+                var video = new Video
+                {
+                    Team = Team,
+                    Game = game,
+                    Title = "Full game",
+                    Status = VideoStatus.Ready,
+                    DurationMs = (1 * 60 + 52) * 60 * 1000,   // 1 hour 52 minutes
+                    UploadedBy = uploadedBy,
+                    CreatedAt = _now,
+                    Clips = new List<Clip>()
+                };
+
+                _context.Videos.Add(video);   // the game is saved with it through the navigation property
+                _playsToLayOut[video] = new List<Clip>();
+                return video;
+            }
+
+            // Tagged plays for one team at one down: first the runs, then the passes,
+            // with the distance to go taken in turn from the list
+            public void AddPlays(Video video, ScoutedTeam offence, int down, int[] distances, int runs, int passes)
+            {
+                for (int i = 0; i < runs + passes; i++)
+                {
+                    _playsToLayOut[video].Add(new Clip
+                    {
+                        Team = Team,
+                        CreatedBy = video.UploadedBy,
+                        CreatedAt = _now,
+                        UpdatedAt = _now,
+                        Tag = new PlayTag
+                        {
+                            Team = Team,
+                            PlayType = i < runs ? PlayType.Run : PlayType.Pass,
+                            Down = down,
+                            Distance = distances[i % distances.Length],
+                            OffenceTeam = offence
+                        }
+                    });
+                }
+            }
+
+            // A play that is cut but not tagged, so it is left out of the tendency charts
+            public void AddPlayWithoutTag(Video video, string title)
+            {
+                _playsToLayOut[video].Add(new Clip
+                {
+                    Team = Team,
+                    Title = title,
+                    CreatedBy = video.UploadedBy,
+                    CreatedAt = _now,
+                    UpdatedAt = _now
+                });
+            }
+
+            // Puts a video's plays on its timeline in a mixed order.
+            // The same number always gives the same order, so the demo data is the same on every run.
+            public void LayOutPlays(Video video, int orderNumber)
+            {
+                var random = new Random(orderNumber);
+                var plays = _playsToLayOut[video].OrderBy(_ => random.Next()).ToList();
+
+                int startMs = 45_000;   // the first play starts 45 seconds in
+                foreach (var play in plays)
+                {
+                    play.StartMs = startMs;
+                    play.EndMs = startMs + random.Next(6, 12) * 1000;   // a play lasts 6 to 11 seconds
+                    video.Clips!.Add(play);
+
+                    startMs = play.EndMs + random.Next(25, 41) * 1000;   // and the next one starts 25 to 40 seconds later
+                }
+            }
+
+            // The tagged plays on film where this team has the ball, in the order they happened.
+            // The other arguments narrow the list.
+            public IEnumerable<Clip> Plays(ScoutedTeam offence, int? down = null, PlayType? playType = null, Video? video = null)
+            {
+                return _context.Clips.Local
+                    .Where(c => c.Team == Team && c.Tag != null && c.Tag.OffenceTeam == offence)
+                    .Where(c => down == null || c.Tag!.Down == down)
+                    .Where(c => playType == null || c.Tag!.PlayType == playType)
+                    .Where(c => video == null || c.Video == video)
+                    .OrderBy(c => c.Video!.Game!.GameDate)
+                    .ThenBy(c => c.StartMs);
+            }
+
+            // A draft cutup made of the given plays, in the order given
+            public Cutup AddCutup(string name, string? description, DateOnly? forWeekOf, User createdBy, IEnumerable<Clip> clips)
+            {
+                var cutup = new Cutup
+                {
+                    Team = Team,
+                    Name = name,
+                    Description = description,
+                    ForWeekOf = forWeekOf,
+                    Status = CutupStatus.Draft,
+                    CreatedBy = createdBy,
+                    CreatedAt = _now,
+                    UpdatedAt = _now,
+                    Clips = new List<CutupClip>(),
+                    Assignments = new List<FilmAssignment>()
+                };
+
+                int position = 0;
+                foreach (var clip in clips)
+                {
+                    cutup.Clips.Add(new CutupClip
+                    {
+                        Team = Team,
+                        Position = ++position,
+                        Clip = clip,
+                        Video = clip.Video,
+                        StartMs = clip.StartMs,
+                        EndMs = clip.EndMs,
+                        Title = clip.Title
+                    });
+                }
+
+                _context.Cutups.Add(cutup);
+                return cutup;
+            }
+
+            public void ShareWithTeam(Cutup cutup, User sharedBy)
+            {
+                cutup.Assignments!.Add(new FilmAssignment { Audience = FilmAudience.Team, AssignedBy = sharedBy, AssignedAt = _now });
+            }
+
+            public void ShareWithGroups(Cutup cutup, User sharedBy, params string[] groupNames)
+            {
+                foreach (var groupName in groupNames)
+                {
+                    cutup.Assignments!.Add(new FilmAssignment
+                    {
+                        Audience = FilmAudience.Group,
+                        PositionGroup = FindGroup(groupName),
+                        AssignedBy = sharedBy,
+                        AssignedAt = _now
+                    });
+                }
+            }
+
+            public void ShareWithPlayers(Cutup cutup, User sharedBy, params int[] jerseyNumbers)
+            {
+                foreach (int jerseyNumber in jerseyNumbers)
+                {
+                    cutup.Assignments!.Add(new FilmAssignment
+                    {
+                        Audience = FilmAudience.Player,
+                        Player = _playersByJersey[jerseyNumber],
+                        AssignedBy = sharedBy,
+                        AssignedAt = _now
+                    });
+                }
             }
 
             private Formation FindFormation(string name)

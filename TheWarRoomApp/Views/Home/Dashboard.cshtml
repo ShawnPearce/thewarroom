@@ -123,6 +123,38 @@
         </div>
     </div>
 
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">@(Model.Me.Role == UserRole.Player ? "Film for you" : "Cutups")</div>
+            <div class="card-body">
+                @if (Model.Cutups.Count == 0)
+                {
+                    <p class="text-muted">@(Model.Me.Role == UserRole.Player ? "No film has been shared with you yet." : "No cutups have been made yet.")</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-3">
+                        @foreach (var cutup in Model.Cutups.Take(3))
+                        {
+                            <li class="mb-1">
+                                <a asp-controller="Cutups" asp-action="Details" asp-route-id="@cutup.Id">@cutup.Name</a>
+                                <span class="small text-muted">@DisplayText.Count(cutup.PlayCount, "play", "plays"), @TimeText.Length(cutup.DurationMs)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                @if (Model.Me.Role == UserRole.Player)
+                {
+                    <a asp-controller="Cutups" asp-action="Index">See all your film</a>
+                }
+                else
+                {
+                    <a asp-controller="Film" asp-action="Index">Open game film</a>
+                }
+            </div>
+        </div>
+    </div>
+
     @if (Model.Me.Role != UserRole.Player)
     {
         <div class="col-md-6">

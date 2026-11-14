@@ -120,6 +120,29 @@ namespace TheWarRoomAPI.Services
             return user.IsHeadCoach;
         }
 
+        // ---------- Film ----------
+
+        // Game film (games, videos, clips and tags), and building and sharing cutups: every coach.
+        public static bool CanManageFilm(CurrentUser user)
+        {
+            return user.IsCoach;
+        }
+
+        // Watching a cutup: every coach. A player only when it was shared with the whole team,
+        // with one of the groups the player is in, or with the player directly.
+        public static bool CanWatchCutup(CurrentUser user, IEnumerable<FilmAssignment> assignments)
+        {
+            if (user.IsCoach)
+            {
+                return true;
+            }
+
+            return assignments.Any(a =>
+                a.Audience == FilmAudience.Team
+                || (a.Audience == FilmAudience.Group && a.PositionGroupId != null && user.IsInGroup(a.PositionGroupId.Value))
+                || (a.Audience == FilmAudience.Player && a.PlayerId == user.Id));
+        }
+
         // Creating accounts, changing roles and permissions, deactivating, resetting passwords,
         // team settings, deleting a week: the head coach only.
         public static bool CanManageTeam(CurrentUser user)

@@ -4,7 +4,7 @@ using TheWarRoomAPI.Models;
 namespace TheWarRoomAPI.Data
 {
     // What every new team starts with: a standard set of position groups and depth-chart positions,
-    // and a playbook for each unit holding the base formations.
+    // a playbook for each unit holding the base formations, and the team's own entry in the film library.
     // Used when a team registers and when the demo teams are created, so both get the same setup.
     // Coaches can change all of it afterwards.
     public static class TeamDefaults
@@ -13,6 +13,9 @@ namespace TheWarRoomAPI.Data
         {
             AddGroupsAndPositions(team, context);
             AddPlaybooks(team, context, now);
+
+            // Games on film are played between two "teams on film"; this one stands for the team itself
+            context.ScoutedTeams.Add(new ScoutedTeam { Team = team, Name = team.Name, IsOwnTeam = true });
         }
 
         // One playbook per unit, each starting with a copy of the base formations for that unit

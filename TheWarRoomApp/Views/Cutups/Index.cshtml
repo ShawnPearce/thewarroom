@@ -1,0 +1,105 @@
+@model List<CutupDto>
+
+@{
+    bool coach = User.IsCoach();
+    ViewData["Title"] = coach ? "Cutups" : "My film";
+}
+
+@if (coach)
+{
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+        <h1 class="h3 mb-0">Cutups</h1>
+        <div>
+            <a asp-controller="Film" asp-action="Index" class="btn btn-outline-primary">Game film</a>
+            <a asp-action="Create" class="btn btn-primary">New cutup</a>
+        </div>
+    </div>
+    <p class="text-muted">
+        A cutup is film edited down to chosen plays in a chosen order, with the time between plays gone.
+        Share one with the whole team, with position groups, or with single players.
+    </p>
+
+    @if (Model.Count == 0)
+    {
+        <p class="text-muted">No cutups have been made yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Cutup</th>
+                        <th>For</th>
+                        <th>Plays</th>
+                        <th>Length</th>
+                        <th>Shared with</th>
+                        <th>Status</th>
+                        <th>By</th>
+                    </tr>
+                </thead>
+                <tbody>
+        @foreach (var item in Model) {
+                    <tr>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.Id">@item.Name</a>
+                        </td>
+                        <td class="text-nowrap">@(item.ForWeekOf != null ? DisplayText.WeekOf(item.ForWeekOf.Value) : "")</td>
+                        <td>@item.PlayCount</td>
+                        <td class="text-nowrap">@TimeText.Length(item.DurationMs)</td>
+                        <td>
+                            @if (item.SharedWith.Count == 0)
+                            {
+                                <span class="text-muted">Nobody yet</span>
+                            }
+                            else
+                            {
+                                @string.Join(", ", item.SharedWith)
+                            }
+                        </td>
+                        <td><span class="badge text-bg-@DisplayText.CutupStateColour(item.Status)">@DisplayText.CutupState(item.Status)</span></td>
+                        <td>@item.CreatedBy</td>
+                    </tr>
+        }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+else
+{
+    <h1 class="h3">My film</h1>
+    <p class="text-muted">Film your coaches have shared with you, with one of your position groups, or with the whole team.</p>
+
+    @if (Model.Count == 0)
+    {
+        <p class="text-muted">Nothing has been shared with you yet.</p>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card wr-feature">
+                        <div class="card-body">
+                            <h2 class="h5 card-title">@item.Name</h2>
+                            @if (item.ForWeekOf != null)
+                            {
+                                <p class="card-text small text-muted mb-2">@DisplayText.WeekOf(item.ForWeekOf.Value)</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(item.Description))
+                            {
+                                <p class="card-text">@item.Description</p>
+                            }
+                            <p class="card-text small text-muted">
+                                @DisplayText.Count(item.PlayCount, "play", "plays") &middot; @TimeText.Length(item.DurationMs) &middot; from @item.CreatedBy
+                            </p>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-primary">Open</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
