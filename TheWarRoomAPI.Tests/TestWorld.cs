@@ -51,6 +51,7 @@ namespace TheWarRoomAPI.Tests
         public ClipService Clips(AppDbContext context) => new ClipService(context, Clock);
         public VideoService Videos(AppDbContext context) => new VideoService(context, Clips(context));
         public CutupService Cutups(AppDbContext context) => new CutupService(context, Clock);
+        public TendencyService Tendencies(AppDbContext context) => new TendencyService(context);
 
         // ---------- Setting up data ----------
 
@@ -269,6 +270,42 @@ namespace TheWarRoomAPI.Tests
 
             return clip.Id;
         }
+
+        // Several tagged plays of the same kind at once: so many runs and so many passes
+        // for one team on one down and distance. They are laid one after another in the video.
+        public async Task AddTaggedPlaysAsync(CurrentUser teamMember, int videoId, int offenceTeamId, int down, int distance, int runs, int passes)
+        {
+            using var context = NewContext();
+            var now = Clock.GetUtcNow().UtcDateTime;
+
+            for (int i = 0; i < runs + passes; i++)
+            {
+                _nextPlaySecond += 8;
+
+                context.Clips.Add(new Clip
+                {
+                    TeamId = teamMember.TeamId,
+                    VideoId = videoId,
+                    StartMs = _nextPlaySecond * 1000,
+                    EndMs = (_nextPlaySecond + 6) * 1000,
+                    CreatedById = teamMember.Id,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    Tag = new PlayTag
+                    {
+                        TeamId = teamMember.TeamId,
+                        PlayType = i < runs ? PlayType.Run : PlayType.Pass,
+                        Down = down,
+                        Distance = distance,
+                        OffenceTeamId = offenceTeamId
+                    }
+                });
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+        private int _nextPlaySecond;
 
         // ---------- Looking things up ----------
 

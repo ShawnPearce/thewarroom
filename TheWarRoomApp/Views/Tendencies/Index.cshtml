@@ -1,0 +1,272 @@
+@using System.Text.Json
+@model TendenciesViewModel
+
+@{
+    ViewData["Title"] = "Tendencies";
+
+    var report = Model.Report;
+    var ranges = new[] { DistanceRange.Short, DistanceRange.Medium, DistanceRange.Long, DistanceRange.VeryLong };
+}
+
+@functions {
+    // The bars of one chart as JSON for tendency-charts.js: a label, the counts and the percentages of each bar
+    private static string Bars(IEnumerable<(string Label, TendencySplitDto Split)> bars)
+    {
+        return JsonSerializer.Serialize(bars.Select(bar => new
+        {
+            label = bar.Label,
+            runs = bar.Split.Runs,
+            passes = bar.Split.Passes,
+            plays = bar.Split.Plays,
+            runPercent = bar.Split.RunPercent,
+            passPercent = bar.Split.PassPercent
+        }));
+    }
+
+    // The same figures in a sentence, for people who cannot see the chart
+    private static string InWords(string label, TendencySplitDto split)
+    {
+        return split.Plays == 0
+            ? $"{label}: no data."
+            : $"{label}: run {DisplayText.Percent(split.RunPercent!.Value)}, pass {DisplayText.Percent(split.PassPercent!.Value)}, from {split.Plays} plays.";
+    }
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h1 class="h3 mb-0">Tendencies</h1>
+    <a asp-controller="Film" asp-action="Index" class="btn btn-outline-primary">Game film</a>
+</div>
+<p class="text-muted">
+    How often a team ran and how often it passed, counted from the plays you have tagged on film.
+    These numbers describe what was recorded. They do not predict the next play.
+</p>
+
+@if (Model.Team == null || report == null)
+{
+    <p class="text-muted">There is no team on film yet.</p>
+}
+else
+{
+    var selected = report.Selected;
+
+    @* The filters. Choosing from a drop-down reloads the page; the games are applied with the Show button. *@
+    <form asp-action="Index" method="get" class="card card-body mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="teamId" class="form-label">Team on offence</label>
+                <select id="teamId" name="teamId" class="form-select" data-auto-submit>
+                    @foreach (var team in Model.Teams)
+                    {
+                        <option value="@team.Id" selected="@(team.Id == Model.Team.Id)">@team.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="down" class="form-label">Down</label>
+                <select id="down" name="down" class="form-select" data-auto-submit>
+                    <option value="">Every down</option>
+                    @for (int down = 1; down <= 4; down++)
+                    {
+                        <option value="@down" selected="@(Model.Down == down)">@DisplayText.Ordinal(down) down</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="distance" class="form-label">Distance to go</label>
+                <select id="distance" name="distance" class="form-select" data-auto-submit>
+                    <option value="">Every distance</option>
+                    @foreach (var range in ranges)
+                    {
+                        <option value="@range" selected="@(Model.Distance == range)">@DisplayText.Distance(range)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Show</button>
+            </div>
+        </div>
+
+        <fieldset class="mt-3">
+            <legend class="form-label fs-6 mb-1">Games</legend>
+            @if (Model.Games.Count == 0)
+            {
+                <p class="text-muted mb-0">There is no film of @Model.Team.Name yet.</p>
+            }
+            @foreach (var game in Model.Games)
+            {
+                // With no game chosen every game is counted, so every box is shown ticked
+                bool counted = Model.GameIds.Count == 0 || Model.GameIds.Contains(game.Id);
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="gameIds" value="@game.Id" id="game-@game.Id" checked="@counted" />
+                    <label class="form-check-label" for="game-@game.Id">
+                        @game.GameDate.ToString("MMM d, yyyy"): @DisplayText.Matchup(game)
+                        <span class="small text-muted">&middot; @DisplayText.Count(game.TaggedClipCount, "tagged play", "tagged plays") in the game</span>
+                    </label>
+                </div>
+            }
+            @if (Model.Games.Count > 1)
+            {
+                <div class="form-text">Untick a game to leave it out, then choose Show. With none ticked, every game is counted.</div>
+            }
+        </fieldset>
+    </form>
+
+    @* The figure for exactly what was chosen *@
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                <strong class="text-body">@Model.Team.Name</strong> on offence &middot;
+                @if (Model.GameIds.Count == 0)
+                {
+                    @DisplayText.Count(Model.Games.Count, "game", "games")
+                }
+                else
+                {
+                    <text>@Model.GameIds.Count of @Model.Games.Count games</text>
+                }
+                &middot; @DisplayText.Situation(Model.Down, Model.Distance)
+            </p>
+
+            @if (selected.Plays == 0)
+            {
+                <p class="wr-tendency-figure mb-2">No data</p>
+                <p class="text-muted mb-0">
+                    @if (report.TaggedPlays > 0)
+                    {
+                        <text>@Model.Team.Name has @DisplayText.Count(report.TaggedPlays, "tagged play", "tagged plays") in these games, but none in this situation.</text>
+                    }
+                    else
+                    {
+                        <text>No tagged play matches. Plays are tagged on a video's page, under Game film.</text>
+                    }
+                </p>
+            }
+            else
+            {
+                <div class="row align-items-center g-4">
+                    <div class="col-auto">
+                        <div class="wr-tendency-figure wr-tendency-run">@DisplayText.Percent(selected.RunPercent!.Value)</div>
+                        <div class="text-muted">run</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="wr-tendency-figure wr-tendency-pass">@DisplayText.Percent(selected.PassPercent!.Value)</div>
+                        <div class="text-muted">pass</div>
+                    </div>
+                    <div class="col">
+                        <div class="fw-semibold">from @DisplayText.Count(selected.Plays, "play", "plays")</div>
+                        <div class="small text-muted">
+                            @DisplayText.Count(selected.Runs, "run", "runs") and @DisplayText.Count(selected.Passes, "pass", "passes")
+                        </div>
+                        <a href="@Url.Action("Plays")?@Model.Query(Model.Down, Model.Distance)">See these plays</a>
+                    </div>
+                </div>
+                <div class="wr-chart wr-chart-one mt-3">
+                    <canvas data-tendency-chart="@Bars(new[] { ("Chosen plays", selected) })" role="img"
+                            aria-label="@InWords("Chosen plays", selected)"></canvas>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* The same games and team, split two ways. Each split keeps the other filter. *@
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    By down
+                    <span class="small text-muted">&middot; @(Model.Distance != null ? DisplayText.Distance(Model.Distance.Value).ToLowerInvariant() : "every distance")</span>
+                </div>
+                <div class="card-body">
+                    @if (report.ByDown.All(s => s.Plays == 0))
+                    {
+                        <p class="text-muted mb-0">No data</p>
+                    }
+                    else
+                    {
+                        var bars = report.ByDown.Select(s => ($"{DisplayText.Ordinal(s.Down!.Value)} down", s)).ToList();
+                        <div class="wr-chart wr-chart-four">
+                            <canvas data-tendency-chart="@Bars(bars)" role="img"
+                                    aria-label="@string.Join(" ", bars.Select(b => InWords(b.Item1, b.s)))"></canvas>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    By distance to go
+                    <span class="small text-muted">&middot; @(Model.Down != null ? $"{DisplayText.Ordinal(Model.Down.Value)} down" : "every down")</span>
+                </div>
+                <div class="card-body">
+                    @if (report.ByDistance.All(s => s.Plays == 0))
+                    {
+                        <p class="text-muted mb-0">No data</p>
+                    }
+                    else
+                    {
+                        var bars = report.ByDistance.Select(s => (DisplayText.DistanceName(s.Distance!.Value), s)).ToList();
+                        <div class="wr-chart wr-chart-four">
+                            <canvas data-tendency-chart="@Bars(bars)" role="img"
+                                    aria-label="@string.Join(" ", bars.Select(b => InWords(b.Item1, b.s)))"></canvas>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Every down against every distance. The chosen situation is shaded. *@
+    <h2 class="h5">Every down and distance</h2>
+    <p class="small text-muted">
+        For the chosen team and games. Each box shows the run and pass share and how many plays it comes from;
+        follow the number of plays to see them.
+    </p>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center wr-tendency-grid">
+            <thead>
+                <tr>
+                    <th></th>
+                    @foreach (var range in ranges)
+                    {
+                        <th scope="col">
+                            @DisplayText.DistanceName(range)
+                            <div class="small fw-normal text-muted">@DisplayText.DistanceYards(range)</div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+        @foreach (var row in report.Grid) {
+                <tr>
+                    <th scope="row" class="text-start">@DisplayText.Ordinal(row.Down) down</th>
+                    @foreach (var cell in row.Cells)
+                    {
+                        bool chosen = (Model.Down != null || Model.Distance != null)
+                            && (Model.Down == null || Model.Down == cell.Down)
+                            && (Model.Distance == null || Model.Distance == cell.Distance);
+
+                        <td class="@(chosen ? "table-active" : "")">
+                            @if (cell.Plays == 0)
+                            {
+                                <span class="text-muted">No data</span>
+                            }
+                            else
+                            {
+                                <div class="wr-tendency-run fw-semibold">Run @DisplayText.Percent(cell.RunPercent!.Value)</div>
+                                <div class="wr-tendency-pass">Pass @DisplayText.Percent(cell.PassPercent!.Value)</div>
+                                <a class="small" href="@Url.Action("Plays")?@Model.Query(cell.Down, cell.Distance)">@DisplayText.Count(cell.Plays, "play", "plays")</a>
+                            }
+                        </td>
+                    }
+                </tr>
+        }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/lib/chart.js/dist/chart.umd.min.js"></script>
+    <script src="~/js/charts/tendency-charts.js" asp-append-version="true"></script>
+}

@@ -216,3 +216,37 @@ a {
   background-color: var(--wr-gold);
   color: #212529;
 }
+
+/* ---------- Tendencies ---------- */
+
+/* Chart.js sizes its canvas to the box it is in */
+.wr-chart {
+  position: relative;
+}
+
+.wr-chart-one {
+  height: 110px;
+}
+
+.wr-chart-four {
+  height: 240px;
+}
+
+.wr-tendency-figure {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* Run and pass as text: the same navy as the Run badge, and a darker gold than the Pass badge so it can be read */
+.wr-tendency-run {
+  color: var(--wr-navy-light);
+}
+
+.wr-tendency-pass {
+  color: #8a6100;
+}
+
+.wr-tendency-grid td {
+  min-width: 8.5rem;
+}

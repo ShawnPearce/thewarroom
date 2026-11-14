@@ -8,6 +8,9 @@ namespace TheWarRoomAPI.DTOs
         public int? GameId { get; set; }
         public int? VideoId { get; set; }
 
+        // Several games at once; none of them means every game
+        public List<int> GameIds { get; set; } = new List<int>();
+
         // Only tagged plays (true) or only plays without a tag (false)
         public bool? Tagged { get; set; }
 
@@ -17,5 +20,8 @@ namespace TheWarRoomAPI.DTOs
         public int? Down { get; set; }
         public int? MinDistance { get; set; }
         public int? MaxDistance { get; set; }
+
+        // A distance range by name, the same ranges the tendency charts use
+        public DistanceRange? Distance { get; set; }
     }
 }

@@ -1,0 +1,63 @@
+@model TendencyPlaysViewModel
+
+@{
+    ViewData["Title"] = "Plays";
+    string team = Model.Team?.Name ?? "Every team";
+    int runs = Model.Clips.Count(c => c.Tag?.PlayType == PlayType.Run);
+    int passes = Model.Clips.Count - runs;
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Tendencies", Url.Action("Index") + "?" + Model.BackQuery),
+    new PageLink("Plays", null) })" />
+
+<h1 class="h3">@team on offence: @DisplayText.Situation(Model.Down, Model.Distance)</h1>
+<p class="text-muted">
+    @if (Model.Clips.Count == 0)
+    {
+        <text>No tagged play matches.</text>
+    }
+    else
+    {
+        <text>@DisplayText.Count(Model.Clips.Count, "tagged play", "tagged plays") from @DisplayText.Count(Model.GameCount, "game", "games"):
+        @DisplayText.Count(runs, "run", "runs") and @DisplayText.Count(passes, "pass", "passes").</text>
+    }
+</p>
+
+@if (Model.Clips.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th>Game</th>
+                    <th>In the video</th>
+                    <th>Length</th>
+                    <th>Down</th>
+                    <th>Play</th>
+                    <th>Note</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var clip in Model.Clips) {
+                <tr>
+                    <td>@clip.Matchup <span class="small text-muted">@clip.GameDate.ToString("MMM d")</span></td>
+                    <td>@TimeText.Format(clip.StartMs)</td>
+                    <td>@TimeText.Length(clip.EndMs - clip.StartMs)</td>
+                    <td class="text-nowrap">@DisplayText.DownAndDistance(clip.Tag!)</td>
+                    <td><span class="badge @(clip.Tag!.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@clip.Tag.PlayType</span></td>
+                    <td>@clip.Title</td>
+                    <td class="text-nowrap text-end">
+                        <a asp-controller="Film" asp-action="Video" asp-route-id="@clip.VideoId">Open the video</a>
+                    </td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+}
+
+<div>
+    <a href="@Url.Action("Index")?@Model.BackQuery">Back to the tendencies</a>
+</div>

@@ -30,6 +30,10 @@ namespace TheWarRoomAPI.Services
             {
                 query = query.Where(c => c.VideoId == filter.VideoId);
             }
+            if (filter.GameIds.Count > 0)
+            {
+                query = query.Where(c => filter.GameIds.Contains(c.Video!.GameId));
+            }
             if (filter.Tagged != null)
             {
                 query = filter.Tagged.Value ? query.Where(c => c.Tag != null) : query.Where(c => c.Tag == null);
@@ -55,6 +59,11 @@ namespace TheWarRoomAPI.Services
             if (filter.MaxDistance != null)
             {
                 query = query.Where(c => c.Tag!.Distance <= filter.MaxDistance);
+            }
+            if (filter.Distance != null)
+            {
+                var (firstYard, lastYard) = TendencyCalculator.Bounds(filter.Distance.Value);
+                query = query.Where(c => c.Tag!.Distance >= firstYard && (lastYard == null || c.Tag!.Distance <= lastYard));
             }
 
             var clips = await query

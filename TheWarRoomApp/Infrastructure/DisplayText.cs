@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Html;
 using TheWarRoomApp.Models;
 
@@ -213,6 +214,63 @@ namespace TheWarRoomApp.Infrastructure
         public static string WeekOf(DateOnly monday)
         {
             return $"Week of {monday:MMM d, yyyy}";
+        }
+
+        // ---------- Tendencies ----------
+
+        // "Short (1 to 3 yards)"
+        public static string Distance(DistanceRange range)
+        {
+            return $"{DistanceName(range)} ({DistanceYards(range)})";
+        }
+
+        // The yards a range covers, in words
+        public static string DistanceYards(DistanceRange range)
+        {
+            return range switch
+            {
+                DistanceRange.Short => "1 to 3 yards",
+                DistanceRange.Medium => "4 to 6 yards",
+                DistanceRange.Long => "7 to 10 yards",
+                _ => "11 yards or more"
+            };
+        }
+
+        // Just the name of the range, for a column heading or a chart label
+        public static string DistanceName(DistanceRange range)
+        {
+            return range switch
+            {
+                DistanceRange.Short => "Short",
+                DistanceRange.Medium => "Medium",
+                DistanceRange.Long => "Long",
+                _ => "Very long"
+            };
+        }
+
+        // "60.0%": always one decimal, and always with a point whatever the server's language is
+        public static string Percent(decimal value)
+        {
+            return value.ToString("0.0", CultureInfo.InvariantCulture) + "%";
+        }
+
+        // The situation in words: "1st down", "3rd down, long (7 to 10 yards)", "every down and distance"
+        public static string Situation(int? down, DistanceRange? distance)
+        {
+            if (down == null && distance == null)
+            {
+                return "every down and distance";
+            }
+            if (distance == null)
+            {
+                return $"{Ordinal(down!.Value)} down";
+            }
+            if (down == null)
+            {
+                return $"every down, {Distance(distance.Value).ToLowerInvariant()}";
+            }
+
+            return $"{Ordinal(down.Value)} down, {Distance(distance.Value).ToLowerInvariant()}";
         }
 
         // What a coach's changes to a playbook lead to, shown next to the playbook's name
