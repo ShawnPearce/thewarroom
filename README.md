@@ -291,8 +291,6 @@ The next push to `main` deploys.
 - A cutup's video has no sound, and is always 1280 x 720 at 30 pictures a second.
 - Cutups are made one at a time by the one running copy of the API.
 - A video is sent in one piece, so an upload that is interrupted starts again from the beginning.
-- The deploy job has been tried out in parts (the server script with stand-in system commands, both programs
-  run the way the server runs them), but it has not yet run against a real server.
 
 ## Libraries
 
