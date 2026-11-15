@@ -32,6 +32,9 @@ namespace TheWarRoomAPI.Migrations
                     b.Property<int?>("BaseVersion")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("DecisionSeenAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("FormationId")
                         .HasColumnType("INTEGER");
 
@@ -69,6 +72,9 @@ namespace TheWarRoomAPI.Migrations
                     b.Property<int>("RequestedById")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ResubmittedFromId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ReviewNote")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
@@ -102,6 +108,8 @@ namespace TheWarRoomAPI.Migrations
                     b.HasIndex("PlaybookId");
 
                     b.HasIndex("RequestedById");
+
+                    b.HasIndex("ResubmittedFromId");
 
                     b.HasIndex("ReviewedById");
 
@@ -1080,6 +1088,11 @@ namespace TheWarRoomAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("TheWarRoomAPI.Models.ApprovalRequest", "ResubmittedFrom")
+                        .WithMany()
+                        .HasForeignKey("ResubmittedFromId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("TheWarRoomAPI.Models.User", "ReviewedBy")
                         .WithMany()
                         .HasForeignKey("ReviewedById")
@@ -1098,6 +1111,8 @@ namespace TheWarRoomAPI.Migrations
                     b.Navigation("Playbook");
 
                     b.Navigation("RequestedBy");
+
+                    b.Navigation("ResubmittedFrom");
 
                     b.Navigation("ReviewedBy");
 

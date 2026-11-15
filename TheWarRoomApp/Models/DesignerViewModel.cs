@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace TheWarRoomApp.Models
 {
     // The play designer page. The same page draws a new or changed formation, a new or changed play,
-    // and a change that is being revised while it waits for approval.
+    // a change that is being revised while it waits for approval, and a rejected change that is sent again.
     public class DesignerViewModel
     {
         [Required(ErrorMessage = "Name is required.")]
@@ -46,6 +46,13 @@ namespace TheWarRoomApp.Models
 
         // True when a change that is already waiting for approval is being redrawn
         public bool IsRevision { get; set; }
+
+        // True when a change the head coach rejected is being redrawn to be sent again.
+        // The page then shows what the head coach said about it.
+        public bool IsResubmission { get; set; }
+        public string? Feedback { get; set; }
+        public string? FeedbackFrom { get; set; }
+        public DateTime? FeedbackAt { get; set; }
 
         // The links at the top of the page, from the playbook down to what is being drawn
         public List<PageLink> Trail { get; set; } = new List<PageLink>();

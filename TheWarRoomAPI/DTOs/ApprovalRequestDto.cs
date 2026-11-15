@@ -29,9 +29,24 @@ namespace TheWarRoomAPI.DTOs
         public DateTime? ReviewedAt { get; set; }
         public string? ReviewNote { get; set; }
 
+        // A change that was rejected can be revised and sent again. The new request points back at the rejected one,
+        // and the rejected one points forward at the request that took its place.
+        public int? ResubmittedFromId { get; set; }
+        public int? ResubmittedAsId { get; set; }
+
+        // True when the formation or play has changed, or is gone, since the request was made.
+        // A waiting request can then no longer be approved, and a rejected one can no longer be sent again.
+        public bool IsStale { get; set; }
+
         // What the current user may do with this request
         public bool CanReview { get; set; }
         public bool CanRevise { get; set; }
+
+        // True for the coach who made a request that the head coach rejected, while it can still be revised and sent again
+        public bool CanResubmit { get; set; }
+
+        // True for that coach until they have opened the rejected request: the rejection is news to them
+        public bool IsNewDecision { get; set; }
     }
 
     // A request with everything needed to compare before and after
@@ -50,7 +65,22 @@ namespace TheWarRoomAPI.DTOs
         public string? ProposedJson { get; set; }
         public string? ProposedNotes { get; set; }
 
-        // True when the target has changed since a pending request was made; approving it would be refused
-        public bool IsStale { get; set; }
+        // For a request that was sent again: the head coach's decision on the request it was made from
+        public string? EarlierReviewNote { get; set; }
+        public string? EarlierReviewedBy { get; set; }
+        public DateTime? EarlierReviewedAt { get; set; }
+
+        // True when the current user may publish in this playbook, so that a change they hand in goes live at once
+        public bool CanPublish { get; set; }
+    }
+
+    // What the menu tells a coach about playbook changes
+    public class ApprovalNoticesDto
+    {
+        // For the head coach: the changes that are waiting for a decision
+        public int WaitingForDecision { get; set; }
+
+        // For the coach who made them: the changes the head coach rejected that the coach has not opened yet
+        public int SentBack { get; set; }
     }
 }

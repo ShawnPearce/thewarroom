@@ -12,6 +12,12 @@ namespace TheWarRoomApp.Infrastructure
             return user.FindFirstValue(WarRoomClaimTypes.TeamName) ?? string.Empty;
         }
 
+        // The id of the signed-in user, to tell their own requests from other coaches' (0 when nobody is signed in)
+        public static int GetUserId(this ClaimsPrincipal user)
+        {
+            return int.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : 0;
+        }
+
         public static bool IsHeadCoach(this ClaimsPrincipal user)
         {
             return user.IsInRole(nameof(UserRole.HeadCoach));

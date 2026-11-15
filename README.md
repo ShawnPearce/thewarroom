@@ -15,7 +15,7 @@ and each sees and changes what their role allows.
 | Team and depth charts | Add coaches and players, put them in position groups, and keep a depth chart for every week. A player can be the starter at one position and a backup at another. |
 | American or Canadian football | The head coach chooses the game the team plays. It sets the positions on the depth chart, the playbooks the team works in (11 players a side, or 12 on the wider Canadian field) and the downs film is tagged with (four, or three). |
 | Schedule and attendance | List practices, games and meetings. Coaches record attendance when the head coach has switched tracking on. |
-| Playbook | A playbook for offence, defence and special teams, organised by formation. Coaches draw formations and plays on a field: routes, blocks and motion on offence; rushes, zone and man coverage and motion on defence. A change waits for the head coach's approval unless the coach has been given the right to publish, and players keep seeing the last approved version in the meantime. |
+| Playbook | A playbook for offence, defence and special teams, organised by formation. Coaches draw formations and plays on a field: routes, blocks and motion on offence; rushes, zone and man coverage and motion on defence. A change waits for the head coach's approval unless the coach has been given the right to publish, and players keep seeing the last approved version in the meantime. A change the head coach rejects goes back to the coach with a note: the coach is told in the menu and on the dashboard, and can revise the drawing and send it again. |
 | Film | Keep the games a team has film of, its own and its opponents'. Upload a game's video and play it in the browser. Mark plays on the video itself, tag each play (run or pass, down, distance, team on offence) and draw arrows and text on it. Build cutups of chosen plays in a chosen order, have each made into one video with the time between plays gone, and share it with the whole team, with position groups or with single players. |
 | Tendencies | Run and pass shares for a team on offence, by game, down and distance, always with the number of plays they come from. |
 | Study time | How long each player was signed in, and how long they watched film and read the playbook, as three separate numbers per week. |
@@ -31,6 +31,10 @@ One solution with three projects:
 | `TheWarRoomAPI.Tests` | xUnit tests of the services and rules, run against an in-memory SQLite database. |
 
 The two web projects do not reference each other. They only talk over HTTP.
+
+A coach is told what needs them by a number beside "Approvals" in the menu: for the head coach the changes waiting for a
+decision, for another coach their own changes that were rejected and not opened yet. It is a view component
+(`ApprovalBadgeViewComponent`) that asks the API once for each page that is drawn. Nothing is sent by email.
 
 ### How the API answers
 
@@ -208,7 +212,8 @@ Every demo account has the same password: the `Seed:DemoPassword` value in `TheW
 |---|---|---|
 | Head coach | `coach.bennett@lakeshorelions.example` | Everything: approvals, permissions, team settings |
 | Offence coordinator | `elena.ruiz@lakeshorelions.example` | Publishing playbook changes without approval, inside the offence only |
-| Position coach | `tom.gallagher@lakeshorelions.example` | A change that waits for approval; the study time of his own groups only |
+| Position coach | `tom.gallagher@lakeshorelions.example` | A change that waits for approval, and a suggested play the head coach rejected: the notice, the note, "Revise and send again"; the study time of his own groups only |
+| Position coach | `sam.whitaker@lakeshorelions.example` | A play that was rejected, revised and sent again, as the head coach then sees it under Approvals |
 | Position coach | `kenji.sato@lakeshorelions.example` | A coach whose depth chart permission is switched off |
 | Player | `tyrese.walker@lakeshorelions.example` | "My film" shared through the Receivers group; the study timer on a playbook page |
 | Player | `jalen.carter@lakeshorelions.example` | Film shared with one player directly |
@@ -231,6 +236,7 @@ The rules are in the API's services, and each has tests.
 | A play on film is tagged with a down the team's game has: 1 to 4 in American football, 1 to 3 in Canadian football. The tendency charts have the same downs, and a play tagged with a down the game does not have is left out of them, counted in a notice and listed so it can be tagged again | `FilmRules.Downs`, `ClipService`, `TendencyService` |
 | Each game has its own three playbooks and some positions of its own. The team works with those of the game it plays; the others are put away, never deleted, and cannot be changed until the team plays that game again. A game the team takes up for the first time brings its standard positions and base formations | `TeamDefaults`, `FormationTemplates`, `PlaybookService`, `DepthChartService` |
 | Playbook changes: approval by default, direct publishing only with the right and inside the coach's playbooks, one waiting change per play, a change made on an older version is refused | `PlaybookService`, `ApprovalService`, `PlaybookChangeApplier` |
+| A rejected change is news to the coach who made it until they open it. That coach, and nobody else, can revise it and send it again, once: it becomes a new request that points back at the rejected one, which stays in the history. A request to delete has nothing to revise, and a change whose formation or play has changed since has to be made again on the current version | `ApprovalService`, `PlaybookChangeApplier` |
 | Only MP4 and MOV files with H.264 video are taken, up to 5 GB and six hours; the server looks at the file itself with ffprobe and does not trust what the browser said about it | `VideoRules`, `VideoService` |
 | A clip lies inside its video and ends after it starts; a clip used in a cutup cannot be deleted, and neither can a video whose clips are | `ClipService`, `VideoService` |
 | A drawing belongs to a moment inside its play: at most five per play, each with up to twelve arrows and texts, shown for one to ten seconds; trimming a play removes the drawings that were cut off | `FilmDrawingsValidator`, `ClipService` |
@@ -247,7 +253,7 @@ The rules are in the API's services, and each has tests.
 dotnet test
 ```
 
-About 375 tests cover the rules above, the permission rules by role, and for every area a check that one team
+About 383 tests cover the rules above, the permission rules by role, and for every area a check that one team
 cannot reach another team's records. One test applies all migrations to an empty database and checks that they
 match the entity classes; another brings a database from before teams could choose their game up to date and
 checks that the team in it is still an American one.

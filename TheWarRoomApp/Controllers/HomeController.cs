@@ -86,6 +86,18 @@ namespace TheWarRoomApp.Controllers
                 }
             }
 
+            // A coach is told here about their own changes that the head coach rejected, until they have opened them.
+            // The head coach publishes directly, so there is never one of these to tell them about.
+            if (model.Me.Role == UserRole.Coordinator || model.Me.Role == UserRole.PositionCoach)
+            {
+                var rejectedResponse = await _client.GetAsync($"api/ApprovalRequest?status={ApprovalStatus.Rejected}");
+                if (rejectedResponse.IsSuccessStatusCode)
+                {
+                    var rejected = (await rejectedResponse.Content.ReadFromJsonAsync<List<ApprovalRequestDto>>())!;
+                    model.SentBackChanges = rejected.Where(r => r.IsNewDecision).ToList();
+                }
+            }
+
             // Film: what was shared with a player, or the team's cutups for a coach
             var cutupsResponse = await _client.GetAsync("api/Cutup");
             if (cutupsResponse.IsSuccessStatusCode)

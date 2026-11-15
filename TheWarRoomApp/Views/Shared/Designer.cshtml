@@ -10,7 +10,10 @@
     // An offensive or special teams play is drawn with routes and blocks. Motion before the snap is in both.
     bool defence = info.Unit == TeamUnit.Defence;
     string line = defence ? "line" : "route";   // what the page calls a line drawn from a player
-    string saveLabel = info.IsRevision ? "Save my changes" : info.CanPublish ? "Save and publish" : "Send for approval";
+    string saveLabel = info.IsRevision ? "Save my changes"
+        : info.CanPublish ? "Save and publish"
+        : info.IsResubmission ? "Send again for approval"
+        : "Send for approval";
 }
 
 <partial name="_Trail" model="info.Trail" />
@@ -21,6 +24,12 @@
     {
         <text>Your request is still waiting for the head coach. Saving here replaces what you proposed.</text>
     }
+    else if (info.IsResubmission)
+    {
+        <text>The head coach rejected this @thing. Change the drawing with the note in mind, then save:
+        @(info.CanPublish ? "you may publish in this playbook now, so it goes live at once."
+            : $"it goes back to the head coach as a new request. Players keep seeing the approved playbook until it is approved.")</text>
+    }
     else if (info.CanPublish)
     {
         <text>Saving publishes the @thing at once: everyone who can read this playbook sees it.</text>
@@ -30,6 +39,22 @@
         <text>Saving sends the @thing to the head coach. Players keep seeing the approved playbook until it is approved.</text>
     }
 </p>
+@if (info.IsResubmission)
+{
+    @* What the head coach said about the drawing below, kept in sight while it is changed *@
+    <div class="card wr-sent-back mb-3">
+        <div class="card-body">
+            <partial name="_HeadCoachNote" model="info.Feedback" />
+            @if (info.FeedbackFrom != null)
+            {
+                <p class="small text-muted mt-2 mb-0">
+                    Rejected by @info.FeedbackFrom@if (info.FeedbackAt != null)
+                    {<text>, @DisplayText.When(info.FeedbackAt.Value)</text>}
+                </p>
+            }
+        </div>
+    </div>
+}
 @if (info.IsFormation)
 {
     <p class="text-muted">

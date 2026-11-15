@@ -20,6 +20,9 @@ namespace TheWarRoomApp.Models
         // For coaches: the playbook changes that are waiting for the head coach
         public List<ApprovalRequestDto> WaitingChanges { get; set; } = new List<ApprovalRequestDto>();
 
+        // For a coach: their own changes that the head coach rejected and that they have not opened yet
+        public List<ApprovalRequestDto> SentBackChanges { get; set; } = new List<ApprovalRequestDto>();
+
         // Film: a player's shared cutups, or all of the team's cutups for a coach (the latest first)
         public List<CutupDto> Cutups { get; set; } = new List<CutupDto>();
 

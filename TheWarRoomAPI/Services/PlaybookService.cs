@@ -10,13 +10,11 @@ namespace TheWarRoomAPI.Services
     {
         private readonly AppDbContext _context;
         private readonly PlaybookChangeApplier _applier;
-        private readonly TimeProvider _clock;
 
-        public PlaybookService(AppDbContext context, PlaybookChangeApplier applier, TimeProvider clock)
+        public PlaybookService(AppDbContext context, PlaybookChangeApplier applier)
         {
             _context = context;
             _applier = applier;
-            _clock = clock;
         }
 
         // ---------- Reading (approved content only) ----------
@@ -190,6 +188,9 @@ namespace TheWarRoomAPI.Services
         }
 
         // ---------- Changing formations ----------
+        //
+        // Every change below is handed in through PlaybookChangeApplier.SubmitAsync, the path every change takes:
+        // it goes live at once for someone who may publish in the playbook, and waits for the head coach otherwise.
 
         public async Task<PlaybookChangeResultDto?> CreateFormationAsync(CurrentUser currentUser, SaveFormationDto dto)
         {
@@ -200,10 +201,10 @@ namespace TheWarRoomAPI.Services
                 return null;
             }
 
-            EnsureCanChange(currentUser, playbook);
+            PlaybookChangeApplier.EnsureCanChange(currentUser, playbook);
 
             var name = dto.Name.Trim();
-            return await SubmitAsync(currentUser, playbook, new ApprovalRequest
+            return await _applier.SubmitAsync(currentUser, playbook, new ApprovalRequest
             {
                 TargetType = PlaybookTargetType.Formation,
                 Action = PlaybookChangeAction.Create,
@@ -222,10 +223,10 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = formation.Playbook!;
-            EnsureCanChange(currentUser, playbook);
+            PlaybookChangeApplier.EnsureCanChange(currentUser, playbook);
             EnsureStartedFromCurrentVersion(dto.Version, formation.Version, formation.Name);
 
-            return await SubmitAsync(currentUser, playbook, new ApprovalRequest
+            return await _applier.SubmitAsync(currentUser, playbook, new ApprovalRequest
             {
                 TargetType = PlaybookTargetType.Formation,
                 Action = PlaybookChangeAction.Update,
@@ -246,9 +247,9 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = formation.Playbook!;
-            EnsureCanChange(currentUser, playbook);
+            PlaybookChangeApplier.EnsureCanChange(currentUser, playbook);
 
-            return await SubmitAsync(currentUser, playbook, new ApprovalRequest
+            return await _applier.SubmitAsync(currentUser, playbook, new ApprovalRequest
             {
                 TargetType = PlaybookTargetType.Formation,
                 Action = PlaybookChangeAction.Delete,
@@ -269,10 +270,10 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = formation.Playbook!;
-            EnsureCanChange(currentUser, playbook);
+            PlaybookChangeApplier.EnsureCanChange(currentUser, playbook);
 
             var name = dto.Name.Trim();
-            return await SubmitAsync(currentUser, playbook, new ApprovalRequest
+            return await _applier.SubmitAsync(currentUser, playbook, new ApprovalRequest
             {
                 TargetType = PlaybookTargetType.Play,
                 Action = PlaybookChangeAction.Create,
@@ -293,10 +294,10 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = play.Formation!.Playbook!;
-            EnsureCanChange(currentUser, playbook);
+            PlaybookChangeApplier.EnsureCanChange(currentUser, playbook);
             EnsureStartedFromCurrentVersion(dto.Version, play.Version, play.Name);
 
-            return await SubmitAsync(currentUser, playbook, new ApprovalRequest
+            return await _applier.SubmitAsync(currentUser, playbook, new ApprovalRequest
             {
                 TargetType = PlaybookTargetType.Play,
                 Action = PlaybookChangeAction.Update,
@@ -319,9 +320,9 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = play.Formation!.Playbook!;
-            EnsureCanChange(currentUser, playbook);
+            PlaybookChangeApplier.EnsureCanChange(currentUser, playbook);
 
-            return await SubmitAsync(currentUser, playbook, new ApprovalRequest
+            return await _applier.SubmitAsync(currentUser, playbook, new ApprovalRequest
             {
                 TargetType = PlaybookTargetType.Play,
                 Action = PlaybookChangeAction.Delete,
@@ -330,62 +331,6 @@ namespace TheWarRoomAPI.Services
                 BaseVersion = play.Version,
                 TargetName = play.Name
             });
-        }
-
-        // ---------- The path every change takes ----------
-
-        // A change is always recorded as a request. Who made it decides what happens next:
-        // someone who may publish in this playbook sees it go live at once; anyone else's waits for the head coach.
-        private async Task<PlaybookChangeResultDto> SubmitAsync(CurrentUser currentUser, Playbook playbook, ApprovalRequest request)
-        {
-            var now = _clock.GetUtcNow().UtcDateTime;
-
-            request.TeamId = currentUser.TeamId;
-            request.PlaybookId = playbook.Id;
-            request.RequestedById = currentUser.Id;
-            request.RequestedAt = now;
-
-            // Business rule: one request at a time may be waiting on a formation or play
-            if (request.Action != PlaybookChangeAction.Create)
-            {
-                bool alreadyWaiting = await _context.ApprovalRequests.AnyAsync(r =>
-                    r.Status == ApprovalStatus.Pending
-                    && r.TargetType == request.TargetType
-                    && r.FormationId == request.FormationId
-                    && r.PlayId == request.PlayId
-                    && r.Action != PlaybookChangeAction.Create);
-                if (alreadyWaiting)
-                {
-                    throw new InvalidOperationException($"A change to {request.TargetName} is already waiting for approval.");
-                }
-            }
-
-            await _applier.ValidateAsync(request);
-
-            bool publishNow = AccessRules.CanPublishPlaybook(currentUser, playbook.Unit);
-            if (publishNow)
-            {
-                await _applier.ApplyAsync(request);
-                request.Status = ApprovalStatus.Approved;
-                request.AutoApproved = true;
-                request.ReviewedById = currentUser.Id;
-                request.ReviewedAt = now;
-            }
-            else
-            {
-                request.Status = ApprovalStatus.Pending;
-            }
-
-            _context.ApprovalRequests.Add(request);
-            await _context.SaveChangesAsync();
-
-            return new PlaybookChangeResultDto
-            {
-                Published = publishNow,
-                RequestId = request.Id,
-                FormationId = request.Formation?.Id ?? request.FormationId,
-                PlayId = request.Play?.Id ?? request.PlayId
-            };
         }
 
         // ---------- Helpers ----------
@@ -427,24 +372,6 @@ namespace TheWarRoomAPI.Services
             if (!AccessRules.CanReadPlaybook(currentUser, unit))
             {
                 throw new ForbiddenException($"The {Labels.Unit(unit).ToLowerInvariant()} playbook is shared with the players of that unit's groups.");
-            }
-        }
-
-        private static void EnsureCanChange(CurrentUser currentUser, Playbook playbook)
-        {
-            if (!AccessRules.CanChangePlaybook(currentUser, playbook.Unit))
-            {
-                throw new ForbiddenException(currentUser.IsCoach
-                    ? $"The {Labels.Unit(playbook.Unit).ToLowerInvariant()} playbook is outside the playbooks you can change."
-                    : "Only coaches can change the playbook.");
-            }
-
-            // Business rule: a playbook of the game the team is not playing is kept as it was left.
-            // It can be read, but nothing in it is changed until the team plays that game again.
-            if (IsPutAway(currentUser, playbook))
-            {
-                throw new InvalidOperationException(
-                    $"This playbook is for {Labels.Rules(playbook.Rules)}. It is put away while the team plays {Labels.Rules(currentUser.Rules)}.");
             }
         }
 

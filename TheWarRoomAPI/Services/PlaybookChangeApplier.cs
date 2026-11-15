@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TheWarRoomAPI.Data;
+using TheWarRoomAPI.DTOs;
 using TheWarRoomAPI.Models;
 
 namespace TheWarRoomAPI.Services
 {
-    // The one place where a playbook change is checked against the playbook and applied to it.
+    // The one place where a playbook change is handed in, checked against the playbook and applied to it.
     // Both ways a change becomes live go through here: a coach publishing directly, and the head coach approving.
     // That keeps the rules identical in both cases.
     public class PlaybookChangeApplier
@@ -16,6 +17,81 @@ namespace TheWarRoomAPI.Services
         {
             _context = context;
             _clock = clock;
+        }
+
+        // ---------- The path every change takes ----------
+
+        // Who may change a playbook, checked before any change is handed in
+        public static void EnsureCanChange(CurrentUser currentUser, Playbook playbook)
+        {
+            if (!AccessRules.CanChangePlaybook(currentUser, playbook.Unit))
+            {
+                throw new ForbiddenException(currentUser.IsCoach
+                    ? $"The {Labels.Unit(playbook.Unit).ToLowerInvariant()} playbook is outside the playbooks you can change."
+                    : "Only coaches can change the playbook.");
+            }
+
+            // Business rule: a playbook of the game the team is not playing is kept as it was left.
+            // It can be read, but nothing in it is changed until the team plays that game again.
+            if (playbook.Rules != currentUser.Rules)
+            {
+                throw new InvalidOperationException(
+                    $"This playbook is for {Labels.Rules(playbook.Rules)}. It is put away while the team plays {Labels.Rules(currentUser.Rules)}.");
+            }
+        }
+
+        // A change is always recorded as a request. Who made it decides what happens next:
+        // someone who may publish in this playbook sees it go live at once; anyone else's waits for the head coach.
+        public async Task<PlaybookChangeResultDto> SubmitAsync(CurrentUser currentUser, Playbook playbook, ApprovalRequest request)
+        {
+            var now = _clock.GetUtcNow().UtcDateTime;
+
+            request.TeamId = currentUser.TeamId;
+            request.PlaybookId = playbook.Id;
+            request.RequestedById = currentUser.Id;
+            request.RequestedAt = now;
+
+            // Business rule: one request at a time may be waiting on a formation or play
+            if (request.Action != PlaybookChangeAction.Create)
+            {
+                bool alreadyWaiting = await _context.ApprovalRequests.AnyAsync(r =>
+                    r.Status == ApprovalStatus.Pending
+                    && r.TargetType == request.TargetType
+                    && r.FormationId == request.FormationId
+                    && r.PlayId == request.PlayId
+                    && r.Action != PlaybookChangeAction.Create);
+                if (alreadyWaiting)
+                {
+                    throw new InvalidOperationException($"A change to {request.TargetName} is already waiting for approval.");
+                }
+            }
+
+            await ValidateAsync(request);
+
+            bool publishNow = AccessRules.CanPublishPlaybook(currentUser, playbook.Unit);
+            if (publishNow)
+            {
+                await ApplyAsync(request);
+                request.Status = ApprovalStatus.Approved;
+                request.AutoApproved = true;
+                request.ReviewedById = currentUser.Id;
+                request.ReviewedAt = now;
+            }
+            else
+            {
+                request.Status = ApprovalStatus.Pending;
+            }
+
+            _context.ApprovalRequests.Add(request);
+            await _context.SaveChangesAsync();
+
+            return new PlaybookChangeResultDto
+            {
+                Published = publishNow,
+                RequestId = request.Id,
+                FormationId = request.Formation?.Id ?? request.FormationId,
+                PlayId = request.Play?.Id ?? request.PlayId
+            };
         }
 
         // Checks that the change still fits the playbook as it is right now.

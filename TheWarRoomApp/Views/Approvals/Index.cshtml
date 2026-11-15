@@ -3,7 +3,11 @@
 @{
     ViewData["Title"] = "Playbook changes";
     bool history = Model.Show == "history";
+    bool sentBack = Model.Show == "sent-back";
     var rows = history ? Model.History : Model.Waiting;
+
+    // How many of the changes that were sent back the coach has not opened yet
+    int news = Model.SentBack.Count(r => r.IsNewDecision);
 }
 
 <h1 class="h3">Playbook changes</h1>
@@ -14,21 +18,82 @@
     }
     else
     {
-        <text>The changes you sent to the head coach, and the changes made in the playbooks you coach.</text>
+        <text>The changes you sent to the head coach, and the changes made in the playbooks you coach. A change the head coach rejects comes back to you with a note, and you can revise it and send it again.</text>
     }
 </p>
 
-@* Waiting / history are links that reload the page *@
+@* Waiting / sent back / history are links that reload the page *@
 <ul class="nav nav-tabs mb-3">
     <li class="nav-item">
-        <a class="nav-link @(history ? "" : "active")" asp-action="Index">Waiting (@Model.Waiting.Count)</a>
+        <a class="nav-link @(history || sentBack ? "" : "active")" asp-action="Index" asp-route-show="waiting">Waiting (@Model.Waiting.Count)</a>
     </li>
+    @if (!User.IsHeadCoach())
+    {
+        <li class="nav-item">
+            <a class="nav-link @(sentBack ? "active" : "")" asp-action="Index" asp-route-show="sent-back">
+                Sent back (@Model.SentBack.Count)
+                @if (news > 0)
+                {
+                    <span class="badge wr-badge-new">@news new</span>
+                }
+            </a>
+        </li>
+    }
     <li class="nav-item">
         <a class="nav-link @(history ? "active" : "")" asp-action="Index" asp-route-show="history">History</a>
     </li>
 </ul>
 
-@if (rows.Count == 0)
+@if (sentBack)
+{
+    @* The coach's own changes that the head coach rejected, each with the note and the way to send it again *@
+    if (Model.SentBack.Count == 0)
+    {
+        <p class="text-muted">Nothing has been sent back to you.</p>
+    }
+    else
+    {
+        foreach (var item in Model.SentBack)
+        {
+            <div class="card wr-sent-back mb-3">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-1">
+                        <h2 class="h6 mb-0">
+                            <a asp-action="Details" asp-route-id="@item.Id">@DisplayText.Change(item.Action, item.TargetType): @item.TargetName</a>
+                            @if (item.IsNewDecision)
+                            {
+                                <span class="badge wr-badge-new">New</span>
+                            }
+                        </h2>
+                        <span class="small text-muted">@item.PlaybookName</span>
+                    </div>
+                    <p class="small text-muted mb-2">
+                        Rejected by @item.ReviewedBy@if (item.ReviewedAt != null)
+                        {<text>, @DisplayText.When(item.ReviewedAt.Value)</text>}
+                    </p>
+                    <partial name="_HeadCoachNote" model="item.ReviewNote" />
+                    <div class="mt-3">
+                        @if (item.CanResubmit)
+                        {
+                            <a asp-action="Resubmit" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Revise and send again</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">See the drawing</a>
+                        }
+                        else
+                        {
+                            @* A request to delete, or one whose play has changed since: its page says what can be done *@
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">Open the request</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        <p class="small text-muted">
+            A change stays here until you send it again, or until its formation or play changes in the playbook.
+            Every rejected change is also kept under History.
+        </p>
+    }
+}
+else if (rows.Count == 0)
 {
     <p class="text-muted">@(history ? "No playbook changes have been made yet." : "Nothing is waiting for approval.")</p>
 }
@@ -51,11 +116,22 @@ else
                 <tr>
                     <td>
                         <a asp-action="Details" asp-route-id="@item.Id">@DisplayText.Change(item.Action, item.TargetType): @item.TargetName</a>
+                        @if (item.ResubmittedFromId != null)
+                        {
+                            @* Revised by the coach after an earlier version was rejected *@
+                            <span class="badge text-bg-info">Sent again</span>
+                        }
                     </td>
                     <td>@item.PlaybookName</td>
                     <td>@item.RequestedBy</td>
                     <td class="text-nowrap">@DisplayText.When(item.RequestedAt)</td>
-                    <td><span class="badge text-bg-@DisplayText.StatusColour(item.Status)">@DisplayText.Status(item)</span></td>
+                    <td>
+                        <span class="badge text-bg-@DisplayText.StatusColour(item.Status)">@DisplayText.Status(item)</span>
+                        @if (item.IsNewDecision)
+                        {
+                            <span class="badge wr-badge-new">New</span>
+                        }
+                    </td>
                     <td class="text-nowrap">
                         @if (item.CanReview)
                         {
@@ -64,6 +140,10 @@ else
                         else if (item.CanRevise)
                         {
                             <span class="small text-muted">Your request</span>
+                        }
+                        else if (item.CanResubmit)
+                        {
+                            <a asp-action="Resubmit" asp-route-id="@item.Id">Revise and send again</a>
                         }
                     </td>
                 </tr>

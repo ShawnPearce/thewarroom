@@ -94,11 +94,13 @@ namespace TheWarRoomAPI.Data
             modelBuilder.Entity<Formation>().Property(f => f.Name).UseCollation("NOCASE");
             modelBuilder.Entity<Play>().Property(p => p.Name).UseCollation("NOCASE");
 
-            // A change request points at two users: who asked for it and who decided on it
+            // A change request points at two users: who asked for it and who decided on it.
+            // One that was sent again after a rejection also points at the request that was rejected.
             modelBuilder.Entity<ApprovalRequest>(entity =>
             {
                 entity.HasOne(r => r.RequestedBy).WithMany().HasForeignKey(r => r.RequestedById);
                 entity.HasOne(r => r.ReviewedBy).WithMany().HasForeignKey(r => r.ReviewedById);
+                entity.HasOne(r => r.ResubmittedFrom).WithMany().HasForeignKey(r => r.ResubmittedFromId);
             });
 
             // The names of the teams on film are unique without regard to upper/lower case

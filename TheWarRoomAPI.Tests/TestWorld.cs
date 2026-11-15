@@ -55,7 +55,7 @@ namespace TheWarRoomAPI.Tests
         public ScheduleService Schedule(AppDbContext context) => new ScheduleService(context, Clock);
         public AttendanceService Attendance(AppDbContext context) => new AttendanceService(context, Schedule(context), Clock);
         public TeamService Teams(AppDbContext context) => new TeamService(context, Auth(context), PasswordHasher, Clock, Options.Create(Site));
-        public PlaybookService Playbooks(AppDbContext context) => new PlaybookService(context, new PlaybookChangeApplier(context, Clock), Clock);
+        public PlaybookService Playbooks(AppDbContext context) => new PlaybookService(context, new PlaybookChangeApplier(context, Clock));
         public ApprovalService Approvals(AppDbContext context) => new ApprovalService(context, new PlaybookChangeApplier(context, Clock), Clock);
         public ScoutedTeamService ScoutedTeams(AppDbContext context) => new ScoutedTeamService(context);
         public GameService Games(AppDbContext context) => new GameService(context, Clock);

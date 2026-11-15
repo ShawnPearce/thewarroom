@@ -31,6 +31,21 @@ namespace TheWarRoomAPI.Controllers
             }
         }
 
+        // GET: api/ApprovalRequest/notices   (what the menu counts: waiting for the head coach, sent back to a coach)
+        [HttpGet("notices")]
+        public async Task<ActionResult<ApprovalNoticesDto>> GetNotices()
+        {
+            try
+            {
+                var notices = await _approvalService.GetNoticesAsync(CurrentUser);
+                return Ok(notices);   // 200 OK
+            }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden (players)
+            }
+        }
+
         // GET: api/ApprovalRequest/5   (with the before and after diagrams)
         [HttpGet("{id}")]
         public async Task<ActionResult<ApprovalRequestDetailDto>> GetRequest(int id)
@@ -144,6 +159,55 @@ namespace TheWarRoomAPI.Controllers
             catch (InvalidOperationException ex)
             {
                 return Conflict(ex.Message);   // 409 Conflict (already decided)
+            }
+        }
+
+        // POST: api/ApprovalRequest/5/seen   (the requester has read the head coach's rejection)
+        [HttpPost("{id}/seen")]
+        public async Task<IActionResult> MarkSeen(int id)
+        {
+            try
+            {
+                var result = await _approvalService.MarkSeenAsync(CurrentUser, id);
+                if (!result)
+                {
+                    return NotFound();   // 404 Not Found
+                }
+
+                return NoContent();   // 204 No Content
+            }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden (somebody else's request)
+            }
+        }
+
+        // POST: api/ApprovalRequest/5/resubmit   (the requester revises a rejected change and sends it again)
+        [HttpPost("{id}/resubmit")]
+        public async Task<ActionResult<PlaybookChangeResultDto>> Resubmit(int id, ReviseApprovalRequestDto dto)
+        {
+            try
+            {
+                var result = await _approvalService.ResubmitAsync(CurrentUser, id, dto);
+                if (result == null)
+                {
+                    return NotFound();   // 404 Not Found
+                }
+
+                if (result.Published)
+                {
+                    return Ok(result);   // 200 OK: this coach may publish by now, so the change is live
+                }
+
+                return Accepted(result);   // 202 Accepted: a new request is waiting for the head coach
+            }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);   // 409 Conflict (not rejected, sent again already, or the playbook changed)
             }
         }
     }

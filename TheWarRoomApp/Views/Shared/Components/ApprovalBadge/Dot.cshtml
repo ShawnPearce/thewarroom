@@ -1,0 +1,7 @@
+@model ApprovalBadgeViewModel
+
+@* On the button that opens the menu on a phone: a dot says that the menu has a number to show *@
+@if (Model.Count > 0)
+{
+    <span class="wr-topbar-dot"><span class="visually-hidden">@Model.Count @Model.Meaning</span></span>
+}

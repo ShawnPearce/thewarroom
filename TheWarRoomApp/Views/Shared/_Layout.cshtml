@@ -69,8 +69,11 @@
                         </a>
                         @if (User.IsCoach())
                         {
+                            @* The number tells a coach that something needs them: changes waiting for the head coach's
+                               decision, or changes the head coach sent back to this coach *@
                             <a class="wr-nav-link @At("Approvals")" asp-area="" asp-controller="Approvals" asp-action="Index">
                                 <svg class="wr-icon"><use href="#i-check"></use></svg><span>Approvals</span>
+                                @await Component.InvokeAsync("ApprovalBadge")
                             </a>
                         }
 
@@ -164,6 +167,10 @@
                 <button class="wr-topbar-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav"
                         aria-label="Open the menu">
                     <svg class="wr-icon"><use href="#i-menu"></use></svg>
+                    @if (User.IsCoach())
+                    {
+                        @await Component.InvokeAsync("ApprovalBadge", new { dot = true })
+                    }
                 </button>
                 <a class="wr-brand" asp-area="" asp-controller="Home" asp-action="Dashboard">
                     <img src="~/favicon.svg" alt="" width="28" height="28"/>

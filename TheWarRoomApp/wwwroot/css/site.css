@@ -468,6 +468,21 @@ dt {
   outline-color: var(--wr-yellow-400);
 }
 
+/* A number at the end of a menu entry: something there needs the reader */
+.wr-nav-badge {
+  flex: 0 0 auto;
+  min-width: 1.35rem;
+  margin-left: auto;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background-color: var(--wr-yellow-400);
+  color: var(--wr-ink-900);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+
 /* The foot of the menu: the guide, and who is signed in */
 .wr-sidebar-foot {
   flex: 0 0 auto;
@@ -581,6 +596,7 @@ dt {
 }
 
 .wr-topbar-menu {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -594,6 +610,18 @@ dt {
 
 .wr-topbar-menu:hover {
   background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* The menu is folded away on a phone, so its button says when an entry in it has a number */
+.wr-topbar-dot {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.3rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 2px solid var(--wr-ink-900);
+  border-radius: 50%;
+  background-color: var(--wr-yellow-400);
 }
 
 .wr-footer {
@@ -1278,6 +1306,57 @@ progress {
   font-weight: 500;
 }
 
+/* News at the top of the dashboard */
+.wr-notice {
+  display: flex;
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--wr-amber-200);
+  border-left: 4px solid var(--wr-yellow-500);
+  border-radius: var(--wr-radius-lg);
+  background-color: var(--wr-amber-50);
+  box-shadow: var(--wr-shadow-xs);
+}
+
+.wr-notice-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background-color: var(--wr-yellow-400);
+  color: var(--wr-ink-900);
+}
+
+.wr-notice-body {
+  min-width: 0;
+}
+
+.wr-notice-title {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.wr-notice-list {
+  margin: 0 0 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+
+.wr-notice-list li + li {
+  margin-top: 0.45rem;
+}
+
+.wr-notice-note {
+  display: block;
+  color: var(--wr-slate-700);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
 .wr-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
@@ -1556,6 +1635,49 @@ a.wr-tile:hover {
 /* Notes keep the line breaks they were typed with */
 .wr-notes {
   white-space: pre-line;
+}
+
+/* A change the head coach sent back: the amber line down the side marks it wherever it is shown */
+.wr-sent-back {
+  border-left: 4px solid var(--wr-yellow-500);
+}
+
+.wr-sent-back-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.wr-sent-back-title .wr-icon {
+  color: var(--wr-amber-800);
+}
+
+/* What the head coach wrote about it */
+.wr-feedback {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--wr-amber-200);
+  border-radius: var(--wr-radius);
+  background-color: var(--wr-amber-50);
+  color: var(--wr-slate-800);
+}
+
+.wr-feedback-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+  color: var(--wr-amber-800);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* "New": something the reader has not opened yet */
+.wr-badge-new {
+  background-color: var(--wr-yellow-400);
+  color: var(--wr-ink-900);
 }
 
 .wr-legend svg {

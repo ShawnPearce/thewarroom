@@ -270,8 +270,28 @@ namespace TheWarRoomAPI.Data
                 diagram.Drawings.Add(new DiagramDrawing { Id = "t1", Type = "text", X = -25, Y = 16, Text = "Slants break at 5" });
             });
 
-            // Waiting for the head coach: a new play from the offensive line coach
-            lions.AddNewPlayRequest("I-Form", lineCoach, "Counter Left", "Misdirection off Power. Both backs step right, then the ball goes left.",
+            // A new play from the offensive line coach, in two rounds. The head coach rejected the first drawing
+            // with a note; the coach revised it and sent it again, and that second request is waiting now.
+            var counterLeftFirst = lions.AddNewPlayRequest("I-Form", lineCoach, "Counter Left", "Misdirection off Power. Both backs step right, then the ball goes left.",
+                diagram =>
+                {
+                    Route(diagram, "RB", new[] { 2, 1.0 }, new[] { -4, 6.0 }, new[] { -7, 11.0 });
+                    Block(diagram, "FB", new[] { -4, 4.5 });
+                    Block(diagram, "RG", new[] { -2, -1.5 }, new[] { -6, 0.0 }, new[] { -7, 2.0 });
+                    Block(diagram, "RT", new[] { -2, -2.5 }, new[] { -9, -1.0 }, new[] { -10, 2.0 });
+                    foreach (var lineman in new[] { "LT", "LG", "C", "TE" })
+                    {
+                        Block(diagram, lineman, new[] { 1, 1.5 });
+                    }
+                });
+            counterLeftFirst.RequestedAt = now.AddDays(-2);
+            counterLeftFirst.Status = ApprovalStatus.Rejected;
+            counterLeftFirst.ReviewedBy = lions.HeadCoach;
+            counterLeftFirst.ReviewedAt = now.AddDays(-1);
+            counterLeftFirst.ReviewNote = "Pulling the tackle as well leaves the back side open. Pull the right guard only and send it again.";
+            counterLeftFirst.DecisionSeenAt = now.AddHours(-20);   // the coach has read it
+
+            var counterLeft = lions.AddNewPlayRequest("I-Form", lineCoach, "Counter Left", "Misdirection off Power. Both backs step right, then the ball goes left.",
                 diagram =>
                 {
                     Route(diagram, "RB", new[] { 2, 1.0 }, new[] { -4, 6.0 }, new[] { -7, 11.0 });
@@ -282,8 +302,31 @@ namespace TheWarRoomAPI.Data
                         Block(diagram, lineman, new[] { 1, 1.5 });
                     }
                 });
+            counterLeft.RequestedAt = now.AddHours(-18);
+            counterLeft.ResubmittedFrom = counterLeftFirst;
 
-            // Already decided: the head coach turned this one down, so Cover 3 is unchanged
+            // Rejected, and not read yet: a play the receivers coach suggested. The coach is told when signing in,
+            // and can revise the drawing with the head coach's note beside it and send it again.
+            var mesh = lions.AddNewPlayRequest("Shotgun Spread", receiversCoach, "Mesh", "Two shallow crossers under a post and a dig. Throw to the crosser who comes open.",
+                diagram =>
+                {
+                    Route(diagram, "H", new[] { 2, 4.0 }, new[] { 20, 7.0 });
+                    Route(diagram, "Y", new[] { -2, 4.0 }, new[] { -20, 7.0 });
+                    Route(diagram, "X", new[] { 0, 10.0 }, new[] { 6, 10.0 });
+                    Route(diagram, "Z", new[] { 0, 11.0 }, new[] { -5, 16.0 });
+                    Route(diagram, "RB", new[] { 4, -1.0 }, new[] { 9, 2.0 });
+                    foreach (var lineman in new[] { "LT", "LG", "C", "RG", "RT" })
+                    {
+                        Block(diagram, lineman, new[] { 0, 1.5 });
+                    }
+                });
+            mesh.RequestedAt = now.AddDays(-1);
+            mesh.Status = ApprovalStatus.Rejected;
+            mesh.ReviewedBy = lions.HeadCoach;
+            mesh.ReviewedAt = now.AddHours(-3);
+            mesh.ReviewNote = "The two crossers meet at the same depth. Run H at six yards with Y underneath at four, and send it again.";
+
+            // Rejected, and not read yet: the head coach turned this change down, so Cover 3 is unchanged
             var rejected = lions.AddUpdateRequest(coverThree, frontSevenCoach, "Cover 3", coverThree.Notes, diagram =>
             {
                 diagram.Players.First(p => p.Label == "MLB").Paths.Clear();

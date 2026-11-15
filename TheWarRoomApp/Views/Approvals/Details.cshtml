@@ -8,7 +8,14 @@
     bool isDelete = Model.Action == PlaybookChangeAction.Delete;
     bool isNewPlay = isPlay && Model.Action == PlaybookChangeAction.Create;
     bool approved = Model.Status == ApprovalStatus.Approved;
+    bool rejected = Model.Status == ApprovalStatus.Rejected;
     bool hasBefore = !string.IsNullOrEmpty(Model.BeforeJson);
+
+    // The coach who made a change that was rejected is shown the note with what can be done next
+    bool sentBackToMe = rejected && Model.RequestedById == User.GetUserId();
+
+    // True when the formation or play the change was about (for a new play, the formation it is drawn on) was deleted since
+    bool targetIsGone = Model.Action == PlaybookChangeAction.Create || !isPlay ? Model.FormationId == null : Model.PlayId == null;
     bool hasAfter = !string.IsNullOrEmpty(Model.ProposedJson);
 
     // What the two drawings are, in words
@@ -61,14 +68,91 @@
         <dt class="col-sm-3">Withdrawn</dt>
         <dd class="col-sm-9">@DisplayText.When(Model.ReviewedAt.Value)</dd>
     }
-    @if (!string.IsNullOrWhiteSpace(Model.ReviewNote))
+    @if (!string.IsNullOrWhiteSpace(Model.ReviewNote) && !sentBackToMe)
     {
         <dt class="col-sm-3">Head coach's note</dt>
         <dd class="col-sm-9 wr-notes">@Model.ReviewNote</dd>
     }
+    @if (Model.ResubmittedAsId != null && !sentBackToMe)
+    {
+        <dt class="col-sm-3">Sent again</dt>
+        <dd class="col-sm-9">
+            The coach revised this change and sent it again.
+            <a asp-action="Details" asp-route-id="@Model.ResubmittedAsId">Open the newer request</a>
+        </dd>
+    }
 </dl>
 
-@if (Model.IsStale)
+@if (sentBackToMe)
+{
+    @* The head coach's feedback, and the way to act on it *@
+    <div class="card wr-sent-back mb-4">
+        <div class="card-body">
+            <h2 class="h5 wr-sent-back-title"><svg class="wr-icon" aria-hidden="true"><use href="#i-return"></use></svg>The head coach sent this back</h2>
+            <partial name="_HeadCoachNote" model="Model.ReviewNote" />
+            @if (Model.CanResubmit)
+            {
+                <p class="mt-3 mb-2">
+                    Change the drawing with the note in mind and send it again.
+                    @(Model.CanPublish ? "You may publish in this playbook now, so it goes live when you save."
+                        : "It goes back to the head coach as a new request, and this one stays in the history.")
+                </p>
+                <a asp-action="Resubmit" asp-route-id="@Model.Id" class="btn btn-primary">Revise and send again</a>
+            }
+            else if (Model.ResubmittedAsId != null)
+            {
+                <p class="mt-3 mb-0">
+                    You revised this change and sent it again.
+                    <a asp-action="Details" asp-route-id="@Model.ResubmittedAsId">Open the newer request</a>
+                </p>
+            }
+            else if (isDelete)
+            {
+                <p class="mt-3 mb-0">
+                    A request to delete has no drawing to revise. If the @(isPlay ? "play" : "formation") should still go,
+                    ask for the delete again from the playbook.
+                </p>
+            }
+            else if (Model.IsStale)
+            {
+                <p class="mt-3 mb-0">
+                    @if (targetIsGone)
+                    {
+                        <text>What this change was drawn on is no longer in the playbook, so it cannot be sent again.</text>
+                    }
+                    else
+                    {
+                        <text>@Model.TargetName has changed since you made this request, so this drawing is of an older version.
+                        Open it in the playbook and make your change on the current version.</text>
+                    }
+                </p>
+            }
+            else
+            {
+                <p class="mt-3 mb-0">This change can no longer be sent again from here.</p>
+            }
+        </div>
+    </div>
+}
+
+@if (Model.ResubmittedFromId != null)
+{
+    @* A change that was revised after a rejection: what the head coach said about the earlier drawing *@
+    <div class="card wr-sent-back mb-4">
+        <div class="card-body">
+            <h2 class="h5 wr-sent-back-title"><svg class="wr-icon" aria-hidden="true"><use href="#i-return"></use></svg>Sent again after a rejection</h2>
+            <p class="mb-2">@Model.RequestedBy revised this change after an earlier drawing was rejected. What is shown below is the new drawing.</p>
+            <partial name="_HeadCoachNote" model="Model.EarlierReviewNote" />
+            <p class="small text-muted mt-2 mb-0">
+                Rejected by @(Model.EarlierReviewedBy ?? "the head coach")@if (Model.EarlierReviewedAt != null)
+                {<text>, @DisplayText.When(Model.EarlierReviewedAt.Value)</text>}
+                &middot; <a asp-action="Details" asp-route-id="@Model.ResubmittedFromId">See the earlier request</a>
+            </p>
+        </div>
+    </div>
+}
+
+@if (Model.IsStale && Model.Status == ApprovalStatus.Pending)
 {
     <div class="alert alert-warning" role="alert">
         @Model.TargetName has changed since this request was made, so the request can no longer be approved.
@@ -144,7 +228,10 @@
                 <div class="form-group">
                     <label for="Note" class="control-label">Note for the coach</label>
                     <textarea id="Note" name="Note" class="form-control" rows="2" maxlength="500"></textarea>
-                    <div class="form-text">Optional. The coach sees it with your decision.</div>
+                    <div class="form-text">
+                        Optional. The coach sees it with your decision. If you reject the change, say what to change:
+                        the coach is told, and can revise the drawing and send it again.
+                    </div>
                 </div>
                 <button type="submit" asp-action="Approve" asp-route-id="@Model.Id" class="btn btn-success" disabled="@Model.IsStale">Approve</button>
                 <button type="submit" asp-action="Reject" asp-route-id="@Model.Id" class="btn btn-outline-danger">Reject</button>

@@ -71,5 +71,14 @@ namespace TheWarRoomAPI.Models
 
         [StringLength(500)]
         public string? ReviewNote { get; set; }
+
+        // When the coach who made the request first opened it after the head coach rejected it.
+        // Empty while the rejection is still news to that coach.
+        public DateTime? DecisionSeenAt { get; set; }
+
+        // Foreign key for the ApprovalRequest entity: the rejected request this one was made from,
+        // when the coach revised a change the head coach had rejected and sent it again
+        public int? ResubmittedFromId { get; set; }
+        public ApprovalRequest? ResubmittedFrom { get; set; }
     }
 }

@@ -14,6 +14,34 @@
     <p class="wr-welcome-date">@DateTime.Today.ToString("dddd, MMMM d")</p>
 </section>
 
+@if (Model.SentBackChanges.Count > 0)
+{
+    @* News for a coach: the head coach rejected a change they made. It stays here until they open it. *@
+    <section class="wr-notice" role="status">
+        <span class="wr-notice-icon" aria-hidden="true"><svg class="wr-icon"><use href="#i-return"></use></svg></span>
+        <div class="wr-notice-body">
+            <h2 class="wr-notice-title">
+                The head coach sent back @DisplayText.Count(Model.SentBackChanges.Count, "playbook change", "playbook changes")
+            </h2>
+            <ul class="wr-notice-list">
+                @foreach (var request in Model.SentBackChanges.Take(3))
+                {
+                    <li>
+                        <a asp-controller="Approvals" asp-action="Details" asp-route-id="@request.Id">@DisplayText.Change(request.Action, request.TargetType): @request.TargetName</a>
+                        @if (!string.IsNullOrWhiteSpace(request.ReviewNote))
+                        {
+                            <span class="wr-notice-note">@request.ReviewNote</span>
+                        }
+                    </li>
+                }
+            </ul>
+            <a class="wr-more" asp-controller="Approvals" asp-action="Index" asp-route-show="sent-back">
+                Read the @(Model.SentBackChanges.Count == 1 ? "note" : "notes") and send @(Model.SentBackChanges.Count == 1 ? "it" : "them") again<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg>
+            </a>
+        </div>
+    </section>
+}
+
 @* The week at a glance: each tile leads to its page *@
 <div class="wr-tiles">
     @if (nextEvent != null)

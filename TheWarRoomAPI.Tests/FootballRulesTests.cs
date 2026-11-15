@@ -498,6 +498,58 @@ namespace TheWarRoomAPI.Tests
             }
         }
 
+        [Fact]
+        public async Task ARejectedChangeInTheOtherGame_IsPutAwayToo_AndIsSentAgainOnlyWhenThatGameIsBack()
+        {
+            var headCoach = await _world.AddTeamAsync();
+            var receiversCoach = await _world.AddCoachAsync(headCoach, UserRole.PositionCoach, null, "Receivers");
+            var revised = new ReviseApprovalRequestDto
+            {
+                Name = "Slant Return",
+                DiagramJson = await _world.DiagramAsync(headCoach, "Shotgun Spread", "X", "Z")
+            };
+
+            int requestId;
+            using (var context = _world.NewContext())
+            {
+                var result = await _world.Playbooks(context).CreatePlayAsync(receiversCoach, new SavePlayDto
+                {
+                    FormationId = await _world.FormationIdAsync(headCoach, "Shotgun Spread"),
+                    Name = "Slant",
+                    DiagramJson = await _world.DiagramAsync(headCoach, "Shotgun Spread", "X")
+                });
+                requestId = result!.RequestId;
+
+                Assert.True(await _world.Approvals(context).RejectAsync(headCoach, requestId, new ReviewDecisionDto { Note = "Not yet." }));
+                Assert.Equal(1, (await _world.Approvals(context).GetNoticesAsync(receiversCoach)).SentBack);
+            }
+
+            await SwitchAsync(headCoach, FootballRules.Canadian);
+            receiversCoach = await _world.AsAsync(receiversCoach.Id);
+
+            // The American playbook is put away, and so is what was said about its plays
+            using (var context = _world.NewContext())
+            {
+                var service = _world.Approvals(context);
+
+                Assert.Equal(0, (await service.GetNoticesAsync(receiversCoach)).SentBack);
+                Assert.False((await service.GetRequestAsync(receiversCoach, requestId))!.CanResubmit);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => service.ResubmitAsync(receiversCoach, requestId, revised));
+            }
+
+            await SwitchAsync(headCoach, FootballRules.American);
+            receiversCoach = await _world.AsAsync(receiversCoach.Id);
+
+            using (var context = _world.NewContext())
+            {
+                var service = _world.Approvals(context);
+
+                Assert.Equal(1, (await service.GetNoticesAsync(receiversCoach)).SentBack);
+                Assert.True((await service.GetRequestAsync(receiversCoach, requestId))!.CanResubmit);
+                Assert.NotNull(await service.ResubmitAsync(receiversCoach, requestId, revised));
+            }
+        }
+
         // ---------- Film: four downs in the American game, three in the Canadian ----------
 
         [Fact]

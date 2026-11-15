@@ -1,0 +1,14 @@
+@model string?
+
+@* The note the head coach wrote when rejecting a change: the feedback the coach revises the drawing from *@
+<div class="wr-feedback">
+    <div class="wr-feedback-label"><svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-note"></use></svg>Head coach's note</div>
+    @if (string.IsNullOrWhiteSpace(Model))
+    {
+        <p class="mb-0 text-muted">The head coach did not leave a note.</p>
+    }
+    else
+    {
+        <p class="wr-notes mb-0">@Model</p>
+    }
+</div>
