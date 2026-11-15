@@ -11,11 +11,18 @@
     new PageLink("Tendencies", Url.Action("Index") + "?" + Model.BackQuery),
     new PageLink("Plays", null) })" />
 
-<h1 class="h3">@team on offence: @DisplayText.Situation(Model.Down, Model.Distance)</h1>
+<h1 class="h3">@team on offence: @(Model.LeftOut ? "plays left out of the charts" : DisplayText.Situation(Model.Down, Model.Distance))</h1>
+@if (Model.LeftOut)
+{
+    <p class="text-muted">
+        These plays are tagged with a down that the game the team plays does not have, so the tendency charts do not count them.
+        Change a play's tag to give it a down that game has.
+    </p>
+}
 <p class="text-muted">
     @if (Model.Clips.Count == 0)
     {
-        <text>No tagged play matches.</text>
+        <text>@(Model.LeftOut ? "No tagged play is left out." : "No tagged play matches.")</text>
     }
     else
     {
@@ -49,6 +56,10 @@
                     <td><span class="badge @(clip.Tag!.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@clip.Tag.PlayType</span></td>
                     <td>@clip.Title</td>
                     <td class="text-nowrap text-end">
+                        @if (Model.LeftOut)
+                        {
+                            <a asp-controller="Film" asp-action="EditClip" asp-route-id="@clip.Id">Change the tag</a> <text>|</text>
+                        }
                         <a asp-controller="Film" asp-action="Video" asp-route-id="@clip.VideoId">Open the video</a>
                     </td>
                 </tr>

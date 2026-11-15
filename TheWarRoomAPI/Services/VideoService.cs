@@ -46,10 +46,13 @@ namespace TheWarRoomAPI.Services
         {
             FilmRules.EnsureCoach(currentUser);
 
+            int downs = FilmRules.Downs(currentUser.Rules);
+
             var video = await _context.Videos
                 .Where(v => v.Id == id && v.TeamId == currentUser.TeamId)
                 .Select(v => new VideoDetailDto
                 {
+                    Downs = downs,
                     Id = v.Id,
                     GameId = v.GameId,
                     Title = v.Title,

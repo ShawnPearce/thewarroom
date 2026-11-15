@@ -51,6 +51,13 @@ namespace TheWarRoomApp.Controllers
             }
             model.Games = (await gamesResponse.Content.ReadFromJsonAsync<List<GameDto>>())!;
 
+            // A down the team's game does not have is not a choice: a 4th down in an address
+            // that was kept from before the team took up Canadian football
+            if (model.Down > (model.Games.FirstOrDefault()?.Downs ?? 4))
+            {
+                model.Down = null;
+            }
+
             // Only this team's games can be chosen. Choosing none of them, or all of them, counts every game.
             model.GameIds = gameIds.Where(id => model.Games.Any(g => g.Id == id)).Distinct().ToList();
             if (model.GameIds.Count == model.Games.Count)
@@ -69,7 +76,7 @@ namespace TheWarRoomApp.Controllers
         }
 
         // GET: Tendencies/Plays?teamId=2&gameIds=2&down=3&distance=Long   (the plays behind one figure)
-        public async Task<IActionResult> Plays(int? teamId, List<int> gameIds, int? down, DistanceRange? distance)
+        public async Task<IActionResult> Plays(int? teamId, List<int> gameIds, int? down, DistanceRange? distance, bool leftOut = false)
         {
             if (User.IsPlayer())
             {
@@ -86,13 +93,16 @@ namespace TheWarRoomApp.Controllers
             var model = new TendencyPlaysViewModel
             {
                 Team = teams.FirstOrDefault(t => t.Id == teamId),
-                Down = down >= 1 && down <= 4 ? down : null,
-                Distance = distance
+                Down = !leftOut && down >= 1 && down <= 4 ? down : null,
+                Distance = leftOut ? null : distance,
+                LeftOut = leftOut
             };
             gameIds = gameIds.Distinct().ToList();
 
-            // The same filters the figure was counted with, and tagged plays only
-            var clipsResponse = await _client.GetAsync("api/Clip?tagged=true&" + ApiQuery(model.Team?.Id, gameIds, model.Down, model.Distance));
+            // The same filters the figure was counted with, and only the plays the charts count.
+            // "leftOut" asks for the other ones: tagged with a down the team's game does not have.
+            string charted = leftOut ? "false" : "true";
+            var clipsResponse = await _client.GetAsync($"api/Clip?charted={charted}&" + ApiQuery(model.Team?.Id, gameIds, model.Down, model.Distance));
             if (!clipsResponse.IsSuccessStatusCode)
             {
                 return await ApiFailureAsync(clipsResponse);

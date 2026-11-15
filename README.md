@@ -13,9 +13,9 @@ and each sees and changes what their role allows.
 | Area | What a team can do |
 |---|---|
 | Team and depth charts | Add coaches and players, put them in position groups, and keep a depth chart for every week. A player can be the starter at one position and a backup at another. |
-| American or Canadian football | The head coach chooses the game the team plays. It sets the positions on the depth chart and the playbooks the team works in: 11 players a side, or 12 on the wider Canadian field. |
+| American or Canadian football | The head coach chooses the game the team plays. It sets the positions on the depth chart, the playbooks the team works in (11 players a side, or 12 on the wider Canadian field) and the downs film is tagged with (four, or three). |
 | Schedule and attendance | List practices, games and meetings. Coaches record attendance when the head coach has switched tracking on. |
-| Playbook | A playbook for offence, defence and special teams, organised by formation. Coaches draw formations and plays on a field. A change waits for the head coach's approval unless the coach has been given the right to publish, and players keep seeing the last approved version in the meantime. |
+| Playbook | A playbook for offence, defence and special teams, organised by formation. Coaches draw formations and plays on a field: routes, blocks and motion on offence; rushes, zone and man coverage and motion on defence. A change waits for the head coach's approval unless the coach has been given the right to publish, and players keep seeing the last approved version in the meantime. |
 | Film | Keep the games a team has film of, its own and its opponents'. Upload a game's video and play it in the browser. Mark plays on the video itself, tag each play (run or pass, down, distance, team on offence) and draw arrows and text on it. Build cutups of chosen plays in a chosen order, have each made into one video with the time between plays gone, and share it with the whole team, with position groups or with single players. |
 | Tendencies | Run and pass shares for a team on offence, by game, down and distance, always with the number of plays they come from. |
 | Study time | How long each player was signed in, and how long they watched film and read the playbook, as three separate numbers per week. |
@@ -228,6 +228,7 @@ The rules are in the API's services, and each has tests.
 | Depth chart: ranks 1, 2, 3 with no gaps; a player once per position; only active players of the position's group | `DepthChartService` |
 | Attendance only while the head coach has it switched on, and only by permitted coaches | `AttendanceService` |
 | The head coach chooses the game, American or Canadian football. A diagram has at most 11 players a side in the first and 12 in the second, on a field 53 1/3 or 65 yards wide; the game comes from the playbook, never from the browser | `TeamService`, `DiagramValidator` |
+| A play on film is tagged with a down the team's game has: 1 to 4 in American football, 1 to 3 in Canadian football. The tendency charts have the same downs, and a play tagged with a down the game does not have is left out of them, counted in a notice and listed so it can be tagged again | `FilmRules.Downs`, `ClipService`, `TendencyService` |
 | Each game has its own three playbooks and some positions of its own. The team works with those of the game it plays; the others are put away, never deleted, and cannot be changed until the team plays that game again. A game the team takes up for the first time brings its standard positions and base formations | `TeamDefaults`, `FormationTemplates`, `PlaybookService`, `DepthChartService` |
 | Playbook changes: approval by default, direct publishing only with the right and inside the coach's playbooks, one waiting change per play, a change made on an older version is refused | `PlaybookService`, `ApprovalService`, `PlaybookChangeApplier` |
 | Only MP4 and MOV files with H.264 video are taken, up to 5 GB and six hours; the server looks at the file itself with ffprobe and does not trust what the browser said about it | `VideoRules`, `VideoService` |
@@ -246,7 +247,7 @@ The rules are in the API's services, and each has tests.
 dotnet test
 ```
 
-About 370 tests cover the rules above, the permission rules by role, and for every area a check that one team
+About 375 tests cover the rules above, the permission rules by role, and for every area a check that one team
 cannot reach another team's records. One test applies all migrations to an empty database and checks that they
 match the entity classes; another brings a database from before teams could choose their game up to date and
 checks that the team in it is still an American one.
@@ -327,8 +328,8 @@ The next push to `main` deploys.
 - A cutup's video has no sound, and is always 1280 x 720 at 30 pictures a second.
 - Cutups are made one at a time by the one running copy of the API.
 - A video is sent in one piece, so an upload that is interrupted starts again from the beginning.
-- Choosing Canadian football changes the players a side, the positions, the base formations and the width of the
-  field. Film is tagged with downs 1 to 4 in both games, although Canadian football has three.
+- Choosing Canadian football changes the players a side, the positions, the base formations, the width of the
+  field and the number of downs. The longer field and the other differences between the two games are not modelled.
 
 ## Libraries
 

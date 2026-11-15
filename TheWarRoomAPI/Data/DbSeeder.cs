@@ -218,19 +218,45 @@ namespace TheWarRoomAPI.Data
                     }
                 });
 
+            // Defence: the four linemen rush and the other seven drop into zones
             var coverThree = lions.AddPlay("4-3", "Cover 3", "Three deep, four under. Corners and the free safety take the deep thirds.",
                 diagram =>
                 {
-                    Route(diagram, "LCB", new[] { 0, 10.0 });
-                    Route(diagram, "RCB", new[] { 0, 10.0 });
-                    Route(diagram, "FS", new[] { 6, 5.0 });
-                    Route(diagram, "SS", new[] { 6, -4.0 });
-                    Route(diagram, "SLB", new[] { 4, 3.0 });
-                    Route(diagram, "MLB", new[] { 0, 4.0 });
-                    Route(diagram, "WLB", new[] { -6, 3.0 });
+                    Zone(diagram, "LCB", new[] { 0, 10.0 });
+                    Zone(diagram, "RCB", new[] { 0, 10.0 });
+                    Zone(diagram, "FS", new[] { 6, 5.0 });
+                    Zone(diagram, "SS", new[] { 7, -2.5 });
+                    Zone(diagram, "SLB", new[] { -1, 3.5 });
+                    Zone(diagram, "MLB", new[] { -2.5, 4.0 });
+                    Zone(diagram, "WLB", new[] { -6, 3.0 });
                     foreach (var rusher in new[] { "LE", "DT", "NT", "RE" })
                     {
-                        Route(diagram, rusher, new[] { 0, -4.0 });
+                        Rush(diagram, rusher, new[] { 0, -4.0 });
+                    }
+                });
+
+            // Defence: man coverage. The offence is drawn in so that each defender's line ends on his man.
+            lions.AddPlay("4-3", "Cover 1 Blitz", "Man coverage with the free safety deep in the middle. The left end slants inside and the strong-side linebacker comes off the edge behind him.",
+                diagram =>
+                {
+                    Opponent(diagram, "QB", 0, -2.5);
+                    Opponent(diagram, "RB", 0, -6.5);
+                    Opponent(diagram, "X", -22, -1);
+                    Opponent(diagram, "Y", -13, -2);
+                    Opponent(diagram, "TE", 8.5, -1);
+                    Opponent(diagram, "Z", 22, -1);
+
+                    Man(diagram, "RCB", -2, -7);
+                    Man(diagram, "LCB", 2, -7);
+                    Man(diagram, "WLB", -7, -7);
+                    Man(diagram, "SS", 0.5, -12);
+                    Man(diagram, "MLB", 0, -11.5);
+                    Zone(diagram, "FS", new[] { 6, 4.0 });
+                    Rush(diagram, "SLB", new[] { 0.8, -4.0 }, new[] { 0, -9.0 });
+                    Rush(diagram, "LE", new[] { -1.75, -4.5 });
+                    foreach (var rusher in new[] { "DT", "NT", "RE" })
+                    {
+                        Rush(diagram, rusher, new[] { 0, -4.0 });
                     }
                 });
 
@@ -260,7 +286,8 @@ namespace TheWarRoomAPI.Data
             // Already decided: the head coach turned this one down, so Cover 3 is unchanged
             var rejected = lions.AddUpdateRequest(coverThree, frontSevenCoach, "Cover 3", coverThree.Notes, diagram =>
             {
-                ReplaceRoute(diagram, "MLB", new[] { 0, 8.0 });
+                diagram.Players.First(p => p.Label == "MLB").Paths.Clear();
+                Zone(diagram, "MLB", new[] { 0, 8.0 });
             });
             rejected.Status = ApprovalStatus.Rejected;
             rejected.ReviewedBy = lions.HeadCoach;
@@ -384,6 +411,37 @@ namespace TheWarRoomAPI.Data
         private static void Block(DiagramDocument diagram, string label, params double[][] points)
         {
             AddPath(diagram, label, "block", points);
+        }
+
+        // What a defender does: rush the passer, drop into a zone, or cover a man.
+        // A man line is one straight step, from the defender to the player he covers.
+        private static void Rush(DiagramDocument diagram, string label, params double[][] points)
+        {
+            AddPath(diagram, label, "rush", points);
+        }
+
+        private static void Zone(DiagramDocument diagram, string label, params double[][] points)
+        {
+            AddPath(diagram, label, "zone", points);
+        }
+
+        private static void Man(DiagramDocument diagram, string label, double acrossToTheMan, double upToTheMan)
+        {
+            AddPath(diagram, label, "man", new[] { new[] { acrossToTheMan, upToTheMan } });
+        }
+
+        // A player of the other side, drawn for reference
+        private static void Opponent(DiagramDocument diagram, string label, double x, double y)
+        {
+            diagram.Players.Add(new DiagramPlayer
+            {
+                Id = "opp-" + label.ToLowerInvariant(),
+                Team = "opp",
+                Label = label,
+                Shape = "circle",
+                X = x,
+                Y = y
+            });
         }
 
         private static void ReplaceRoute(DiagramDocument diagram, string label, params double[][] points)

@@ -1,7 +1,8 @@
 // The clip editor on a video's page: plays are marked on the video itself.
 //
 // The start and end of a play are taken from the player (keys I and O), the play is tagged
-// (R run, P pass, 1-4 the down, T the other team, D the yards to go) and saved with Enter.
+// (R run, P pass, 1-4 the down or 1-3 in Canadian football, T the other team, D the yards to go)
+// and saved with Enter.
 // Saving sends the play to the site; the answer is the list of plays as the server draws it,
 // which replaces the list on the page. The server stays the judge of what a valid play is.
 //
@@ -173,7 +174,13 @@
                 this.fields.down.value = '';
                 this.fields.distance.value = '';
                 break;
-            case '1': case '2': case '3': case '4': this.fields.down.value = event.key; break;
+            case '1': case '2': case '3': case '4':
+                // Only the downs the page offers: Canadian football has three, so its 4 key does nothing
+                if (!this.fields.down.querySelector('option[value="' + event.key + '"]')) {
+                    return;
+                }
+                this.fields.down.value = event.key;
+                break;
             case 't': case 'T': this.otherTeam(); break;
             case 'd': case 'D':
                 this.fields.distance.focus();

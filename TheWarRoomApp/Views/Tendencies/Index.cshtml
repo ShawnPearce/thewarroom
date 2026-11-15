@@ -65,7 +65,7 @@ else
                 <label for="down" class="form-label">Down</label>
                 <select id="down" name="down" class="form-select" data-auto-submit>
                     <option value="">Every down</option>
-                    @for (int down = 1; down <= 4; down++)
+                    @for (int down = 1; down <= report.Downs; down++)
                     {
                         <option value="@down" selected="@(Model.Down == down)">@DisplayText.Ordinal(down) down</option>
                     }
@@ -110,6 +110,20 @@ else
             }
         </fieldset>
     </form>
+
+    @if (report.LeftOutPlays > 0)
+    {
+        // A team that took up Canadian football may have plays tagged as a fourth down, which that game does not have
+        bool one = report.LeftOutPlays == 1;
+
+        <div class="alert alert-secondary" role="status">
+            @DisplayText.Count(report.LeftOutPlays, "tagged play is", "tagged plays are") left out of these numbers:
+            @(one ? "it is" : "they are") tagged with a down after the @DisplayText.Ordinal(report.Downs),
+            and the game the team plays has @report.Downs downs.
+            Give @(one ? "it" : "them") a down from 1 to @report.Downs to count @(one ? "it" : "them").
+            <a class="alert-link" href="@Url.Action("Plays")?@Model.Query(null, null)&amp;leftOut=true">@(one ? "Show this play" : "Show these plays")</a>
+        </div>
+    }
 
     @* The figure for exactly what was chosen *@
     <div class="card mb-4">

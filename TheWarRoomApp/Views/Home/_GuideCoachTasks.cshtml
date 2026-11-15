@@ -217,7 +217,7 @@
 
     <article class="wr-guide-task" id="@(p)-draw-play">
         <div class="wr-guide-task-head">
-            <h4>Draw a play</h4>
+            <h4>Draw a play on offence or special teams</h4>
         </div>
         <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Playbook</p>
         <ol class="wr-guide-steps" role="list">
@@ -242,6 +242,30 @@
             <div><dt><kbd>Delete</kbd></dt><dd>Delete what is selected</dd></div>
             <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>Undo</dd></div>
             <div><dt><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Z</kbd></dt><dd>Redo</dd></div>
+        </dl>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-draw-defence">
+        <div class="wr-guide-task-head">
+            <h4>Draw a play on defence</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Playbook</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Open a formation of the defence playbook and choose <span class="wr-ui">New play</span>. Its tools are the defence's own.</li>
+            <li>Choose <span class="wr-ui">Rush</span>, click the player who rushes, then click where he goes. Click the last point again, or press <kbd>Enter</kbd>, to finish.</li>
+            <li>Choose <span class="wr-ui">Zone</span>, click the player who drops, then click the middle of his zone and finish the same way. The zone is drawn as an oval.</li>
+            <li>Choose <span class="wr-ui">Man</span>, click the defender, then click the player he covers. The dotted line ends on that player, and stays on him when you move either of them.</li>
+            <li>Use <span class="wr-ui">Motion</span> for what a defender does before the snap, then type the <b>Name</b> and the <b>Coaching notes</b> and save.</li>
+        </ol>
+        <p class="wr-guide-note">
+            <b>Tip.</b> For man coverage, put the offence on the field first with <span class="wr-ui">Opponent</span>, so each line has a player to end on.
+            A line can be turned into another kind afterwards: select it and change <b>Drawn as</b>.
+        </p>
+        <dl class="wr-guide-keys" aria-label="Keys for a defensive play">
+            <div><dt><kbd>R</kbd></dt><dd>Rush</dd></div>
+            <div><dt><kbd>Z</kbd></dt><dd>Zone coverage</dd></div>
+            <div><dt><kbd>N</kbd></dt><dd>Man coverage</dd></div>
+            <div><dt><kbd>M</kbd></dt><dd>Motion before the snap</dd></div>
         </dl>
     </article>
 
@@ -429,7 +453,7 @@ else
             <li>Open the game, then its video.</li>
             <li>Play to the start of a play and press <kbd>I</kbd>, or choose <span class="wr-ui">Mark start</span>.</li>
             <li>Let it run to the end of the play and press <kbd>O</kbd>, or choose <span class="wr-ui">Mark end</span>. The video stops there.</li>
-            <li>Tag the play: <kbd>R</kbd> for a run or <kbd>P</kbd> for a pass, <kbd>1</kbd> to <kbd>4</kbd> for the down, <kbd>D</kbd> to type the yards to go.</li>
+            <li>Tag the play: <kbd>R</kbd> for a run or <kbd>P</kbd> for a pass, <kbd>1</kbd> to <kbd>4</kbd> for the down (<kbd>1</kbd> to <kbd>3</kbd> in Canadian football), <kbd>D</kbd> to type the yards to go.</li>
             <li>Press <kbd>Enter</kbd>, or choose <span class="wr-ui">Save play</span>. The play joins the list and the editor is ready for the next one.</li>
         </ol>
         <p class="wr-guide-note">
@@ -447,7 +471,7 @@ else
             <div><dt><kbd>,</kbd> <kbd>.</kbd></dt><dd>One picture back or forward</dd></div>
             <div><dt><kbd>I</kbd> <kbd>O</kbd></dt><dd>Mark the start, mark the end</dd></div>
             <div><dt><kbd>R</kbd> <kbd>P</kbd> <kbd>U</kbd></dt><dd>Run, pass, not tagged</dd></div>
-            <div><dt><kbd>1</kbd> to <kbd>4</kbd></dt><dd>The down</dd></div>
+            <div><dt><kbd>1</kbd> to <kbd>4</kbd></dt><dd>The down (to <kbd>3</kbd> in Canadian football)</dd></div>
             <div><dt><kbd>D</kbd></dt><dd>Type the yards to go</dd></div>
             <div><dt><kbd>T</kbd></dt><dd>The other team on offence</dd></div>
             <div><dt><kbd>Enter</kbd></dt><dd>Save the play</dd></div>
@@ -589,7 +613,12 @@ else
             <b>Read the sample size.</b> A share from 3 plays tells you much less than one from 30.
             <b>No data</b> means no tagged play matches what you chose.
         </p>
-        <p class="wr-guide-note">These numbers describe what was recorded. They do not predict the next play.</p>
+        <p class="wr-guide-note">
+            The charts have the downs of the game the team plays: four in American football, three in Canadian football.
+            A play tagged with a down that game does not have is left out. The page says how many there are,
+            and <b>Show these plays</b> lists them so you can change their tags.
+            These numbers describe what was recorded. They do not predict the next play.
+        </p>
     </article>
 </section>
 

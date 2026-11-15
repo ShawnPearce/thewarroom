@@ -21,6 +21,13 @@ namespace TheWarRoomAPI.DTOs
         // How many tagged plays the chosen games and team have in all, and how many games they come from
         public int TaggedPlays { get; set; }
         public int Games { get; set; }
+
+        // How many downs the team's game has (four in American football, three in Canadian football):
+        // the number of rows in the split by down and in the grid
+        public int Downs { get; set; }
+
+        // Tagged plays that are not counted anywhere above, because they are tagged with a down the game does not have
+        public int LeftOutPlays { get; set; }
     }
 
     // The runs and passes in one group of tagged plays, and the tendency worked out from them

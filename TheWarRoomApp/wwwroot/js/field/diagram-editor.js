@@ -7,6 +7,7 @@
 // The page marks the designer with data-designer and tells it:
 //   data-form        the id of the form that holds the DiagramJson field
 //   data-formation   "true" for a formation, which has players only (no routes or text)
+//   data-line-name   what the page calls a line drawn from a player: "route", or "line" in a defensive playbook
 //   data-draft-key   the name under which an unsaved copy is kept in this browser
 //   data-dirty       "true" when the page is shown again after a failed save
 (function () {
@@ -22,21 +23,32 @@
     var MAX_LABEL_LENGTH = 4;
     var MAX_TEXT_LENGTH = 60;
 
-    var PATH_TOOLS = ['route', 'block', 'motion'];
+    // The tools that draw a line from a player. An offensive playbook offers route, block and motion;
+    // a defensive one offers rush, zone, man and motion (the page decides which buttons there are).
+    var PATH_TOOLS = ['route', 'block', 'motion', 'rush', 'zone', 'man'];
+
+    // What a line is called in the "Drawn as" box
+    var KIND_NAMES = {
+        route: 'Route', block: 'Block', motion: 'Motion',
+        rush: 'Rush', zone: 'Zone coverage', man: 'Man coverage'
+    };
 
     var HINTS = {
-        select: 'Drag a player to move it. Click a player, a route or a text to select it.',
+        select: 'Drag a player to move it. Click a player, a {line} or a text to select it.',
         selectPlayer: 'Drag a player to move it. Click a player to select it.',
         own: 'Click on the field to place one of your players.',
         opp: 'Click on the field to place an opponent.',
         route: 'Click the player who runs the route.',
         block: 'Click the player who makes the block.',
         motion: 'Click the player who goes in motion.',
+        rush: 'Click the player who rushes.',
+        zone: 'Click the player who drops into a zone.',
+        man: 'Click the player who covers a man.',
         text: 'Click where the text should go.',
-        drawing: 'Click each point in turn. Click the last point again, or press Enter, to finish. Esc cancels.'
+        drawing: 'Click each point in turn. Click the last point again, or press Enter, to finish. Esc cancels.',
+        drawingZone: 'Click where the zone is. Click there again, or press Enter, to finish. Esc cancels.',
+        drawingMan: 'Click the player who is covered. Esc cancels.'
     };
-
-    var SHORTCUTS = { v: 'select', p: 'own', o: 'opp', r: 'route', b: 'block', m: 'motion', t: 'text' };
 
     function Designer(root) {
         this.root = root;
@@ -44,6 +56,7 @@
         this.form = document.getElementById(root.getAttribute('data-form'));
         this.field = this.form.querySelector('input[name="DiagramJson"]');
         this.isFormation = root.getAttribute('data-formation') === 'true';
+        this.lineName = root.getAttribute('data-line-name') || 'route';
         this.draftKey = root.getAttribute('data-draft-key');
 
         this.diagram = Model.parse(this.field.value);
@@ -267,7 +280,7 @@
         this.changed();
     };
 
-    // ---------- Drawing a route, a block or a motion ----------
+    // ---------- Drawing a line from a player: a route, a block, a motion, a rush or a coverage ----------
 
     Designer.prototype.startDraft = function (player) {
         if (!player) {
@@ -279,7 +292,7 @@
         // A player has one motion: drawing it again replaces the old one
         var replacesMotion = kind === 'motion' && player.paths.some(function (path) { return path.kind === 'motion'; });
         if (!replacesMotion && player.paths.length >= Model.MAX_PATHS_PER_PLAYER) {
-            this.message('A player can have at most ' + Model.MAX_PATHS_PER_PLAYER + ' routes, blocks or motions. Delete one first.');
+            this.message('A player can have at most ' + Model.MAX_PATHS_PER_PLAYER + ' lines drawn from it. Delete one first.');
             return;
         }
 
@@ -291,6 +304,14 @@
         var draft = this.draft;
         var player = Model.findPlayer(this.diagram, draft.playerId);
         var spot = this.snapToField(point);
+
+        // Man coverage ends on the player who is covered: a click on a player is taken as that player's place
+        if (draft.kind === 'man') {
+            var covered = this.playerAt(point, draft.playerId);
+            if (covered) {
+                spot = { x: covered.x, y: covered.y };
+            }
+        }
 
         // Where the path is right now: its last point, or where it starts
         var soFar = Model.pathPoints(player, draft);
@@ -306,7 +327,8 @@
 
         draft.pts.push([spot.x - player.x, spot.y - player.y]);
 
-        if (draft.pts.length >= Model.MAX_POINTS_PER_PATH) {
+        // Man coverage is one straight line, so its first point is also its last
+        if (draft.kind === 'man' || draft.pts.length >= Model.MAX_POINTS_PER_PATH) {
             this.finishDraft();
         } else {
             this.refresh();
@@ -378,12 +400,19 @@
 
     // Where a player ends up when it is moved to (x, y): on the half-yard grid,
     // and never so close to an edge that one of its routes would leave the field.
-    Designer.prototype.playerSpot = function (player, x, y) {
+    // The end of a man coverage line stays on the man (see "coverages"), so it does not count.
+    Designer.prototype.playerSpot = function (player, x, y, coverages) {
         var view = this.diagram.view;
         var left = 0, right = 0, down = 0, up = 0;
 
         player.paths.forEach(function (path) {
-            path.pts.forEach(function (offset) {
+            var held = (coverages || []).some(function (coverage) { return coverage.path === path; });
+
+            path.pts.forEach(function (offset, index) {
+                if (held && index === path.pts.length - 1) {
+                    return;
+                }
+
                 left = Math.min(left, offset[0]);
                 right = Math.max(right, offset[0]);
                 down = Math.min(down, offset[1]);
@@ -415,6 +444,58 @@
         return distance(point, { x: from.x + along * dx, y: from.y + along * dy });
     }
 
+    // The player under a point of the field, or null. The one drawn last is on top,
+    // and a small marker still gets a finger-sized target. "exceptId" leaves one player out.
+    Designer.prototype.playerAt = function (point, exceptId) {
+        var players = this.diagram.players;
+        var reach = Math.max(Renderer.PLAYER_RADIUS * 1.2, this.reach(12));
+
+        for (var i = players.length - 1; i >= 0; i--) {
+            if (players[i].id !== exceptId && distance(point, players[i]) <= reach) {
+                return players[i];
+            }
+        }
+        return null;
+    };
+
+    // The man coverage lines that end on a player right now: who covers whom.
+    // Taken before a player is moved, so that the lines can be kept on their men afterwards.
+    Designer.prototype.coverages = function () {
+        var players = this.diagram.players;
+        var list = [];
+
+        players.forEach(function (defender) {
+            defender.paths.forEach(function (path) {
+                if (path.kind !== 'man' || path.pts.length === 0) {
+                    return;
+                }
+
+                var end = path.pts[path.pts.length - 1];
+                var x = defender.x + end[0];
+                var y = defender.y + end[1];
+
+                for (var i = players.length - 1; i >= 0; i--) {
+                    var covered = players[i];
+                    if (covered !== defender && Math.abs(covered.x - x) < 0.01 && Math.abs(covered.y - y) < 0.01) {
+                        list.push({ path: path, defender: defender, covered: covered });
+                        break;
+                    }
+                }
+            });
+        });
+
+        return list;
+    };
+
+    // After a player has moved: every line in the list ends on its man again
+    Designer.prototype.keepOnTheMan = function (coverages) {
+        coverages.forEach(function (coverage) {
+            var end = coverage.path.pts[coverage.path.pts.length - 1];
+            end[0] = coverage.covered.x - coverage.defender.x;
+            end[1] = coverage.covered.y - coverage.defender.y;
+        });
+    };
+
     // What is under a point of the field, or null
     Designer.prototype.hit = function (point) {
         var diagram = this.diagram;
@@ -434,12 +515,9 @@
             }
         }
 
-        // Players: the one drawn last is on top. A small marker still gets a finger-sized target.
-        var playerReach = Math.max(Renderer.PLAYER_RADIUS * 1.2, this.reach(12));
-        for (i = diagram.players.length - 1; i >= 0; i--) {
-            if (distance(point, diagram.players[i]) <= playerReach) {
-                return { type: 'player', id: diagram.players[i].id };
-            }
+        var under = this.playerAt(point);
+        if (under) {
+            return { type: 'player', id: under.id };
         }
 
         for (i = diagram.drawings.length - 1; i >= 0; i--) {
@@ -456,6 +534,16 @@
                 var points = Model.pathPoints(player, player.paths[j]);
                 for (k = 1; k < points.length; k++) {
                     if (distanceToSegment(point, points[k - 1], points[k]) <= this.reach(7)) {
+                        return { type: 'path', playerId: player.id, index: j };
+                    }
+                }
+
+                // A zone is picked up by its oval as well as by its line
+                if (player.paths[j].kind === 'zone') {
+                    var middle = points[points.length - 1];
+                    var across = (point.x - middle.x) / Renderer.ZONE_HALF_WIDTH;
+                    var deep = (point.y - middle.y) / Renderer.ZONE_HALF_DEPTH;
+                    if (across * across + deep * deep <= 1) {
                         return { type: 'path', playerId: player.id, index: j };
                     }
                 }
@@ -604,13 +692,18 @@
             }
             drag.moved = true;
             this.remember();
+
+            if (drag.type === 'player') {
+                drag.coverages = this.coverages();
+            }
         }
 
         if (drag.type === 'player') {
             var player = Model.findPlayer(this.diagram, drag.id);
-            var spot = this.playerSpot(player, point.x - drag.offsetX, point.y - drag.offsetY);
+            var spot = this.playerSpot(player, point.x - drag.offsetX, point.y - drag.offsetY, drag.coverages);
             player.x = spot.x;
             player.y = spot.y;
+            this.keepOnTheMan(drag.coverages);
         } else if (drag.type === 'drawing') {
             var drawing = Model.findDrawing(this.diagram, drag.id);
             var place = this.snapToField({ x: point.x - drag.offsetX, y: point.y - drag.offsetY });
@@ -618,8 +711,18 @@
             drawing.y = place.y;
         } else {
             var owner = Model.findPlayer(this.diagram, drag.playerId);
+            var line = owner.paths[drag.index];
             var corner = this.snapToField(point);
-            owner.paths[drag.index].pts[drag.point] = [corner.x - owner.x, corner.y - owner.y];
+
+            // The end of a man coverage line takes the place of the player it is dragged onto
+            if (line.kind === 'man' && drag.point === line.pts.length - 1) {
+                var man = this.playerAt(point, owner.id);
+                if (man) {
+                    corner = { x: man.x, y: man.y };
+                }
+            }
+
+            line.pts[drag.point] = [corner.x - owner.x, corner.y - owner.y];
         }
 
         this.render();   // the form field is brought up to date when the drag ends
@@ -705,9 +808,13 @@
             return;
         }
 
-        var tool = SHORTCUTS[key.toLowerCase()];
-        if (tool) {
-            this.setTool(tool);
+        // A letter picks the tool whose button names it (data-key), so the keys follow the tools the page offers:
+        // R is a route in an offensive playbook and a rush in a defensive one
+        if (/^[a-z]$/i.test(key)) {
+            var button = this.root.querySelector('[data-tool][data-key="' + key.toLowerCase() + '"]');
+            if (button) {
+                this.setTool(button.getAttribute('data-tool'));
+            }
         }
     };
 
@@ -724,9 +831,11 @@
 
         if (selection.type === 'player') {
             var player = Model.findPlayer(this.diagram, selection.id);
-            var spot = this.playerSpot(player, player.x + step[0], player.y + step[1]);
+            var coverages = this.coverages();
+            var spot = this.playerSpot(player, player.x + step[0], player.y + step[1], coverages);
             player.x = spot.x;
             player.y = spot.y;
+            this.keepOnTheMan(coverages);
         } else {
             var drawing = Model.findDrawing(this.diagram, selection.id);
             var place = this.snapToField({ x: drawing.x + step[0], y: drawing.y + step[1] });
@@ -796,11 +905,14 @@
     Designer.prototype.updateHint = function () {
         var hint = this.root.querySelector('[data-role="hint"]');
         if (hint) {
-            var text = this.draft ? HINTS.drawing : HINTS[this.tool];
+            var text = HINTS[this.tool];
+            if (this.draft) {
+                text = this.draft.kind === 'man' ? HINTS.drawingMan : (this.draft.kind === 'zone' ? HINTS.drawingZone : HINTS.drawing);
+            }
             if (this.isFormation && this.tool === 'select') {
                 text = HINTS.selectPlayer;   // a formation has no routes or text to select
             }
-            hint.textContent = text;
+            hint.textContent = text.replace('{line}', this.lineName);
         }
 
         var label = this.root.querySelector('[data-role="view-label"]');
@@ -886,7 +998,17 @@
             }
         } else if (type === 'path') {
             var owner = Model.findPlayer(this.diagram, selection.playerId);
-            this.property('kind').value = owner.paths[selection.index].kind;
+            var kind = owner.paths[selection.index].kind;
+            var kinds = this.property('kind');
+
+            // A line of a kind this page's tools do not draw (a route on a defensive play, say) is still named
+            if (!kinds.querySelector('option[value="' + kind + '"]')) {
+                var option = document.createElement('option');
+                option.value = kind;
+                option.textContent = KIND_NAMES[kind] || kind;
+                kinds.appendChild(option);
+            }
+            kinds.value = kind;
         } else if (type === 'drawing') {
             this.property('text').value = Model.findDrawing(this.diagram, selection.id).text;
         }
@@ -957,7 +1079,7 @@
         this.changed(name !== 'kind');   // the box being typed in is left as it is
     };
 
-    // Turns the selected path into a route, a block or a motion
+    // Turns the selected path into another kind of line: a route into a block, a rush into a zone, and so on
     Designer.prototype.changeKind = function (selection, kind) {
         var player = Model.findPlayer(this.diagram, selection.playerId);
         var path = player.paths[selection.index];

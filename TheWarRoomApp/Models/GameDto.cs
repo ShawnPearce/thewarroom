@@ -22,6 +22,9 @@ namespace TheWarRoomApp.Models
 
         // How many of the clips are tagged, and so count in the tendency charts
         public int TaggedClipCount { get; set; }
+
+        // How many downs the team's game has: four in American football, three in Canadian football
+        public int Downs { get; set; } = 4;
     }
 
     // A game with its videos

@@ -40,6 +40,9 @@ namespace TheWarRoomApp.Models
         public int AwayTeamId { get; set; }
         public string AwayTeamName { get; set; } = string.Empty;
 
+        // How many downs a play can be tagged with: four in American football, three in Canadian football
+        public int Downs { get; set; } = 4;
+
         public List<ClipDto> Clips { get; set; } = new List<ClipDto>();
     }
 }

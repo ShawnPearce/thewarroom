@@ -51,13 +51,15 @@ namespace TheWarRoomAPI.Diagrams
         public double X { get; set; }
         public double Y { get; set; }
 
-        // The player's routes, blocks and motion
+        // The lines drawn from the player: routes, blocks and motion on offence;
+        // rushes, zone and man coverage and motion on defence
         public List<DiagramPath> Paths { get; set; } = new List<DiagramPath>();
     }
 
     public class DiagramPath
     {
-        // "route", "block" or "motion"
+        // "route", "block" or "motion", and for a defender "rush", "zone" or "man".
+        // A zone ends in the area the defender drops to; a man line ends at the player the defender covers.
         public string Kind { get; set; } = "route";
 
         // Waypoints as [x, y] offsets from the player, so moving the player carries the path along

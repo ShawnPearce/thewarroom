@@ -18,7 +18,10 @@ namespace TheWarRoomAPI.Diagrams
         private static readonly string[] Units = { "Offence", "Defence", "SpecialTeams" };
         private static readonly string[] Teams = { "own", "opp" };
         private static readonly string[] Shapes = { "circle", "square", "triangle" };
-        private static readonly string[] PathKinds = { "route", "block", "motion" };
+        // What a line drawn from a player can be. The first three are what the offence does. The last three are
+        // what a defender does after the snap: rush the passer, drop into a zone, or cover a man.
+        // Motion, before the snap, belongs to both sides.
+        private static readonly string[] PathKinds = { "route", "block", "motion", "rush", "zone", "man" };
 
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
 

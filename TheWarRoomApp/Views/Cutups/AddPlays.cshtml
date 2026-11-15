@@ -60,7 +60,7 @@ else
             <label for="down" class="form-label">Down</label>
             <select id="down" name="down" class="form-select">
                 <option value="">Any</option>
-                @for (int down = 1; down <= 4; down++)
+                @for (int down = 1; down <= game.Downs; down++)
                 {
                     <option value="@down" selected="@(Model.Down == down)">@DisplayText.Ordinal(down)</option>
                 }

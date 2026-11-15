@@ -38,11 +38,20 @@ namespace TheWarRoomAPI.Services
                 .Select(t => new TaggedPlay(t.Clip!.Video!.GameId, t.Down, t.Distance, t.PlayType))
                 .ToListAsync();
 
+            // Business rule: the charts have the downs of the game the team plays, four in American football
+            // and three in Canadian football. A play tagged with a down that game does not have (a fourth down
+            // on a team that now plays the Canadian game) is left out of every number, and the report says how many.
+            int downs = FilmRules.Downs(currentUser.Rules);
+            int leftOut = plays.Count(p => p.Down > downs);
+            plays = plays.Where(p => p.Down <= downs).ToList();
+
             bool IsChosenDown(TaggedPlay play) => filter.Down == null || play.Down == filter.Down;
             bool IsChosenDistance(TaggedPlay play) => filter.Distance == null || TendencyCalculator.RangeOf(play.Distance) == filter.Distance;
 
             var report = new TendencyReportDto
             {
+                Downs = downs,
+                LeftOutPlays = leftOut,
                 TaggedPlays = plays.Count,
                 Games = plays.Select(p => p.GameId).Distinct().Count(),
 
@@ -51,7 +60,7 @@ namespace TheWarRoomAPI.Services
             };
 
             // Each down, at the chosen distance
-            for (int down = 1; down <= 4; down++)
+            for (int down = 1; down <= downs; down++)
             {
                 int thisDown = down;
                 report.ByDown.Add(Count(plays.Where(p => p.Down == thisDown && IsChosenDistance(p)), thisDown, filter.Distance));
@@ -65,7 +74,7 @@ namespace TheWarRoomAPI.Services
             }
 
             // Every down against every distance range
-            for (int down = 1; down <= 4; down++)
+            for (int down = 1; down <= downs; down++)
             {
                 int thisDown = down;
                 var row = new TendencyGridRowDto { Down = thisDown };

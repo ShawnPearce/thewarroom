@@ -26,11 +26,14 @@ namespace TheWarRoomAPI.Services
                 query = query.Where(g => g.HomeTeamId == scoutedTeamId || g.AwayTeamId == scoutedTeamId);
             }
 
+            int downs = FilmRules.Downs(currentUser.Rules);
+
             return await query
                 .OrderByDescending(g => g.GameDate)
                 .ThenByDescending(g => g.Id)
                 .Select(g => new GameDto
                 {
+                    Downs = downs,
                     Id = g.Id,
                     GameDate = g.GameDate,
                     HomeTeamId = g.HomeTeamId,
@@ -50,10 +53,13 @@ namespace TheWarRoomAPI.Services
         {
             FilmRules.EnsureCoach(currentUser);
 
+            int downs = FilmRules.Downs(currentUser.Rules);
+
             var game = await _context.Games
                 .Where(g => g.Id == id && g.TeamId == currentUser.TeamId)
                 .Select(g => new GameDetailDto
                 {
+                    Downs = downs,
                     Id = g.Id,
                     GameDate = g.GameDate,
                     HomeTeamId = g.HomeTeamId,

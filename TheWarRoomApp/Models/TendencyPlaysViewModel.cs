@@ -9,6 +9,9 @@ namespace TheWarRoomApp.Models
         public int? Down { get; set; }
         public DistanceRange? Distance { get; set; }
 
+        // True for the list of tagged plays the charts leave out, because their down is not one the team's game has
+        public bool LeftOut { get; set; }
+
         public List<ClipDto> Clips { get; set; } = new List<ClipDto>();
 
         // The query string that leads back to the tendencies page with the same filters

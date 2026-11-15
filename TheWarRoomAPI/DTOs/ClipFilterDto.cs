@@ -14,6 +14,10 @@ namespace TheWarRoomAPI.DTOs
         // Only tagged plays (true) or only plays without a tag (false)
         public bool? Tagged { get; set; }
 
+        // Only the plays the tendency charts count (true): tagged, with a down the team's game has.
+        // Only the tagged plays the charts leave out (false): tagged with a down that game does not have.
+        public bool? Charted { get; set; }
+
         // The rest look at the tag, so they leave out plays that are not tagged
         public int? OffenceTeamId { get; set; }
         public PlayType? PlayType { get; set; }

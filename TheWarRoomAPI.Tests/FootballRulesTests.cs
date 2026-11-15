@@ -498,6 +498,111 @@ namespace TheWarRoomAPI.Tests
             }
         }
 
+        // ---------- Film: four downs in the American game, three in the Canadian ----------
+
+        [Fact]
+        public async Task APlay_IsTaggedWithADownTheGameHas()
+        {
+            var headCoach = await _world.AddTeamAsync();
+            var film = await _world.AddFilmAsync(headCoach);
+
+            SaveClipDto Play(int startSeconds, int down) => new SaveClipDto
+            {
+                VideoId = film.VideoId,
+                StartMs = startSeconds * 1000,
+                EndMs = (startSeconds + 6) * 1000,
+                Tag = new SavePlayTagDto { OffenceTeamId = film.OpponentId, PlayType = PlayType.Run, Down = down, Distance = 2 }
+            };
+
+            // American football: a fourth down is a down like any other
+            using (var context = _world.NewContext())
+            {
+                var clip = await _world.Clips(context).CreateAsync(headCoach, Play(10, down: 4));
+                Assert.Equal(4, clip!.Tag!.Down);
+                Assert.Equal(4, (await _world.Videos(context).GetVideoAsync(headCoach, film.VideoId))!.Downs);
+            }
+
+            headCoach = await SwitchAsync(headCoach, FootballRules.Canadian);
+
+            // Canadian football: there is no fourth down to tag a play with
+            using (var context = _world.NewContext())
+            {
+                var clips = _world.Clips(context);
+
+                var error = await Assert.ThrowsAsync<InvalidOperationException>(() => clips.CreateAsync(headCoach, Play(20, down: 4)));
+                Assert.Contains("three downs", error.Message);
+
+                var third = await clips.CreateAsync(headCoach, Play(30, down: 3));
+                Assert.Equal(3, third!.Tag!.Down);
+
+                // The pages are told how many downs to offer
+                Assert.Equal(3, (await _world.Videos(context).GetVideoAsync(headCoach, film.VideoId))!.Downs);
+                Assert.All(await _world.Games(context).GetGamesAsync(headCoach, null), g => Assert.Equal(3, g.Downs));
+            }
+        }
+
+        [Fact]
+        public async Task TheTendencyCharts_HaveTheDownsOfTheGame_AndLeaveOutPlaysOnADownItDoesNotHave()
+        {
+            var headCoach = await _world.AddTeamAsync();
+            var film = await _world.AddFilmAsync(headCoach, "Northgate Knights");
+            await _world.AddTaggedPlaysAsync(headCoach, film.VideoId, film.OpponentId, down: 1, distance: 10, runs: 6, passes: 4);
+            await _world.AddTaggedPlaysAsync(headCoach, film.VideoId, film.OpponentId, down: 3, distance: 5, runs: 1, passes: 3);
+            await _world.AddTaggedPlaysAsync(headCoach, film.VideoId, film.OpponentId, down: 4, distance: 1, runs: 2, passes: 0);
+
+            var filter = new TendencyFilterDto { OffenceTeamId = film.OpponentId };
+
+            // American football: four downs, and every play is counted
+            using (var context = _world.NewContext())
+            {
+                var report = await _world.Tendencies(context).GetReportAsync(headCoach, filter);
+
+                Assert.Equal(4, report.Downs);
+                Assert.Equal(new[] { 1, 2, 3, 4 }, report.ByDown.Select(s => s.Down!.Value));
+                Assert.Equal(4, report.Grid.Count);
+                Assert.Equal(16, report.Selected.Plays);
+                Assert.Equal(0, report.LeftOutPlays);
+
+                var counted = await _world.Clips(context).GetClipsAsync(headCoach, new ClipFilterDto { Charted = true, OffenceTeamId = film.OpponentId });
+                Assert.Equal(16, counted.Count);
+            }
+
+            headCoach = await SwitchAsync(headCoach, FootballRules.Canadian);
+
+            // Canadian football: three downs. The two plays tagged as a fourth down are left out of every number,
+            // and the report says how many they are.
+            using (var context = _world.NewContext())
+            {
+                var report = await _world.Tendencies(context).GetReportAsync(headCoach, filter);
+
+                Assert.Equal(3, report.Downs);
+                Assert.Equal(new[] { 1, 2, 3 }, report.ByDown.Select(s => s.Down!.Value));
+                Assert.Equal(3, report.Grid.Count);
+                Assert.Equal(14, report.Selected.Plays);
+                Assert.Equal(14, report.TaggedPlays);
+                Assert.Equal(2, report.LeftOutPlays);
+                Assert.Equal(report.Selected.Plays, report.ByDown.Sum(s => s.Plays));
+            }
+
+            // The list of plays behind a figure follows the same rule, and the plays left out can be listed by themselves
+            using (var context = _world.NewContext())
+            {
+                var clips = _world.Clips(context);
+
+                var counted = await clips.GetClipsAsync(headCoach, new ClipFilterDto { Charted = true, OffenceTeamId = film.OpponentId });
+                Assert.Equal(14, counted.Count);
+                Assert.DoesNotContain(counted, c => c.Tag!.Down == 4);
+
+                var leftOut = await clips.GetClipsAsync(headCoach, new ClipFilterDto { Charted = false, OffenceTeamId = film.OpponentId });
+                Assert.Equal(2, leftOut.Count);
+                Assert.All(leftOut, c => Assert.Equal(4, c.Tag!.Down));
+
+                // Every tagged play is still there to be found and tagged again
+                var tagged = await clips.GetClipsAsync(headCoach, new ClipFilterDto { Tagged = true, OffenceTeamId = film.OpponentId });
+                Assert.Equal(16, tagged.Count);
+            }
+        }
+
         [Fact]
         public async Task OneTeamsGame_DoesNotChangeAnotherTeams()
         {

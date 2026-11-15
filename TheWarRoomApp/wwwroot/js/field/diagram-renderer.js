@@ -18,6 +18,7 @@
         oppFill: '#e2e8f0',
         oppStroke: '#5b6980',
         path: '#0e1627',
+        zone: '#1f51e6',
         text: '#0e1627',
         selection: '#3368ff',
         draft: '#3368ff'
@@ -210,7 +211,19 @@
         }
     }
 
-    // ---------- Routes, blocks and motion ----------
+    // ---------- The lines drawn from a player ----------
+    //
+    //   route, rush   a line that ends in an arrowhead (a rush is the defence's word for it)
+    //   block         a line that ends in a short bar
+    //   motion        a dashed line with an arrowhead: what a player does before the snap
+    //   zone          a line to the zone a defender drops into, which is drawn as an oval
+    //   man           a dotted line from a defender to the player he covers, with a small ring where it ends
+
+    var DASHES = { motion: [6, 4], man: [2, 5] };
+
+    // How far a zone reaches from its middle, in yards: six yards across and four deep
+    var ZONE_HALF_WIDTH = 3;
+    var ZONE_HALF_DEPTH = 2;
 
     function drawPath(context, size, points, kind, colour, small) {
         if (points.length < 2) {
@@ -219,23 +232,35 @@
 
         var pixels = points.map(function (point) { return toPixels(size, point.x, point.y); });
 
+        var end = pixels[pixels.length - 1];
+        var before = pixels[pixels.length - 2];
+        var angle = Math.atan2(end.y - before.y, end.x - before.x);
+
+        // The line of a zone stops at the edge of its oval instead of running into it
+        var lineEnd = end;
+        var zoneX = ZONE_HALF_WIDTH * size.scale;
+        var zoneY = ZONE_HALF_DEPTH * size.scale;
+        if (kind === 'zone') {
+            var reach = (zoneX * zoneY) / Math.sqrt(Math.pow(zoneY * Math.cos(angle), 2) + Math.pow(zoneX * Math.sin(angle), 2));
+            var lastStep = Math.sqrt(Math.pow(end.x - before.x, 2) + Math.pow(end.y - before.y, 2));
+            reach = Math.min(reach, lastStep);
+            lineEnd = { x: end.x - Math.cos(angle) * reach, y: end.y - Math.sin(angle) * reach };
+        }
+
         context.strokeStyle = colour;
         context.fillStyle = colour;
         context.lineWidth = small ? 1 : 2;
         context.lineJoin = 'round';
-        context.setLineDash(kind === 'motion' ? [6, 4] : []);
+        context.setLineDash(DASHES[kind] || []);
 
         context.beginPath();
         context.moveTo(pixels[0].x, pixels[0].y);
-        for (var i = 1; i < pixels.length; i++) {
+        for (var i = 1; i < pixels.length - 1; i++) {
             context.lineTo(pixels[i].x, pixels[i].y);
         }
+        context.lineTo(lineEnd.x, lineEnd.y);
         context.stroke();
         context.setLineDash([]);
-
-        var end = pixels[pixels.length - 1];
-        var before = pixels[pixels.length - 2];
-        var angle = Math.atan2(end.y - before.y, end.x - before.x);
 
         if (kind === 'block') {
             // A block ends in a short bar across the line
@@ -244,8 +269,22 @@
             context.moveTo(end.x + Math.cos(angle + Math.PI / 2) * half, end.y + Math.sin(angle + Math.PI / 2) * half);
             context.lineTo(end.x + Math.cos(angle - Math.PI / 2) * half, end.y + Math.sin(angle - Math.PI / 2) * half);
             context.stroke();
+        } else if (kind === 'zone') {
+            // The zone itself: an oval, lightly filled so that what lies under it can still be seen
+            context.beginPath();
+            context.ellipse(end.x, end.y, zoneX, zoneY, 0, 0, Math.PI * 2);
+            context.fillStyle = COLOURS.zone;
+            context.globalAlpha = 0.16;
+            context.fill();
+            context.globalAlpha = 1;
+            context.stroke();
+        } else if (kind === 'man') {
+            // A ring where the line ends. When it ends on a player, that player's marker is drawn over it.
+            context.beginPath();
+            context.arc(end.x, end.y, 0.45 * size.scale, 0, Math.PI * 2);
+            context.stroke();
         } else {
-            // A route or motion ends in an arrowhead
+            // A route, a rush or a motion ends in an arrowhead
             var length = (small ? 0.9 : 1.0) * size.scale;
             context.beginPath();
             context.moveTo(end.x, end.y);
@@ -346,6 +385,8 @@
 
     window.WarRoom.DiagramRenderer = {
         PLAYER_RADIUS: PLAYER_RADIUS,
+        ZONE_HALF_WIDTH: ZONE_HALF_WIDTH,
+        ZONE_HALF_DEPTH: ZONE_HALF_DEPTH,
         draw: draw,
         centre: centre,
         layout: layout,

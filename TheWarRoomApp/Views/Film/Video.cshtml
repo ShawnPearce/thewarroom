@@ -121,7 +121,8 @@ else if (!playable)
                                 <label for="playDown" class="form-label small mb-1">Down</label>
                                 <select id="playDown" name="Down" class="form-select form-select-sm">
                                     <option value="">&ndash;</option>
-                                    @for (int down = 1; down <= 4; down++)
+                                    @* Four downs in American football, three in Canadian football *@
+                                    @for (int down = 1; down <= Model.Downs; down++)
                                     {
                                         <option value="@down">@DisplayText.Ordinal(down)</option>
                                     }
@@ -155,7 +156,7 @@ else if (!playable)
                                 </div>
                                 <div class="col-sm-6">
                                     <kbd>R</kbd> run &middot; <kbd>P</kbd> pass &middot; <kbd>U</kbd> not tagged<br />
-                                    <kbd>1</kbd> to <kbd>4</kbd> the down &middot; <kbd>T</kbd> the other team on offence<br />
+                                    <kbd>1</kbd> to <kbd>@Model.Downs</kbd> the down &middot; <kbd>T</kbd> the other team on offence<br />
                                     <kbd>D</kbd> type the yards to go<br />
                                     <kbd>Enter</kbd> save &middot; <kbd>Esc</kbd> start a new play
                                 </div>

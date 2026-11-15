@@ -39,6 +39,14 @@ namespace TheWarRoomAPI.Services
             {
                 query = filter.Tagged.Value ? query.Where(c => c.Tag != null) : query.Where(c => c.Tag == null);
             }
+            if (filter.Charted != null)
+            {
+                // The same rule as the tendency charts: a tagged play counts when its down is one the team's game has
+                int downs = FilmRules.Downs(currentUser.Rules);
+                query = filter.Charted.Value
+                    ? query.Where(c => c.Tag != null && c.Tag.Down <= downs)
+                    : query.Where(c => c.Tag != null && c.Tag.Down > downs);
+            }
 
             // The filters below look at the tag, so a play without a tag never matches them
             if (filter.OffenceTeamId != null)
@@ -104,7 +112,7 @@ namespace TheWarRoomAPI.Services
             EnsureTimesFit(dto.StartMs, dto.EndMs, video);
             if (dto.Tag != null)
             {
-                EnsureTagIsValid(dto.Tag, video.Game!);
+                EnsureTagIsValid(dto.Tag, video.Game!, currentUser.Rules);
             }
 
             var now = _clock.GetUtcNow().UtcDateTime;
@@ -149,7 +157,7 @@ namespace TheWarRoomAPI.Services
             EnsureTimesFit(dto.StartMs, dto.EndMs, clip.Video!);
             if (dto.Tag != null)
             {
-                EnsureTagIsValid(dto.Tag, clip.Video!.Game!);
+                EnsureTagIsValid(dto.Tag, clip.Video!.Game!, currentUser.Rules);
             }
 
             clip.StartMs = dto.StartMs;
@@ -294,16 +302,20 @@ namespace TheWarRoomAPI.Services
             }
         }
 
-        private static void EnsureTagIsValid(SavePlayTagDto tag, Game game)
+        private static void EnsureTagIsValid(SavePlayTagDto tag, Game game, FootballRules rules)
         {
             if (tag.PlayType != PlayType.Run && tag.PlayType != PlayType.Pass)
             {
                 throw new InvalidOperationException("A tagged play is a run or a pass.");
             }
 
-            if (tag.Down < 1 || tag.Down > 4)
+            // Business rule: a play is on a down the team's game has, four in American football and three in Canadian football
+            int downs = FilmRules.Downs(rules);
+            if (tag.Down < 1 || tag.Down > downs)
             {
-                throw new InvalidOperationException("The down must be between 1 and 4.");
+                throw new InvalidOperationException(rules == FootballRules.Canadian
+                    ? "Canadian football has three downs, so the down must be 1, 2 or 3."
+                    : "The down must be between 1 and 4.");
             }
 
             if (tag.Distance < 1 || tag.Distance > 99)

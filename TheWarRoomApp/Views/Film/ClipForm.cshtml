@@ -75,12 +75,20 @@
                         <label asp-for="Down" class="control-label"></label>
                         <select asp-for="Down" class="form-select">
                             <option value="">Choose the down</option>
-                            @for (int down = 1; down <= 4; down++)
+                            @for (int down = 1; down <= video.Downs; down++)
                             {
                                 <option value="@down">@DisplayText.Ordinal(down)</option>
                             }
                         </select>
                         <span asp-validation-for="Down" class="text-danger"></span>
+                        @if (Model.Down > video.Downs)
+                        {
+                            @* Tagged before the team took up a game with fewer downs *@
+                            <div class="form-text">
+                                This play is tagged as a @DisplayText.Ordinal(Model.Down.Value) down, which the game the team plays does not have.
+                                Choose its down.
+                            </div>
+                        }
                     </div>
                     <div class="form-group col-sm-6 mb-0">
                         <label asp-for="Distance" class="control-label"></label>

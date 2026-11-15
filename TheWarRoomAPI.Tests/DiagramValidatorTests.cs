@@ -205,6 +205,40 @@ namespace TheWarRoomAPI.Tests
         }
 
         [Fact]
+        public void WhatADefenderDoes_IsKept_RushZoneAndMan()
+        {
+            // A defensive play: the end rushes, the free safety drops into a zone, the corner covers his man
+            var sent = new DiagramDocument
+            {
+                Unit = "Defence",
+                Players =
+                {
+                    new DiagramPlayer
+                    {
+                        Id = "re", Label = "RE", Shape = "triangle", X = -5, Y = 1,
+                        Paths = { new DiagramPath { Kind = "rush", Pts = { new[] { 0.0, -4.0 } } } }
+                    },
+                    new DiagramPlayer
+                    {
+                        Id = "fs", Label = "FS", Shape = "triangle", X = -6, Y = 13,
+                        Paths = { new DiagramPath { Kind = "zone", Pts = { new[] { 6.0, 4.0 } } } }
+                    },
+                    new DiagramPlayer
+                    {
+                        Id = "rcb", Label = "RCB", Shape = "triangle", X = -20, Y = 6,
+                        Paths = { new DiagramPath { Kind = "man", Pts = { new[] { -2.0, -7.0 } } } }
+                    },
+                    new DiagramPlayer { Id = "x", Team = "opp", Label = "X", X = -22, Y = -1 }
+                }
+            };
+
+            string stored = DiagramValidator.Normalize(Json(sent), "Defence", isFormation: false, American);
+
+            var kinds = DiagramValidator.Parse(stored).Players.SelectMany(p => p.Paths).Select(p => p.Kind);
+            Assert.Equal(new[] { "rush", "zone", "man" }, kinds);
+        }
+
+        [Fact]
         public void EveryBaseFormation_IsAValidDiagramWithElevenPlayers()
         {
             var templates = FormationTemplates.For(American);

@@ -13,11 +13,12 @@
 //   view: { yMin: -12, yMax: 18 },          how much of the field is shown
 //   ballX: 0,
 //   players: [ { id, team: "own"|"opp", label, shape: "circle"|"square"|"triangle", x, y,
-//                paths: [ { kind: "route"|"block"|"motion", pts: [[dx, dy], ...] } ] } ],
+//                paths: [ { kind: "route"|"block"|"motion"|"rush"|"zone"|"man", pts: [[dx, dy], ...] } ] } ],
 //   drawings: [ { id, type: "text", x, y, text } ]
 // }
 //
 // A path's points are offsets from its player, so moving the player carries the path along.
+// Routes and blocks are the offence's; a defender rushes, drops into a zone or covers a man. Motion is anybody's.
 (function () {
     'use strict';
 
