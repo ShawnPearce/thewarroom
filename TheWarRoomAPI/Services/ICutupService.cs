@@ -21,5 +21,16 @@ namespace TheWarRoomAPI.Services
         Task<bool> RemovePlayAsync(CurrentUser currentUser, int playId);
 
         Task<bool> SetSharingAsync(CurrentUser currentUser, int id, SetCutupSharingDto dto);
+
+        // ----- The video of a cutup -----
+
+        // Asks for the cutup to be made into one video. Its plays are fixed from then on.
+        Task<bool> RequestRenderAsync(CurrentUser currentUser, int id);
+
+        // Turns the cutup back into a draft so its plays can be changed. A video that was made is thrown away.
+        Task<bool> ReturnToDraftAsync(CurrentUser currentUser, int id);
+
+        // How the browser gets the finished video to play it; null when there is nothing to play
+        Task<FilmFile?> GetFileAsync(CurrentUser currentUser, int id);
     }
 }

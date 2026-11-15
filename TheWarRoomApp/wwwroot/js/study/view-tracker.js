@@ -2,7 +2,7 @@
 //
 // Time counts only while this page is the visible tab, and
 //   on a playbook page: the player has moved the mouse, scrolled, typed or touched the page in the last minute
-//   on a film page:     the video is playing
+//   on a film page:     the video is playing, or standing still for a moment on a drawing the coach made
 // It pauses when the tab is hidden, when the video is paused, and when the player goes quiet.
 //
 // Every 15 seconds the counted time is reported to the site. The server decides how much of it to credit:
@@ -65,7 +65,13 @@
 
         if (this.kind === 'Film') {
             var video = this.video;
-            return !!video && !video.paused && !video.ended && video.readyState > 2;
+            if (!video) {
+                return false;
+            }
+
+            // The film player marks the video while it holds on a drawing: that is still watching the film
+            var holding = video.getAttribute('data-holding') === 'true';
+            return holding || (!video.paused && !video.ended && video.readyState > 2);
         }
 
         return now - this.lastActivity < QUIET_AFTER_MS;

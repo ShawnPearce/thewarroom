@@ -31,6 +31,18 @@ namespace TheWarRoomAPI.Models
         [StringLength(300)]
         public string? FailureReason { get; set; }
 
+        // The length of the finished video in milliseconds, measured after it was made
+        public int? DurationMs { get; set; }
+
+        // How far the making of the video has come, from 0 to 100
+        public int ProgressPercent { get; set; }
+
+        // When a coach asked for the video to be made. The cutup that has waited longest is made first.
+        public DateTime? QueuedAt { get; set; }
+
+        // When the video was finished
+        public DateTime? RenderedAt { get; set; }
+
         // Foreign key for the User entity (the coach who made the cutup)
         public int CreatedById { get; set; }
         public User? CreatedBy { get; set; }

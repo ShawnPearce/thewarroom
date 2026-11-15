@@ -15,11 +15,9 @@ and each sees and changes what their role allows.
 | Team and depth charts | Add coaches and players, put them in position groups, and keep a depth chart for every week. A player can be the starter at one position and a backup at another. |
 | Schedule and attendance | List practices, games and meetings. Coaches record attendance when the head coach has switched tracking on. |
 | Playbook | A playbook for offence, defence and special teams, organised by formation. Coaches draw formations and plays on a field. A change waits for the head coach's approval unless the coach has been given the right to publish, and players keep seeing the last approved version in the meantime. |
-| Film | Keep the games a team has film of, its own and its opponents'. Cut a video into plays, tag each play (run or pass, down, distance, team on offence), build cutups of chosen plays in a chosen order, and share them with the whole team, with position groups or with single players. |
+| Film | Keep the games a team has film of, its own and its opponents'. Upload a game's video and play it in the browser. Mark plays on the video itself, tag each play (run or pass, down, distance, team on offence) and draw arrows and text on it. Build cutups of chosen plays in a chosen order, have each made into one video with the time between plays gone, and share it with the whole team, with position groups or with single players. |
 | Tendencies | Run and pass shares for a team on offence, by game, down and distance, always with the number of plays they come from. |
 | Study time | How long each player was signed in, and how long they watched film and read the playbook, as three separate numbers per week. |
-
-Uploading video, playing it and turning a cutup into one video file are not built yet. See "What is not built yet" below.
 
 ## How it is built
 
@@ -27,7 +25,7 @@ One solution with three projects:
 
 | Project | What it is |
 |---|---|
-| `TheWarRoomAPI` | ASP.NET Core Web API. Controllers call services, and the services hold the business rules and do the Entity Framework Core work against a SQLite database. Entities never leave the API: every request and response is a DTO. |
+| `TheWarRoomAPI` | ASP.NET Core Web API. Controllers call services, and the services hold the business rules and do the Entity Framework Core work against a SQLite database. Entities never leave the API: every request and response is a DTO. It also keeps the video files, and a background worker in it makes cutups into videos with ffmpeg. |
 | `TheWarRoomApp` | ASP.NET Core MVC. The site people use. It has no database: every page gets and saves its data by calling the API through `IHttpClientFactory`. Its `Models` folder holds its own copies of the DTOs. |
 | `TheWarRoomAPI.Tests` | xUnit tests of the services and rules, run against an in-memory SQLite database. |
 
@@ -43,6 +41,8 @@ The two web projects do not reference each other. They only talk over HTTP.
 | Nobody is signed in, or the sign-in has ended | 401 Unauthorized |
 | A playbook change was published | 200 OK |
 | A playbook change is waiting for approval | 202 Accepted |
+| A cutup is in the queue to be made into a video | 202 Accepted |
+| A part of a video file was asked for | 206 Partial Content, or 302 Found to a signed link when film is kept in Amazon S3 |
 
 ### Signing in
 
@@ -54,17 +54,21 @@ The API trusts those headers. It must only be reachable by the MVC site, never f
 
 ### In the browser
 
-The browser talks to the MVC site only. JavaScript is used where a page needs it, as plain files with no build step:
+The browser talks to the MVC site only. The one exception is video in Amazon S3: those files travel straight
+between the browser and the bucket, over links the API signs. JavaScript is used where a page needs it, as plain files with no build step:
 
 | Folder | What |
 |---|---|
 | `wwwroot/js/field` | The play designer and the drawing of formations and plays on a canvas |
+| `wwwroot/js/film` | The upload page, the video player, the clip editor, the drawings over the video, and the page that plays a cutup |
 | `wwwroot/js/charts` | The tendency charts (Chart.js) |
-| `wwwroot/js/study` | The study timer on playbook pages |
+| `wwwroot/js/study` | The study timer on playbook pages and on film |
 
 ## Running it
 
-You need the .NET 10 SDK.
+You need the .NET 10 SDK. For video you also need ffmpeg (with ffprobe) on the computer the API runs on:
+`brew install ffmpeg` on a Mac, `sudo apt-get install ffmpeg` on Ubuntu, `winget install ffmpeg` on Windows.
+Without it everything else works; the pages that upload video or make a cutup's video say that ffmpeg is missing.
 
 Start the API first, then the site, each in its own terminal, from the solution folder:
 
@@ -85,11 +89,84 @@ To go back to fresh demo data, stop the API, delete `warroom.db` and start the A
 
 In Swagger, use the Authorize button and type a user id (1 is the demo head coach) to try the API as that user.
 
+## Film storage
+
+Video files are kept apart from the database. The `Film` section of `TheWarRoomAPI/appsettings.json` says where:
+
+| `Film:Storage` | Where the files are | How they travel |
+|---|---|---|
+| `Local` (the default) | The folder `TheWarRoomAPI/film-storage` (`Film:LocalFolder`). It is not in the repository. | Through the site and the API |
+| `S3` | An Amazon S3 bucket (`Film:S3Bucket`, `Film:S3Region`, and optionally `Film:S3Profile`) | Straight between the browser and the bucket, over signed links that stop working after a while |
+
+Either way the database holds only each file's key, a name the API makes up, and a file is handed out only after
+the API has checked who is asking: coaches for game video, and for a cutup also the players it is shared with.
+
+To keep film in S3:
+
+1. Make a general purpose bucket that is not public: leave "Block all public access" on and ACLs disabled.
+   Keep versioning and Object Lock off, so that a deleted video is really gone, and keep the default encryption (SSE-S3).
+   Give it a name without dots, and note its region: the API has to be told the same one.
+2. Give the bucket this CORS rule, with the address people open the site at, so their browsers may send files to it.
+   While the site runs on your own computer that address is `http://localhost:5228`; several addresses can be listed.
+
+   ```json
+   [
+     {
+       "AllowedOrigins": ["https://your-site.example"],
+       "AllowedMethods": ["PUT", "GET", "HEAD"],
+       "AllowedHeaders": ["*"],
+       "ExposeHeaders": ["ETag"],
+       "MaxAgeSeconds": 3000
+     }
+   ]
+   ```
+
+3. Give the API credentials that may read, write and delete objects in that bucket and nothing else.
+   An IAM user with no console access and this policy is enough:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+         "Resource": "arn:aws:s3:::your-bucket/*"
+       },
+       {
+         "Effect": "Allow",
+         "Action": "s3:ListBucket",
+         "Resource": "arn:aws:s3:::your-bucket"
+       }
+     ]
+   }
+   ```
+
+   The second statement is what lets S3 answer "not found" for a file that has not arrived yet.
+   Without it S3 answers "forbidden" instead, and the upload page cannot tell the two apart.
+
+   On your own computer: `aws configure --profile warroom`, then set `Film:S3Profile` to `warroom`.
+   On a server: environment variables or the server's own role. Keys never go into this repository.
+4. Set the bucket outside the repository, for example with user secrets:
+
+   ```
+   dotnet user-secrets init --project TheWarRoomAPI
+   dotnet user-secrets set "Film:Storage" "S3" --project TheWarRoomAPI
+   dotnet user-secrets set "Film:S3Bucket" "your-bucket" --project TheWarRoomAPI
+   dotnet user-secrets set "Film:S3Region" "ca-central-1" --project TheWarRoomAPI
+   ```
+
+   On a server the same settings are environment variables: `Film__Storage`, `Film__S3Bucket`, `Film__S3Region`.
+
 ## Demo data
 
 Two teams are added in Development. "Lakeshore Lions" is a full team: eight coaches, 28 players, depth charts,
 a schedule with attendance, a playbook with change requests, four games on film with tagged plays, five cutups,
 and two weeks of study time. "Northgate Knights" is a small second team that shows one team can never see another's data.
+
+The demo games are records without a video file: their plays can be listed, tagged, charted and put in cutups,
+but there is nothing to play. To try the film pages, sign in as a coach, open a game under Film, upload any MP4 or MOV
+video with H.264 picture, cut a few plays on it, put them in a new cutup and choose "Make the video".
 
 Every demo account has the same password: the `Seed:DemoPassword` value in `TheWarRoomAPI/appsettings.Development.json`.
 
@@ -117,12 +194,15 @@ The rules are in the API's services, and each has tests.
 | Depth chart: ranks 1, 2, 3 with no gaps; a player once per position; only active players of the position's group | `DepthChartService` |
 | Attendance only while the head coach has it switched on, and only by permitted coaches | `AttendanceService` |
 | Playbook changes: approval by default, direct publishing only with the right and inside the coach's playbooks, one waiting change per play, a change made on an older version is refused | `PlaybookService`, `ApprovalService`, `PlaybookChangeApplier` |
-| A clip lies inside its video and ends after it starts; a clip used in a cutup cannot be deleted | `ClipService` |
+| Only MP4 and MOV files with H.264 video are taken, up to 5 GB and six hours; the server looks at the file itself with ffprobe and does not trust what the browser said about it | `VideoRules`, `VideoService` |
+| A clip lies inside its video and ends after it starts; a clip used in a cutup cannot be deleted, and neither can a video whose clips are | `ClipService`, `VideoService` |
+| A drawing belongs to a moment inside its play: at most five per play, each with up to twelve arrows and texts, shown for one to ten seconds; trimming a play removes the drawings that were cut off | `FilmDrawingsValidator`, `ClipService` |
 | A cutup plays its plays in the chosen order, each starting where the one before ends; its plays are fixed once it is no longer a draft | `CutupService`, `CutupTimeline` |
+| A cutup's video can be made only when every play comes from a video with a file; cutups are made one at a time, the one that waited longest first; where each play starts is measured on the finished video; turning a cutup back into a draft throws its video away | `CutupService`, `CutupRenderer` |
 | A player reaches only film shared with them, their groups or the whole team | `AccessRules.CanWatchCutup` |
 | Run % = runs / (runs + passes) to one decimal, pass % is the rest, the sample size always goes with it, and no plays means "No data" | `TendencyCalculator` |
 | Login time runs from a sign-in to its last request and ends after 30 minutes of inactivity | `AuthService`, `ActivityService` |
-| Viewing time is credited no faster than the clock runs (two tabs do not count twice), at most a minute per report, with film and playbook kept apart | `StudyTimeService` |
+| Viewing time is credited no faster than the clock runs (two tabs do not count twice), at most a minute per report, with film and playbook kept apart; film time counts while the video plays or stands still on a coach's drawing | `StudyTimeService`, `view-tracker.js` |
 
 ## Tests
 
@@ -130,27 +210,30 @@ The rules are in the API's services, and each has tests.
 dotnet test
 ```
 
-About 250 tests cover the rules above, the permission rules by role, and for every area a check that one team
+About 350 tests cover the rules above, the permission rules by role, and for every area a check that one team
 cannot reach another team's records. One test applies all migrations to an empty database and checks that they
 match the entity classes.
+
+Film storage and ffmpeg are stood in for in most film tests, so they run anywhere. A few tests use the real
+ffmpeg and ffprobe on videos that ffmpeg makes itself: they read, cut and join real files, and one takes a video
+all the way from upload to a finished cutup. Those are skipped on a computer without ffmpeg.
 
 ## Continuous integration
 
 `.github/workflows/ci.yml` restores, builds and runs the tests on every push and pull request.
+It installs ffmpeg first, so the tests that use it run there too.
 
-## What is not built yet
+## Limits, and what is not done yet
 
-The film pages work on records: games, videos, plays, tags, cutups and sharing. What needs video storage is still to come:
-
-- uploading a game video and playing it in the browser
-- marking plays on the video itself (today a play is added by typing its start and end time)
-- drawing arrows and text on a clip
-- turning a cutup into one video file, and watching it
-- counting film time while a video plays (the timer and its rules are in place and are used on playbook pages)
-
-The demo videos are records without a file. The film time in the demo study data is sample data.
+- A cutup's video has no sound, and is always 1280 x 720 at 30 pictures a second.
+- Cutups are made one at a time by the one running copy of the API.
+- A video is sent in one piece, so an upload that is interrupted starts again from the beginning.
+- The site is not deployed anywhere yet: there is no step that publishes it after a push.
 
 ## Libraries
 
 Bootstrap, jQuery and jQuery Validation (from the ASP.NET Core template) and Chart.js, all under the MIT licence.
 Their licence files are next to them in `TheWarRoomApp/wwwroot/lib`.
+
+The API uses the AWS SDK for .NET (`AWSSDK.S3`, Apache 2.0 licence) for S3 storage, and runs ffmpeg as a separate
+program that has to be installed on its own. ffmpeg is not part of this repository.

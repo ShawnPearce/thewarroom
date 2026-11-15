@@ -12,8 +12,15 @@ namespace TheWarRoomAPI.DTOs
         // The length of the video in milliseconds; empty until the upload has been checked
         public int? DurationMs { get; set; }
 
-        // False when the record has no file in film storage, so the video cannot be played
+        // True when the video is ready and has a file in film storage, so it can be played
         public bool HasFile { get; set; }
+
+        // The name the file had on the coach's computer, and its size
+        public string? FileName { get; set; }
+        public long? SizeBytes { get; set; }
+
+        // Why the upload could not be used, when Status is Failed
+        public string? FailureReason { get; set; }
 
         public int ClipCount { get; set; }
         public int TaggedClipCount { get; set; }

@@ -39,5 +39,12 @@ namespace TheWarRoomAPI.Models
         public string? Title { get; set; }
 
         public string? AnnotationsJson { get; set; }
+
+        // ----- Where the play is in the finished video -----
+
+        // Measured when the video is made, because a play is cut on whole pictures
+        // and so comes out a few hundredths of a second longer or shorter than it was marked
+        public int? OutputOffsetMs { get; set; }
+        public int? OutputDurationMs { get; set; }
     }
 }

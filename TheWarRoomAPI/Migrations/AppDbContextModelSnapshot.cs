@@ -231,6 +231,9 @@ namespace TheWarRoomAPI.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("FailureReason")
                         .HasMaxLength(300)
                         .HasColumnType("TEXT");
@@ -241,6 +244,15 @@ namespace TheWarRoomAPI.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProgressPercent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("QueuedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RenderedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
@@ -281,6 +293,12 @@ namespace TheWarRoomAPI.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("EndMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("OutputDurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("OutputOffsetMs")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Position")

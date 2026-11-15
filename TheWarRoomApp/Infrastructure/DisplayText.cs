@@ -186,6 +186,17 @@ namespace TheWarRoomApp.Infrastructure
             };
         }
 
+        // The size of a file: 5368709120 -> "5 GB", 367001600 -> "350 MB"
+        public static string FileSize(long bytes)
+        {
+            const double megabyte = 1024 * 1024;
+            const double gigabyte = megabyte * 1024;
+
+            return bytes >= gigabyte
+                ? (bytes / gigabyte).ToString("0.#", CultureInfo.InvariantCulture) + " GB"
+                : Math.Max(1, Math.Round(bytes / megabyte)).ToString("0", CultureInfo.InvariantCulture) + " MB";
+        }
+
         public static string CutupState(CutupStatus status)
         {
             return status switch

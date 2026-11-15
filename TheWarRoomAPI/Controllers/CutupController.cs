@@ -96,6 +96,10 @@ namespace TheWarRoomAPI.Controllers
             {
                 return Forbidden(ex.Message);   // 403 Forbidden
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);   // 409 Conflict (it is being made into a video right now)
+            }
         }
 
         // POST: api/Cutup/5/clips   (adds clips to the end of the cutup, in the order given)
@@ -167,6 +171,82 @@ namespace TheWarRoomAPI.Controllers
             catch (InvalidOperationException ex)
             {
                 return Conflict(ex.Message);   // 409 Conflict (not a draft any more)
+            }
+        }
+
+        // POST: api/Cutup/5/render   (asks for the cutup to be made into one video)
+        [HttpPost("{id}/render")]
+        public async Task<IActionResult> RequestRender(int id)
+        {
+            try
+            {
+                var result = await _cutupService.RequestRenderAsync(CurrentUser, id);
+                if (!result)
+                {
+                    return NotFound();   // 404 Not Found
+                }
+
+                // The video is made in the background, in the order cutups were asked for
+                return Accepted();   // 202 Accepted
+            }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);   // 409 Conflict (no plays, a play without a video file, or already made)
+            }
+        }
+
+        // POST: api/Cutup/5/draft   (back to a draft, so its plays can be changed; the video that was made is thrown away)
+        [HttpPost("{id}/draft")]
+        public async Task<IActionResult> ReturnToDraft(int id)
+        {
+            try
+            {
+                var result = await _cutupService.ReturnToDraftAsync(CurrentUser, id);
+                if (!result)
+                {
+                    return NotFound();   // 404 Not Found
+                }
+
+                return NoContent();   // 204 No Content
+            }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);   // 409 Conflict (it is being made into a video right now)
+            }
+        }
+
+        // GET: api/Cutup/5/file   (the finished video, to play it)
+        // Answers with the file when it is kept on this computer, or sends the caller on to a signed link.
+        [HttpGet("{id}/file")]
+        public async Task<IActionResult> GetFile(int id)
+        {
+            try
+            {
+                var file = await _cutupService.GetFileAsync(CurrentUser, id);
+                if (file == null)
+                {
+                    return NotFound();   // 404 Not Found (also when the video has not been made yet)
+                }
+
+                if (file.SignedLink != null)
+                {
+                    return Redirect(file.SignedLink);   // 302 Found
+                }
+
+                // A player asks for the parts of a video it needs, so ranges are answered (206 Partial Content)
+                return PhysicalFile(file.Path!, file.ContentType, enableRangeProcessing: true);
+            }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden (not shared with this player)
             }
         }
 

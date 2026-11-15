@@ -11,9 +11,13 @@ namespace TheWarRoomApp.Controllers
     {
         private readonly HttpClient _client;
 
+        // Video files go through a client of their own (see Program.cs)
+        private readonly HttpClient _files;
+
         public CutupsController(IHttpClientFactory httpClientFactory)
         {
             _client = httpClientFactory.CreateClient("WarRoomAPI");
+            _files = httpClientFactory.CreateClient("WarRoomAPIFiles");
         }
 
         // GET: Cutups   (a coach's list of all cutups, or a player's "my film")
@@ -148,6 +152,10 @@ namespace TheWarRoomApp.Controllers
                 TempData["Message"] = "The cutup was deleted. The plays it used are still on film.";
                 return RedirectToAction(nameof(Index));
             }
+            else if (await StoreRefusalMessageAsync(response))   // 409 it is being made into a video right now
+            {
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             return await ApiFailureAsync(response);
         }
@@ -270,6 +278,80 @@ namespace TheWarRoomApp.Controllers
             }
 
             return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // ---------- The video of a cutup ----------
+
+        // POST: Cutups/Render/5   (asks for the cutup to be made into one video; its plays are fixed from then on)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Render(int id)
+        {
+            var response = await _client.PostAsync($"api/Cutup/{id}/render", null);
+            if (response.IsSuccessStatusCode)   // 202 Accepted: it is in the queue
+            {
+                TempData["Message"] = "The video is being made. This page shows how far it has come.";
+            }
+            else if (!await StoreRefusalMessageAsync(response))   // 409 for example a play from a video without a file
+            {
+                return await ApiFailureAsync(response);
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // POST: Cutups/BackToDraft/5   (the plays can be changed again; a video that was made is thrown away)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BackToDraft(int id)
+        {
+            var response = await _client.PostAsync($"api/Cutup/{id}/draft", null);
+            if (response.IsSuccessStatusCode)   // 204 No Content
+            {
+                TempData["Message"] = "The cutup is a draft again. Change its plays, then make the video again.";
+            }
+            else if (!await StoreRefusalMessageAsync(response))   // 409 it is being made into a video right now
+            {
+                return await ApiFailureAsync(response);
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // GET: Cutups/Status/5   (asked every few seconds by the page of a cutup that is being made into a video)
+        public async Task<IActionResult> Status(int id)
+        {
+            var response = await _client.GetAsync($"api/Cutup/{id}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return StatusCode((int)response.StatusCode);   // the script only needs to know it should stop asking
+            }
+
+            var cutup = (await response.Content.ReadFromJsonAsync<CutupDetailDto>())!;
+            return Json(new { status = cutup.Status.ToString(), progressPercent = cutup.ProgressPercent });
+        }
+
+        // GET: Cutups/Stream/5   (the finished video, for the player on the cutup's page)
+        public async Task<IActionResult> Stream(int id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"api/Cutup/{id}/file");
+
+            // A player asks for the part of the video it needs next
+            if (Request.Headers.TryGetValue("Range", out var range))
+            {
+                request.Headers.TryAddWithoutValidation("Range", range.ToString());
+            }
+
+            var response = await _files.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, HttpContext.RequestAborted);
+            if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Found)
+            {
+                return new RelayedFileResult(response);   // 200, 206 Partial Content, or 302 to a signed link
+            }
+
+            using (response)
+            {
+                return StatusCode((int)response.StatusCode);   // 403 when the film has not been shared with this player
+            }
         }
 
         // ---------- Sharing ----------

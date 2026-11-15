@@ -4,6 +4,7 @@
     ViewData["Title"] = Model.Title;
     string matchup = $"{Model.AwayTeamName} at {Model.HomeTeamName}";
     bool ready = Model.Status == VideoStatus.Ready && Model.DurationMs != null;
+    bool playable = ready && Model.HasFile;
 }
 
 <partial name="_Trail" model="@(new List<PageLink> {
@@ -13,7 +14,7 @@
 
 <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
     <h1 class="h3 mb-0">@Model.Title</h1>
-    @if (ready)
+    @if (ready && !playable)
     {
         <a asp-action="CreateClip" asp-route-videoId="@Model.Id" class="btn btn-primary">Add a play</a>
     }
@@ -25,7 +26,22 @@
     &middot; added by @Model.UploadedBy
 </p>
 
-@if (!Model.HasFile)
+@if (Model.Status == VideoStatus.Failed)
+{
+    <div class="alert alert-danger" role="alert">
+        This upload could not be used. @Model.FailureReason
+        <a asp-action="Upload" asp-route-gameId="@Model.GameId" class="alert-link">Upload another file</a>,
+        then <a asp-action="DeleteVideo" asp-route-id="@Model.Id" class="alert-link">delete this record</a>.
+    </div>
+}
+else if (!ready)
+{
+    <div class="alert alert-info" role="status">
+        This video is still being uploaded or checked. If nobody is uploading it right now, the upload did not finish:
+        <a asp-action="DeleteVideo" asp-route-id="@Model.Id" class="alert-link">delete it</a> and upload the file again.
+    </div>
+}
+else if (!playable)
 {
     <div class="alert alert-info" role="status">
         There is no video file behind this record, so it cannot be played here.
@@ -33,75 +49,204 @@
     </div>
 }
 
-<h2 class="h5">Plays (@Model.Clips.Count)</h2>
-@if (Model.Clips.Count == 0)
+@if (playable)
 {
-    <p class="text-muted">No plays have been cut from this video yet.</p>
+    @* The clip editor (clip-editor.js) attaches itself to this element. A play is marked on the video itself:
+       its start and end are taken from the player, and saving sends them to the site. *@
+    <div data-clip-editor data-video-id="@Model.Id"
+         data-save-url="@Url.Action("SavePlay")" data-delete-url="@Url.Action("DeletePlay")"
+         data-drawings-url="@Url.Action("SaveDrawings")">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3">
+            <div class="col-xl-8">
+                <partial name="_FilmPlayer" model="@(new FilmPlayerViewModel {
+                    Source = Url.Action("Stream", new { id = Model.Id })!,
+                    Label = $"{Model.Title}, {matchup}" })" />
+
+                <div class="wr-film-timeline mt-2" data-role="timeline" aria-hidden="true"
+                     title="The plays that have been cut from this video. Click to go to that place."></div>
+
+                <form class="card mt-3" data-role="play-form" novalidate>
+                    <div class="card-header d-flex flex-wrap justify-content-between gap-2">
+                        <strong data-role="form-title">New play</strong>
+                        <span class="small text-muted">Mark the start with <kbd>I</kbd> and the end with <kbd>O</kbd>, tag it, then <kbd>Enter</kbd></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-sm-4">
+                                <div class="small text-muted">Starts at</div>
+                                <div class="wr-film-time fs-5" data-role="start-text">not marked</div>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Start of the play">
+                                    <button type="button" class="btn btn-outline-primary" data-command="mark-start" title="Start the play where the video is now (I)">Mark start</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-command="start-earlier" title="A tenth of a second earlier" aria-label="Start a tenth of a second earlier">&minus;</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-command="start-later" title="A tenth of a second later" aria-label="Start a tenth of a second later">+</button>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="small text-muted">Ends at</div>
+                                <div class="wr-film-time fs-5" data-role="end-text">not marked</div>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="End of the play">
+                                    <button type="button" class="btn btn-outline-primary" data-command="mark-end" title="End the play where the video is now (O)">Mark end</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-command="end-earlier" title="A tenth of a second earlier" aria-label="End a tenth of a second earlier">&minus;</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-command="end-later" title="A tenth of a second later" aria-label="End a tenth of a second later">+</button>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="small text-muted">Length</div>
+                                <div class="wr-film-time fs-5" data-role="length-text">&ndash;</div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-command="play-selection" title="Play from the start mark to the end mark">Play it</button>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="row g-2">
+                            <div class="col-6 col-md-3">
+                                <label for="playType" class="form-label small mb-1">Play</label>
+                                <select id="playType" name="PlayType" class="form-select form-select-sm">
+                                    <option value="">Not tagged</option>
+                                    <option value="@PlayType.Run">Run</option>
+                                    <option value="@PlayType.Pass">Pass</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label for="playTeam" class="form-label small mb-1">Team on offence</label>
+                                <select id="playTeam" name="OffenceTeamId" class="form-select form-select-sm">
+                                    <option value="@Model.AwayTeamId">@Model.AwayTeamName</option>
+                                    <option value="@Model.HomeTeamId">@Model.HomeTeamName</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label for="playDown" class="form-label small mb-1">Down</label>
+                                <select id="playDown" name="Down" class="form-select form-select-sm">
+                                    <option value="">&ndash;</option>
+                                    @for (int down = 1; down <= 4; down++)
+                                    {
+                                        <option value="@down">@DisplayText.Ordinal(down)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label for="playDistance" class="form-label small mb-1">Yards to go</label>
+                                <input id="playDistance" name="Distance" type="number" min="1" max="99" inputmode="numeric" class="form-control form-control-sm" autocomplete="off" />
+                            </div>
+                            <div class="col-12">
+                                <label for="playNote" class="form-label small mb-1">Note</label>
+                                <input id="playNote" name="Title" class="form-control form-control-sm" maxlength="100" autocomplete="off"
+                                       placeholder="Optional, for example &quot;Touchdown&quot; or &quot;Missed block&quot;" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                            <input type="submit" value="Save play" class="btn btn-primary btn-sm" data-role="save" />
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-command="clear" title="Start a new play (Esc)">New play</button>
+                            <span class="small" role="status" data-role="editor-message"></span>
+                        </div>
+
+                        <details class="small text-muted mt-3">
+                            <summary>Keys</summary>
+                            <div class="row mt-2">
+                                <div class="col-sm-6">
+                                    <kbd>Space</kbd> play or pause<br />
+                                    <kbd>&larr;</kbd> <kbd>&rarr;</kbd> 5 seconds back or forward (with <kbd>Shift</kbd>: 1 second)<br />
+                                    <kbd>,</kbd> <kbd>.</kbd> one picture back or forward<br />
+                                    <kbd>I</kbd> mark the start &middot; <kbd>O</kbd> mark the end
+                                </div>
+                                <div class="col-sm-6">
+                                    <kbd>R</kbd> run &middot; <kbd>P</kbd> pass &middot; <kbd>U</kbd> not tagged<br />
+                                    <kbd>1</kbd> to <kbd>4</kbd> the down &middot; <kbd>T</kbd> the other team on offence<br />
+                                    <kbd>D</kbd> type the yards to go<br />
+                                    <kbd>Enter</kbd> save &middot; <kbd>Esc</kbd> start a new play
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </form>
+
+                @* Shown by the editor for a play that has been saved *@
+                <div class="card mt-3 d-none" data-role="drawings-card">
+                    <div class="card-header"><strong>Drawings on this play</strong></div>
+                    <div class="card-body">
+                        <p class="small text-muted">
+                            Stop the video on a moment of the play and draw arrows or put text on the picture.
+                            When the play is shown, in a cutup too, the video stands still on that moment for a few seconds with the drawing over it.
+                        </p>
+
+                        <p class="small text-muted mb-2" data-role="no-stops">This play has no drawings yet.</p>
+                        <ul class="list-unstyled small mb-2" data-role="stop-list"></ul>
+
+                        <div data-role="draw-start">
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-command="draw-here">Stop the video here and draw</button>
+                        </div>
+
+                        <div class="d-none" data-role="draw-tools">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-auto">
+                                    <div class="form-label small mb-1" id="drawToolLabel">Draw</div>
+                                    <div class="btn-group btn-group-sm" role="group" aria-labelledby="drawToolLabel">
+                                        <input type="radio" class="btn-check" name="DrawTool" id="drawArrow" value="arrow" autocomplete="off" checked />
+                                        <label class="btn btn-outline-primary" for="drawArrow">Arrow</label>
+                                        <input type="radio" class="btn-check" name="DrawTool" id="drawText" value="text" autocomplete="off" />
+                                        <label class="btn btn-outline-primary" for="drawText">Text</label>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <label for="drawColour" class="form-label small mb-1">Colour</label>
+                                    <select id="drawColour" name="DrawColour" class="form-select form-select-sm">
+                                        <option value="yellow">Yellow</option>
+                                        <option value="red">Red</option>
+                                        <option value="white">White</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <label for="drawHold" class="form-label small mb-1">Stop for (seconds)</label>
+                                    <input id="drawHold" name="HoldSeconds" type="number" min="1" max="10" value="3" class="form-control form-control-sm" />
+                                </div>
+                                <div class="col d-none" data-role="draw-text-box">
+                                    <label for="drawTextValue" class="form-label small mb-1">Text, then click where it goes</label>
+                                    <input id="drawTextValue" name="DrawText" class="form-control form-control-sm" maxlength="40" autocomplete="off" />
+                                </div>
+                            </div>
+                            <p class="small mt-2 mb-2" data-role="draw-summary"></p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-primary btn-sm" data-command="draw-save">Save drawing</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-command="draw-undo">Undo</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-command="draw-clear">Clear</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-command="draw-cancel" title="Leave the drawing without saving it (Esc)">Cancel</button>
+                            </div>
+                        </div>
+
+                        <div class="small mt-2" role="status" data-role="drawings-message"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <h2 class="h5">Plays (<span data-role="play-count">@Model.Clips.Count</span>)</h2>
+                <div data-role="play-list">
+                    <partial name="_PlayList" model="@(new PlayListViewModel { Video = Model, OnTheVideo = true })" />
+                </div>
+            </div>
+        </div>
+    </div>
 }
 else
 {
-    <p class="small text-muted">
-        @Model.TaggedClipCount of @Model.ClipCount are tagged. Only tagged plays count in the tendency charts.
-    </p>
-    <div class="table-responsive">
-        <table class="table table-sm align-middle">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Length</th>
-                    <th>Down</th>
-                    <th>Play</th>
-                    <th>Offence</th>
-                    <th>Note</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-    @{ int number = 0; }
-    @foreach (var clip in Model.Clips) {
-                number++;
-                <tr>
-                    <td class="text-muted">@number</td>
-                    <td>@TimeText.Format(clip.StartMs)</td>
-                    <td>@TimeText.Format(clip.EndMs)</td>
-                    <td>@TimeText.Length(clip.EndMs - clip.StartMs)</td>
-                    @if (clip.Tag != null)
-                    {
-                        <td class="text-nowrap">@DisplayText.DownAndDistance(clip.Tag)</td>
-                        <td><span class="badge @(clip.Tag.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@clip.Tag.PlayType</span></td>
-                        <td>@clip.Tag.OffenceTeamName</td>
-                    }
-                    else
-                    {
-                        <td colspan="3" class="text-muted">Not tagged</td>
-                    }
-                    <td>@clip.Title</td>
-                    <td class="text-nowrap text-end">
-                        <a asp-action="EditClip" asp-route-id="@clip.Id">Edit</a>
-                        @if (clip.CutupCount > 0)
-                        {
-                            <span class="small text-muted" title="A play that is used in a cutup cannot be deleted">
-                                | in @DisplayText.Count(clip.CutupCount, "cutup", "cutups")
-                            </span>
-                        }
-                        else
-                        {
-                            <form asp-action="DeleteClip" asp-route-id="@clip.Id" method="post" class="d-inline"
-                                  onsubmit="return confirm('Delete this play? This cannot be undone.');">
-                                <input type="hidden" name="videoId" value="@Model.Id" />
-                                | <button type="submit" class="btn btn-link p-0 align-baseline">Delete</button>
-                            </form>
-                        }
-                    </td>
-                </tr>
-    }
-            </tbody>
-        </table>
-    </div>
+    <h2 class="h5">Plays (@Model.Clips.Count)</h2>
+    <partial name="_PlayList" model="@(new PlayListViewModel { Video = Model, OnTheVideo = false })" />
 }
 
-<div>
-    <a asp-action="Game" asp-route-id="@Model.GameId">Back to the game</a>
+<div class="mt-3">
+    <a asp-action="Game" asp-route-id="@Model.GameId">Back to the game</a> |
+    <a asp-action="DeleteVideo" asp-route-id="@Model.Id">Delete this video</a>
 </div>
+
+@section Scripts {
+    @if (playable)
+    {
+        <script src="~/js/film/film-player.js" asp-append-version="true"></script>
+        <script src="~/js/film/film-drawings.js" asp-append-version="true"></script>
+        <script src="~/js/film/clip-editor.js" asp-append-version="true"></script>
+    }
+}

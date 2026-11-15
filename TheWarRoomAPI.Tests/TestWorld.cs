@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using TheWarRoomAPI.Data;
 using TheWarRoomAPI.Diagrams;
 using TheWarRoomAPI.Models;
@@ -23,6 +25,12 @@ namespace TheWarRoomAPI.Tests
         public static readonly DateOnly Today = new DateOnly(2026, 9, 2);
 
         public PasswordHasher<User> PasswordHasher { get; } = new PasswordHasher<User>();
+
+        // Film storage and the video tools are stand-ins, so no test needs a bucket or ffmpeg.
+        // The largest upload is set small enough for a test to go over it.
+        public FakeFilmStorage Storage { get; } = new FakeFilmStorage();
+        public FakeVideoTools Tools { get; } = new FakeVideoTools();
+        public FilmOptions Film { get; } = new FilmOptions { MaxUploadBytes = 10_000 };
 
         public void Dispose()
         {
@@ -49,8 +57,9 @@ namespace TheWarRoomAPI.Tests
         public ScoutedTeamService ScoutedTeams(AppDbContext context) => new ScoutedTeamService(context);
         public GameService Games(AppDbContext context) => new GameService(context, Clock);
         public ClipService Clips(AppDbContext context) => new ClipService(context, Clock);
-        public VideoService Videos(AppDbContext context) => new VideoService(context, Clips(context));
-        public CutupService Cutups(AppDbContext context) => new CutupService(context, Clock);
+        public VideoService Videos(AppDbContext context) => new VideoService(context, Clips(context), Storage, Tools, Options.Create(Film), Clock);
+        public CutupService Cutups(AppDbContext context) => new CutupService(context, Storage, Tools, Clock);
+        public CutupRenderer Renderer(AppDbContext context) => new CutupRenderer(context, Storage, Tools, Clock, NullLogger<CutupRenderer>.Instance);
         public TendencyService Tendencies(AppDbContext context) => new TendencyService(context);
         public StudyTimeService StudyTime(AppDbContext context) => new StudyTimeService(context, Clock);
         public ActivityService Activity(AppDbContext context) => new ActivityService(context, Clock);
@@ -236,6 +245,47 @@ namespace TheWarRoomAPI.Tests
             await context.SaveChangesAsync();
 
             return video.Id;
+        }
+
+        // A video that went through an upload: it is ready, and its file is in film storage
+        public async Task<int> AddVideoWithFileAsync(CurrentUser teamMember, int gameId, string title = "Sideline camera", int durationMs = OneHourMs)
+        {
+            using var context = NewContext();
+
+            var video = new Video
+            {
+                TeamId = teamMember.TeamId,
+                GameId = gameId,
+                Title = title,
+                Status = VideoStatus.Ready,
+                DurationMs = durationMs,
+                StorageKey = $"teams/{teamMember.TeamId}/videos/{Guid.NewGuid():N}.mp4",
+                OriginalFileName = "game.mp4",
+                ContentType = "video/mp4",
+                SizeBytes = 5000,
+                UploadedById = teamMember.Id,
+                CreatedAt = Clock.GetUtcNow().UtcDateTime
+            };
+            context.Videos.Add(video);
+            await context.SaveChangesAsync();
+
+            Storage.BrowserSends(video.StorageKey, 5000);
+            return video.Id;
+        }
+
+        // A cutup with the given clips in that order, still a draft
+        public async Task<int> AddCutupAsync(CurrentUser coach, string name, params int[] clipIds)
+        {
+            using var context = NewContext();
+            var cutups = Cutups(context);
+
+            var cutup = await cutups.CreateAsync(coach, new DTOs.SaveCutupDto { Name = name });
+            if (clipIds.Length > 0)
+            {
+                await cutups.AddClipsAsync(coach, cutup.Id, new DTOs.AddCutupClipsDto { ClipIds = clipIds.ToList() });
+            }
+
+            return cutup.Id;
         }
 
         // A clip written straight to the database. It is tagged when a team on offence is given.

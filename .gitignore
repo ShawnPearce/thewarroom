@@ -488,5 +488,8 @@ $RECYCLE.BIN/
 *.db-shm
 *.db-wal
 
+# Video files the API keeps when film storage is a folder on this computer
+film-storage/
+
 # macOS
 .DS_Store

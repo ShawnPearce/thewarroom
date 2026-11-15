@@ -1,0 +1,140 @@
+@model PlayListViewModel
+
+@{
+    var video = Model.Video;
+}
+
+@* The plays of a video. On the page of a video that can be played, this list is drawn again by the server
+   after every change (FilmController.SavePlay and DeletePlay) and put back on the page by clip-editor.js. *@
+@if (video.Clips.Count == 0)
+{
+    <p class="text-muted" data-play-count="0">No plays have been cut from this video yet.</p>
+}
+else if (Model.OnTheVideo)
+{
+    <p class="small text-muted" data-play-count="@video.Clips.Count">
+        @video.TaggedClipCount of @video.ClipCount are tagged. Only tagged plays count in the tendency charts.
+    </p>
+    <div class="wr-play-list">
+        <table class="table table-sm table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>At</th>
+                    <th>Length</th>
+                    <th>Play</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var clip in video.Clips) {
+                @* What the editor needs to open the play is carried by the row itself *@
+                <tr data-play-id="@clip.Id" data-start="@clip.StartMs" data-end="@clip.EndMs" data-title="@clip.Title"
+                    data-type="@clip.Tag?.PlayType" data-down="@clip.Tag?.Down" data-distance="@clip.Tag?.Distance" data-team="@clip.Tag?.OffenceTeamId"
+                    data-annotations="@clip.AnnotationsJson">
+                    <td>
+                        <button type="button" class="btn btn-link p-0 align-baseline" data-command="load-play"
+                                title="Open this play in the editor">@TimeText.Format(clip.StartMs)</button>
+                    </td>
+                    <td class="text-nowrap">@TimeText.Length(clip.EndMs - clip.StartMs)</td>
+                    <td>
+                        @if (clip.Tag != null)
+                        {
+                            <span class="badge @(clip.Tag.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@clip.Tag.PlayType</span>
+                            <span class="text-nowrap">@DisplayText.DownAndDistance(clip.Tag)</span>
+                            <div class="small text-muted">@clip.Tag.OffenceTeamName</div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not tagged</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(clip.Title))
+                        {
+                            <div class="small">@clip.Title</div>
+                        }
+                        @if (clip.AnnotationsJson != null)
+                        {
+                            <div class="small text-muted">With a drawing</div>
+                        }
+                    </td>
+                    <td class="text-end">
+                        @if (clip.CutupCount > 0)
+                        {
+                            <span class="small text-muted" title="A play that is used in a cutup cannot be deleted">
+                                in @DisplayText.Count(clip.CutupCount, "cutup", "cutups")
+                            </span>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-link btn-sm p-0" data-command="delete-play"
+                                    aria-label="Delete the play at @TimeText.Format(clip.StartMs)">Delete</button>
+                        }
+                    </td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="small text-muted" data-play-count="@video.Clips.Count">
+        @video.TaggedClipCount of @video.ClipCount are tagged. Only tagged plays count in the tendency charts.
+    </p>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Length</th>
+                    <th>Down</th>
+                    <th>Play</th>
+                    <th>Offence</th>
+                    <th>Note</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+    @{ int number = 0; }
+    @foreach (var clip in video.Clips) {
+                number++;
+                <tr>
+                    <td class="text-muted">@number</td>
+                    <td>@TimeText.Format(clip.StartMs)</td>
+                    <td>@TimeText.Format(clip.EndMs)</td>
+                    <td>@TimeText.Length(clip.EndMs - clip.StartMs)</td>
+                    @if (clip.Tag != null)
+                    {
+                        <td class="text-nowrap">@DisplayText.DownAndDistance(clip.Tag)</td>
+                        <td><span class="badge @(clip.Tag.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@clip.Tag.PlayType</span></td>
+                        <td>@clip.Tag.OffenceTeamName</td>
+                    }
+                    else
+                    {
+                        <td colspan="3" class="text-muted">Not tagged</td>
+                    }
+                    <td>@clip.Title</td>
+                    <td class="text-nowrap text-end">
+                        <a asp-action="EditClip" asp-route-id="@clip.Id">Edit</a>
+                        @if (clip.CutupCount > 0)
+                        {
+                            <span class="small text-muted" title="A play that is used in a cutup cannot be deleted">
+                                | in @DisplayText.Count(clip.CutupCount, "cutup", "cutups")
+                            </span>
+                        }
+                        else
+                        {
+                            <form asp-action="DeleteClip" asp-route-id="@clip.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete this play? This cannot be undone.');">
+                                <input type="hidden" name="videoId" value="@video.Id" />
+                                | <button type="submit" class="btn btn-link p-0 align-baseline">Delete</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+}

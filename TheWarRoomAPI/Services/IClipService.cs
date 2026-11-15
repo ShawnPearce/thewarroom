@@ -13,5 +13,8 @@ namespace TheWarRoomAPI.Services
         Task<ClipDto?> CreateAsync(CurrentUser currentUser, SaveClipDto dto);
         Task<bool> UpdateAsync(CurrentUser currentUser, int id, SaveClipDto dto);
         Task<bool> DeleteAsync(CurrentUser currentUser, int id);
+
+        // The arrows and text drawn on a play, and the moments the video stops to show them
+        Task<bool> SaveAnnotationsAsync(CurrentUser currentUser, int id, SaveAnnotationsDto dto);
     }
 }

@@ -1,82 +1,125 @@
-@model GameDetailDto
+@model FilmGameViewModel
 
 @{
-    ViewData["Title"] = DisplayText.Matchup(Model);
+    var game = Model.Game;
+    ViewData["Title"] = DisplayText.Matchup(game);
 }
 
 <partial name="_Trail" model="@(new List<PageLink> {
     new PageLink("Game film", Url.Action("Index")),
-    new PageLink(DisplayText.Matchup(Model), null) })" />
+    new PageLink(DisplayText.Matchup(game), null) })" />
 
-<h1 class="h3">@DisplayText.Matchup(Model)</h1>
+<h1 class="h3">@DisplayText.Matchup(game)</h1>
 <hr />
 
 <dl class="row">
     <dt class="col-sm-2">
-        @Html.DisplayNameFor(model => model.GameDate)
+        @Html.DisplayNameFor(model => model.Game.GameDate)
     </dt>
-    <dd class="col-sm-10">@DisplayText.Date(Model.GameDate)</dd>
-    @if (!string.IsNullOrWhiteSpace(Model.Label))
+    <dd class="col-sm-10">@DisplayText.Date(game.GameDate)</dd>
+    @if (!string.IsNullOrWhiteSpace(game.Label))
     {
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Label)
+            @Html.DisplayNameFor(model => model.Game.Label)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Label)
+            @Html.DisplayFor(model => model.Game.Label)
         </dd>
     }
-    @if (!string.IsNullOrWhiteSpace(Model.Notes))
+    @if (!string.IsNullOrWhiteSpace(game.Notes))
     {
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Notes)
+            @Html.DisplayNameFor(model => model.Game.Notes)
         </dt>
-        <dd class="col-sm-10 wr-notes">@Model.Notes</dd>
+        <dd class="col-sm-10 wr-notes">@game.Notes</dd>
     }
     <dt class="col-sm-2">Plays</dt>
-    <dd class="col-sm-10">@Model.ClipCount cut, @Model.TaggedClipCount of them tagged</dd>
+    <dd class="col-sm-10">@game.ClipCount cut, @game.TaggedClipCount of them tagged</dd>
 </dl>
 
-<h2 class="h5">Video</h2>
-@if (Model.Videos.Count == 0)
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+    <h2 class="h5 mb-0">Video</h2>
+    @if (Model.Setup.Problem == null)
+    {
+        <a asp-action="Upload" asp-route-gameId="@game.Id" class="btn btn-primary btn-sm">Upload a video</a>
+    }
+</div>
+@if (Model.Setup.Problem != null)
+{
+    <div class="alert alert-warning" role="status">
+        Video cannot be uploaded on this server yet. @Model.Setup.Problem
+    </div>
+}
+@if (game.Videos.Count == 0)
 {
     <p class="text-muted">This game has no video yet.</p>
 }
 else
 {
-    <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Video</th>
-                <th>Status</th>
-                <th>Length</th>
-                <th>Plays</th>
-                <th>Added by</th>
-            </tr>
-        </thead>
-        <tbody>
-    @foreach (var video in Model.Videos) {
-            <tr>
-                <td>
-                    <a asp-action="Video" asp-route-id="@video.Id">@video.Title</a>
-                </td>
-                <td>@DisplayText.VideoState(video.Status)</td>
-                <td>@(video.DurationMs != null ? TimeText.Format(video.DurationMs.Value) : "")</td>
-                <td>
-                    @video.ClipCount
-                    @if (video.ClipCount > 0)
-                    {
-                        <span class="small text-muted">(@video.TaggedClipCount tagged)</span>
-                    }
-                </td>
-                <td>@video.UploadedBy</td>
-            </tr>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Video</th>
+                    <th>Status</th>
+                    <th>Length</th>
+                    <th>Plays</th>
+                    <th>Added by</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var video in game.Videos) {
+                <tr>
+                    <td>
+                        <a asp-action="Video" asp-route-id="@video.Id">@video.Title</a>
+                        @if (!string.IsNullOrEmpty(video.FileName))
+                        {
+                            <div class="small text-muted">
+                                @video.FileName@if (video.SizeBytes != null)
+                                {<text>, @DisplayText.FileSize(video.SizeBytes.Value)</text>}
+                            </div>
+                        }
+                    </td>
+                    <td>
+                        @if (video.Status == VideoStatus.Ready && !video.HasFile)
+                        {
+                            <text>Ready</text> <span class="small text-muted">(no file)</span>
+                        }
+                        else
+                        {
+                            @DisplayText.VideoState(video.Status)
+                        }
+                        @if (video.Status == VideoStatus.Failed && !string.IsNullOrEmpty(video.FailureReason))
+                        {
+                            <div class="small text-danger">@video.FailureReason</div>
+                        }
+                        @if (video.Status == VideoStatus.Uploading || video.Status == VideoStatus.Processing)
+                        {
+                            <div class="small text-muted">If nobody is uploading it right now, the upload did not finish. Delete it and upload the file again.</div>
+                        }
+                    </td>
+                    <td>@(video.DurationMs != null ? TimeText.Format(video.DurationMs.Value) : "")</td>
+                    <td>
+                        @video.ClipCount
+                        @if (video.ClipCount > 0)
+                        {
+                            <span class="small text-muted">(@video.TaggedClipCount tagged)</span>
+                        }
+                    </td>
+                    <td>@video.UploadedBy</td>
+                    <td class="text-end">
+                        <a asp-action="DeleteVideo" asp-route-id="@video.Id">Delete</a>
+                    </td>
+                </tr>
     }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 }
 
 <div>
-    <a asp-action="EditGame" asp-route-id="@Model.Id">Edit</a> |
-    <a asp-action="DeleteGame" asp-route-id="@Model.Id">Delete</a> |
+    <a asp-action="EditGame" asp-route-id="@game.Id">Edit</a> |
+    <a asp-action="DeleteGame" asp-route-id="@game.Id">Delete</a> |
     <a asp-action="Index">Back to List</a>
 </div>

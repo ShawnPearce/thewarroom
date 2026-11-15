@@ -261,3 +261,151 @@ a {
 .wr-study-timer .badge {
   margin-right: 0.35rem;
 }
+
+/* ---------- Film: the video player ---------- */
+
+.wr-film {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+/* The picture keeps its shape inside a 16:9 box; what is left over stays black */
+.wr-film-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background-color: #000;
+}
+
+.wr-film-stage video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+.wr-film-message {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  text-align: center;
+}
+
+.wr-film-controls {
+  padding: 0.25rem 0.75rem 0.6rem;
+}
+
+.wr-film-play {
+  min-width: 4.25rem;
+}
+
+/* Digits of equal width, so the readout does not jump about while the video plays */
+.wr-film-time {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* In full screen the picture takes all the room the controls leave */
+.wr-film:fullscreen {
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+}
+
+.wr-film:fullscreen .wr-film-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+/* The bar a file fills while it is being uploaded */
+.wr-upload-bar {
+  display: block;
+  width: 100%;
+  height: 1rem;
+}
+
+/* ---------- Film: the clip editor ---------- */
+
+/* The strip under the player: one block for every play, at its place in the video */
+.wr-film-timeline {
+  position: relative;
+  height: 1.25rem;
+  border-radius: 0.25rem;
+  background-color: var(--bs-secondary-bg);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.wr-film-mark, .wr-film-selection, .wr-film-head {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+/* A play is a few seconds of a two-hour game, so its block is kept wide enough to be seen */
+.wr-film-mark {
+  top: 0.2rem;
+  bottom: 0.2rem;
+  min-width: 2px;
+  background-color: var(--bs-secondary);
+}
+
+/* The play that is being marked in the editor */
+.wr-film-selection {
+  min-width: 3px;
+  background-color: rgba(220, 53, 69, 0.45);
+  border-left: 2px solid #dc3545;
+  border-right: 2px solid #dc3545;
+}
+
+/* Where the video is now */
+.wr-film-head {
+  width: 2px !important;
+  background-color: #000;
+}
+
+/* The list of plays beside the player scrolls on its own, so the player stays in view */
+.wr-play-list {
+  max-height: 34rem;
+  overflow-y: auto;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+}
+
+.wr-play-list thead th {
+  position: sticky;
+  top: 0;
+  background-color: var(--bs-body-bg);
+}
+
+/* The play the video is showing at this moment */
+.wr-play-list tr.wr-play-now > td:first-child {
+  box-shadow: inset 3px 0 0 var(--wr-gold);
+}
+
+/* ---------- Film: drawings over the picture ---------- */
+
+/* The canvas lies exactly over the picture (film-drawings.js places it) and lets clicks through to the video */
+.wr-film-overlay {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* While a coach draws, the canvas takes the pointer */
+.wr-film-overlay-drawing {
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+  outline: 2px dashed var(--wr-gold);
+  outline-offset: -2px;
+}

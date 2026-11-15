@@ -4,13 +4,24 @@
     ViewData["Title"] = Model.Name;
     bool coach = Model.CanManage;
     bool draft = Model.Status == CutupStatus.Draft;
+    bool failed = Model.Status == CutupStatus.Failed;
+    bool working = Model.Status == CutupStatus.Queued || Model.Status == CutupStatus.Rendering;
 }
 
 <partial name="_Trail" model="@(new List<PageLink> {
     new PageLink(coach ? "Cutups" : "My film", Url.Action("Index")),
     new PageLink(Model.Name, null) })" />
 
-<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+@if (Model.HasVideo)
+{
+    @* Players only: counts the time the film is actually playing *@
+    <partial name="_StudyTimer" model="@(new StudyTimerViewModel {
+        Kind = ViewingKind.Film,
+        CutupId = Model.Id,
+        VideoSelector = "[data-film-player] video" })" />
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
     <h1 class="h3 mb-0">
         @Model.Name
         @if (coach)
@@ -20,10 +31,25 @@
     </h1>
     @if (coach)
     {
-        <div>
+        <div class="d-flex flex-wrap gap-1">
             @if (draft)
             {
                 <a asp-action="AddPlays" asp-route-id="@Model.Id" class="btn btn-primary">Add plays</a>
+            }
+            @if (draft || failed)
+            {
+                @* Making the video fixes the plays, so it is a form post like every other change *@
+                <form asp-action="Render" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    <button type="submit" class="btn @(draft && Model.Plays.Count > 0 ? "btn-primary" : "btn-outline-primary")"
+                            disabled="@(Model.RenderProblem != null)">@(failed ? "Try again" : "Make the video")</button>
+                </form>
+            }
+            @if (!draft && Model.Status != CutupStatus.Rendering)
+            {
+                <form asp-action="BackToDraft" asp-route-id="@Model.Id" method="post" class="d-inline"
+                      onsubmit="return confirm('@(Model.HasVideo ? "Change the plays? The video that was made is thrown away and has to be made again afterwards." : "Turn this cutup back into a draft?")');">
+                    <button type="submit" class="btn btn-outline-primary">Change the plays</button>
+                </form>
             }
             <a asp-action="Sharing" asp-route-id="@Model.Id" class="btn btn-outline-primary">Share</a>
             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Edit</a>
@@ -58,108 +84,184 @@
     </p>
 }
 
-@if (!Model.HasVideo)
+@if (Model.HasVideo)
+{
+    @* The script cutup-watch.js attaches itself to this element: the plays below become places to jump to,
+       and the drawings on the plays are shown over the picture. *@
+    <div class="row mb-3">
+        <div class="col-xl-9">
+            <partial name="_FilmPlayer" model="@(new FilmPlayerViewModel {
+                Source = Url.Action("Stream", new { id = Model.Id })!,
+                Label = Model.Name })" />
+            <p class="small text-muted mt-2 mb-0" role="status" data-role="now-showing"></p>
+        </div>
+    </div>
+}
+else if (coach && working)
+{
+    @* The script asks the site every few seconds how far the video has come, and reloads the page when it is done *@
+    <div class="alert alert-info" data-cutup-status data-url="@Url.Action("Status", new { id = Model.Id })">
+        <div class="mb-1" role="status" data-role="status-text">
+            @(Model.Status == CutupStatus.Queued ? "Waiting for its turn..." : $"Making the video: {Model.ProgressPercent}%")
+        </div>
+        <progress class="wr-upload-bar" max="100" value="@Model.ProgressPercent" aria-label="How far the video has come"></progress>
+        <div class="small mt-1">
+            Every play is cut out of its game video and the plays are joined in order. You can leave this page: the work goes on.
+        </div>
+    </div>
+}
+else if (coach && failed)
+{
+    <div class="alert alert-danger" role="alert">
+        The video could not be made. @Model.FailureReason
+        Try again, or change the plays first.
+    </div>
+}
+else if (coach)
 {
     <div class="alert alert-info" role="status">
-        @if (!coach)
+        This cutup is a draft: plays can be added, taken out and put in another order.
+        When it is as you want it, make the video. Players can watch it as soon as it is ready.
+    </div>
+}
+else
+{
+    <div class="alert alert-info" role="status">
+        The video for this film is not ready yet. These are the plays that will be in it.
+        @if (working)
         {
-            <text>The video for this film is not ready yet. These are the plays that will be in it.</text>
-        }
-        else if (draft)
-        {
-            <text>This cutup is a draft: plays can be added, taken out and put in another order. It has not been made into a video yet.</text>
-        }
-        else
-        {
-            <text>The plays of this cutup are fixed. Its video is not available yet.</text>
+            <text>It is being made right now: open this page again in a little while.</text>
         }
     </div>
 }
 
-<h2 class="h5">Plays</h2>
-@if (Model.Plays.Count == 0)
+@if (coach && (draft || failed) && Model.RenderProblem != null)
 {
-    <p class="text-muted">This cutup has no plays yet.</p>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-sm align-middle">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Starts at</th>
-                    <th>Length</th>
-                    @if (coach)
-                    {
-                        <th>Down</th>
-                        <th>Play</th>
-                        <th>Offence</th>
-                    }
-                    <th>Game</th>
-                    <th>Note</th>
-                    @if (coach && draft)
-                    {
-                        <th></th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-    @foreach (var play in Model.Plays) {
-                <tr>
-                    <td class="text-muted">@play.Position</td>
-                    <td>@TimeText.Format(play.OffsetMs)</td>
-                    <td>@TimeText.Length(play.DurationMs)</td>
-                    @if (coach)
-                    {
-                        @if (play.Tag != null)
-                        {
-                            <td class="text-nowrap">@DisplayText.DownAndDistance(play.Tag)</td>
-                            <td><span class="badge @(play.Tag.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@play.Tag.PlayType</span></td>
-                            <td>@play.Tag.OffenceTeamName</td>
-                        }
-                        else
-                        {
-                            <td colspan="3" class="text-muted">Not tagged</td>
-                        }
-                    }
-                    <td>@play.Matchup <span class="small text-muted">@play.GameDate.ToString("MMM d")</span></td>
-                    <td>@play.Title</td>
-                    @if (coach && draft)
-                    {
-                        <td class="text-nowrap text-end">
-                            @* Each button is its own small form; the page comes back with the new order *@
-                            <form asp-action="Move" method="post" class="d-inline">
-                                <input type="hidden" name="id" value="@Model.Id" />
-                                <input type="hidden" name="playId" value="@play.Id" />
-                                <input type="hidden" name="direction" value="@MoveDirection.Up" />
-                                <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@(play.Position == 1)"
-                                        title="Play it earlier" aria-label="Move play @play.Position earlier">&uarr;</button>
-                            </form>
-                            <form asp-action="Move" method="post" class="d-inline">
-                                <input type="hidden" name="id" value="@Model.Id" />
-                                <input type="hidden" name="playId" value="@play.Id" />
-                                <input type="hidden" name="direction" value="@MoveDirection.Down" />
-                                <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@(play.Position == Model.Plays.Count)"
-                                        title="Play it later" aria-label="Move play @play.Position later">&darr;</button>
-                            </form>
-                            <form asp-action="Remove" method="post" class="d-inline">
-                                <input type="hidden" name="id" value="@Model.Id" />
-                                <input type="hidden" name="playId" value="@play.Id" />
-                                <button type="submit" class="btn btn-outline-danger btn-sm">Take out</button>
-                            </form>
-                        </td>
-                    }
-                </tr>
-    }
-            </tbody>
-        </table>
+    <div class="alert alert-warning" role="status">
+        A video cannot be made of this cutup yet. @Model.RenderProblem
     </div>
-    <p class="small text-muted">
-        "Starts at" is where each play begins in the cutup: every play starts where the one before it ends.
-    </p>
 }
+
+<div data-cutup-watch>
+    <h2 class="h5">Plays</h2>
+    @if (Model.Plays.Count == 0)
+    {
+        <p class="text-muted">This cutup has no plays yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Starts at</th>
+                        <th>Length</th>
+                        @if (coach)
+                        {
+                            <th>Down</th>
+                            <th>Play</th>
+                            <th>Offence</th>
+                        }
+                        <th>Game</th>
+                        <th>Note</th>
+                        @if (coach && draft)
+                        {
+                            <th></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+        @foreach (var play in Model.Plays) {
+                    @* Where the play is in the cutup, and what was drawn on it, for the player above *@
+                    <tr data-play-offset="@play.OffsetMs" data-play-duration="@play.DurationMs" data-play-start="@play.StartMs"
+                        data-play-position="@play.Position" data-play-title="@play.Title" data-annotations="@play.AnnotationsJson">
+                        <td class="text-muted">@play.Position</td>
+                        <td>
+                            @if (Model.HasVideo)
+                            {
+                                <button type="button" class="btn btn-link p-0 align-baseline" data-command="go-to-play"
+                                        title="Play from here">@TimeText.Format(play.OffsetMs)</button>
+                            }
+                            else
+                            {
+                                @TimeText.Format(play.OffsetMs)
+                            }
+                        </td>
+                        <td>@TimeText.Length(play.DurationMs)</td>
+                        @if (coach)
+                        {
+                            @if (play.Tag != null)
+                            {
+                                <td class="text-nowrap">@DisplayText.DownAndDistance(play.Tag)</td>
+                                <td><span class="badge @(play.Tag.PlayType == PlayType.Run ? "wr-play-run" : "wr-play-pass")">@play.Tag.PlayType</span></td>
+                                <td>@play.Tag.OffenceTeamName</td>
+                            }
+                            else
+                            {
+                                <td colspan="3" class="text-muted">Not tagged</td>
+                            }
+                        }
+                        <td>@play.Matchup <span class="small text-muted">@play.GameDate.ToString("MMM d")</span></td>
+                        <td>
+                            @play.Title
+                            @if (play.AnnotationsJson != null)
+                            {
+                                <span class="small text-muted">@(string.IsNullOrWhiteSpace(play.Title) ? "With a drawing" : "(with a drawing)")</span>
+                            }
+                        </td>
+                        @if (coach && draft)
+                        {
+                            <td class="text-nowrap text-end">
+                                @* Each button is its own small form; the page comes back with the new order *@
+                                <form asp-action="Move" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="playId" value="@play.Id" />
+                                    <input type="hidden" name="direction" value="@MoveDirection.Up" />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@(play.Position == 1)"
+                                            title="Play it earlier" aria-label="Move play @play.Position earlier">&uarr;</button>
+                                </form>
+                                <form asp-action="Move" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="playId" value="@play.Id" />
+                                    <input type="hidden" name="direction" value="@MoveDirection.Down" />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm" disabled="@(play.Position == Model.Plays.Count)"
+                                            title="Play it later" aria-label="Move play @play.Position later">&darr;</button>
+                                </form>
+                                <form asp-action="Remove" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="playId" value="@play.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Take out</button>
+                                </form>
+                            </td>
+                        }
+                    </tr>
+        }
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted">
+            "Starts at" is where each play begins in the cutup: every play starts where the one before it ends.
+            @if (Model.HasVideo)
+            {
+                <text>Click a time to play from there.</text>
+            }
+        </p>
+    }
+</div>
 
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
+
+@section Scripts {
+    @if (Model.HasVideo)
+    {
+        <script src="~/js/film/film-player.js" asp-append-version="true"></script>
+        <script src="~/js/film/film-drawings.js" asp-append-version="true"></script>
+    }
+    @if (Model.HasVideo || (coach && working))
+    {
+        <script src="~/js/film/cutup-watch.js" asp-append-version="true"></script>
+    }
+}

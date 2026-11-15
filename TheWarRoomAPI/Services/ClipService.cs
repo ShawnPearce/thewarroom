@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TheWarRoomAPI.Data;
+using TheWarRoomAPI.Diagrams;
 using TheWarRoomAPI.DTOs;
 using TheWarRoomAPI.Models;
 
@@ -156,6 +157,10 @@ namespace TheWarRoomAPI.Services
             clip.Title = Clean(dto.Title);
             clip.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
 
+            // Business rule: a drawing belongs to a moment inside its play.
+            // When the play is trimmed, a drawing on a moment that was cut off goes with it.
+            clip.AnnotationsJson = FilmDrawingsValidator.KeepInside(clip.AnnotationsJson, clip.StartMs, clip.EndMs);
+
             // The tag is added, changed or taken away
             if (dto.Tag == null)
             {
@@ -176,18 +181,27 @@ namespace TheWarRoomAPI.Services
                 clip.Tag.OffenceTeamId = dto.Tag.OffenceTeamId;
             }
 
-            // Cutups that are still drafts follow the clip.
-            // A cutup that has been made into a video keeps its own copy, so film that was shared does not change.
-            var draftPlays = await _context.CutupClips
-                .Where(p => p.ClipId == clip.Id && p.Cutup!.Status == CutupStatus.Draft)
-                .ToListAsync();
-            foreach (var play in draftPlays)
+            await CopyToDraftCutupsAsync(clip);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SaveAnnotationsAsync(CurrentUser currentUser, int id, SaveAnnotationsDto dto)
+        {
+            FilmRules.EnsureCoach(currentUser);
+
+            var clip = await _context.Clips.FirstOrDefaultAsync(c => c.Id == id && c.TeamId == currentUser.TeamId);
+            if (clip == null)
             {
-                play.StartMs = clip.StartMs;
-                play.EndMs = clip.EndMs;
-                play.Title = clip.Title;
-                play.AnnotationsJson = clip.AnnotationsJson;
+                return false;
             }
+
+            // The drawings are checked and stored in a standard form. Sending none takes them away.
+            clip.AnnotationsJson = FilmDrawingsValidator.Normalize(dto.AnnotationsJson, clip.StartMs, clip.EndMs);
+            clip.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
+
+            await CopyToDraftCutupsAsync(clip);
 
             await _context.SaveChangesAsync();
             return true;
@@ -219,6 +233,23 @@ namespace TheWarRoomAPI.Services
         }
 
         // ---------- Helpers ----------
+
+        // Cutups that are still drafts follow the clip.
+        // A cutup that has been made into a video keeps its own copy, so film that was shared does not change.
+        private async Task CopyToDraftCutupsAsync(Clip clip)
+        {
+            var draftPlays = await _context.CutupClips
+                .Where(p => p.ClipId == clip.Id && p.Cutup!.Status == CutupStatus.Draft)
+                .ToListAsync();
+
+            foreach (var play in draftPlays)
+            {
+                play.StartMs = clip.StartMs;
+                play.EndMs = clip.EndMs;
+                play.Title = clip.Title;
+                play.AnnotationsJson = clip.AnnotationsJson;
+            }
+        }
 
         // Everything FilmMapping.ToDto needs
         private IQueryable<Clip> ClipsOfTeam(int teamId)

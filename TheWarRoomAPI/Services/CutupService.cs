@@ -10,12 +10,19 @@ namespace TheWarRoomAPI.Services
         // A cutup is one video in the end, so it is kept to a length that can be made and watched
         public const int MaxPlays = 200;
 
+        // A signed link to a finished cutup lasts a long film session
+        private static readonly TimeSpan PlaybackLinkLife = TimeSpan.FromHours(6);
+
         private readonly AppDbContext _context;
+        private readonly IFilmStorage _storage;
+        private readonly IVideoTools _tools;
         private readonly TimeProvider _clock;
 
-        public CutupService(AppDbContext context, TimeProvider clock)
+        public CutupService(AppDbContext context, IFilmStorage storage, IVideoTools tools, TimeProvider clock)
         {
             _context = context;
+            _storage = storage;
+            _tools = tools;
             _clock = clock;
         }
 
@@ -63,9 +70,11 @@ namespace TheWarRoomAPI.Services
 
             var detail = (CutupDetailDto)ToDto(new CutupDetailDto(), cutup, currentUser);
 
-            // Each play starts where the one before it ends
+            // Each play starts where the one before it ends.
+            // Once the video has been made, where each play is in it was measured; before that it is added up.
             var plays = cutup.Clips!.OrderBy(p => p.Position).ToList();
             var offsets = CutupTimeline.Offsets(plays.Select(p => p.EndMs - p.StartMs));
+            bool measured = cutup.Status == CutupStatus.Ready && plays.All(p => p.OutputOffsetMs != null && p.OutputDurationMs != null);
 
             detail.Plays = plays
                 .Select((play, index) => new CutupPlayDto
@@ -77,14 +86,20 @@ namespace TheWarRoomAPI.Services
                     Matchup = Labels.Matchup(play.Video.Game),
                     StartMs = play.StartMs,
                     EndMs = play.EndMs,
-                    OffsetMs = offsets[index],
-                    DurationMs = play.EndMs - play.StartMs,
+                    OffsetMs = measured ? play.OutputOffsetMs!.Value : offsets[index],
+                    DurationMs = measured ? play.OutputDurationMs!.Value : play.EndMs - play.StartMs,
+                    AnnotationsJson = play.AnnotationsJson,
 
                     // The clip and its tag are the coaches' analysis; players get the film itself
                     ClipId = currentUser.IsCoach ? play.ClipId : null,
                     Tag = currentUser.IsCoach ? FilmMapping.ToDto(play.Clip!.Tag) : null
                 })
                 .ToList();
+
+            if (currentUser.IsCoach && (cutup.Status == CutupStatus.Draft || cutup.Status == CutupStatus.Failed))
+            {
+                detail.RenderProblem = WhyNoVideoCanBeMade(cutup);
+            }
 
             if (currentUser.IsCoach)
             {
@@ -171,8 +186,22 @@ namespace TheWarRoomAPI.Services
                 return false;
             }
 
+            if (cutup.Status == CutupStatus.Rendering)
+            {
+                throw new InvalidOperationException("This cutup is being made into a video right now. Delete it when that has finished.");
+            }
+
+            string? key = cutup.StorageKey;
+
             _context.Cutups.Remove(cutup);   // its plays and its sharing are deleted with it; the clips stay
             await _context.SaveChangesAsync();
+
+            // The video that was made goes after the record, so a record never points at a file that is gone
+            if (key != null)
+            {
+                await _storage.DeleteAsync(key, CancellationToken.None);
+            }
+
             return true;
         }
 
@@ -368,7 +397,164 @@ namespace TheWarRoomAPI.Services
             return true;
         }
 
+        // ---------- The video of a cutup ----------
+
+        public async Task<bool> RequestRenderAsync(CurrentUser currentUser, int id)
+        {
+            FilmRules.EnsureCoach(currentUser);
+
+            var cutup = await CutupWithItsVideosAsync(currentUser, id);
+            if (cutup == null)
+            {
+                return false;
+            }
+
+            // A draft is made into a video for the first time; one that failed can be tried again
+            if (cutup.Status == CutupStatus.Ready)
+            {
+                throw new InvalidOperationException("This cutup has already been made into a video.");
+            }
+            if (cutup.Status == CutupStatus.Queued || cutup.Status == CutupStatus.Rendering)
+            {
+                throw new InvalidOperationException("This cutup is already being made into a video.");
+            }
+
+            string? problem = WhyNoVideoCanBeMade(cutup);
+            if (problem != null)
+            {
+                throw new InvalidOperationException(problem);
+            }
+
+            // Business rule: from here on the plays are fixed. The row itself is the place in the queue:
+            // the background worker makes the cutup that has waited longest (see CutupRenderer).
+            var now = _clock.GetUtcNow().UtcDateTime;
+            cutup.Status = CutupStatus.Queued;
+            cutup.QueuedAt = now;
+            cutup.ProgressPercent = 0;
+            cutup.FailureReason = null;
+            cutup.UpdatedAt = now;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ReturnToDraftAsync(CurrentUser currentUser, int id)
+        {
+            FilmRules.EnsureCoach(currentUser);
+
+            var cutup = await _context.Cutups
+                .Include(c => c.Clips!)
+                    .ThenInclude(p => p.Clip)
+                .FirstOrDefaultAsync(c => c.Id == id && c.TeamId == currentUser.TeamId);
+            if (cutup == null)
+            {
+                return false;
+            }
+
+            if (cutup.Status == CutupStatus.Draft)
+            {
+                return true;   // it already is one
+            }
+            if (cutup.Status == CutupStatus.Rendering)
+            {
+                throw new InvalidOperationException("This cutup is being made into a video right now. Try again when that has finished.");
+            }
+
+            string? key = cutup.StorageKey;
+
+            cutup.Status = CutupStatus.Draft;
+            cutup.StorageKey = null;
+            cutup.DurationMs = null;
+            cutup.ProgressPercent = 0;
+            cutup.QueuedAt = null;
+            cutup.RenderedAt = null;
+            cutup.FailureReason = null;
+            cutup.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
+
+            // A draft follows its clips again, so it catches up with what was changed on them in the meantime
+            foreach (var play in cutup.Clips!)
+            {
+                play.OutputOffsetMs = null;
+                play.OutputDurationMs = null;
+                play.StartMs = play.Clip!.StartMs;
+                play.EndMs = play.Clip.EndMs;
+                play.Title = play.Clip.Title;
+                play.AnnotationsJson = play.Clip.AnnotationsJson;
+            }
+
+            await _context.SaveChangesAsync();
+
+            if (key != null)
+            {
+                await _storage.DeleteAsync(key, CancellationToken.None);
+            }
+
+            return true;
+        }
+
+        public async Task<FilmFile?> GetFileAsync(CurrentUser currentUser, int id)
+        {
+            var cutup = await _context.Cutups
+                .Include(c => c.Assignments)
+                .FirstOrDefaultAsync(c => c.Id == id && c.TeamId == currentUser.TeamId);
+            if (cutup == null)
+            {
+                return null;
+            }
+
+            // Business rule: a player reaches only film shared with them, with one of their groups, or with the team
+            if (!AccessRules.CanWatchCutup(currentUser, cutup.Assignments!))
+            {
+                throw new ForbiddenException("This film has not been shared with you.");
+            }
+
+            if (cutup.Status != CutupStatus.Ready || cutup.StorageKey == null)
+            {
+                return null;
+            }
+
+            if (_storage.UsesSignedLinks)
+            {
+                return new FilmFile { SignedLink = _storage.CreatePlaybackLink(cutup.StorageKey, PlaybackLinkLife) };
+            }
+
+            string? path = _storage.FindFile(cutup.StorageKey);
+            return path == null ? null : new FilmFile { Path = path };
+        }
+
         // ---------- Helpers ----------
+
+        // A cutup with its plays and the video each play is cut from
+        private async Task<Cutup?> CutupWithItsVideosAsync(CurrentUser currentUser, int id)
+        {
+            return await _context.Cutups
+                .Include(c => c.Clips!)
+                    .ThenInclude(p => p.Video)
+                .FirstOrDefaultAsync(c => c.Id == id && c.TeamId == currentUser.TeamId);
+        }
+
+        // Empty when the cutup can be made into a video; otherwise the reason it cannot, written for the coach.
+        // The cutup must be loaded with its plays and their videos.
+        private string? WhyNoVideoCanBeMade(Cutup cutup)
+        {
+            if (cutup.Clips!.Count == 0)
+            {
+                return "Add plays to the cutup first.";
+            }
+
+            // Business rule: a video is made of film that is in storage.
+            // A play from a record without a file cannot be part of it.
+            var withoutFile = cutup.Clips
+                .OrderBy(p => p.Position)
+                .FirstOrDefault(p => p.Video!.Status != VideoStatus.Ready || p.Video.StorageKey == null);
+            if (withoutFile != null)
+            {
+                return $"Play {withoutFile.Position} is cut from \"{withoutFile.Video!.Title}\", a video without a file. " +
+                       "Take that play out, or upload the video and cut the play from it.";
+            }
+
+            return _storage.Problem ?? _tools.Problem;
+        }
 
         // A team's cutups with what the list needs: who made each, its plays, and who it is shared with
         private IQueryable<Cutup> CutupsOfTeam(int teamId)
@@ -399,7 +585,9 @@ namespace TheWarRoomAPI.Services
         {
             if (cutup.Status != CutupStatus.Draft)
             {
-                throw new InvalidOperationException("This cutup has already been made into a video, so its plays can no longer be changed.");
+                throw new InvalidOperationException(
+                    "The plays of this cutup are fixed, because it is being made or has been made into a video. " +
+                    "Turn it back into a draft to change them.");
             }
         }
 
@@ -432,16 +620,20 @@ namespace TheWarRoomAPI.Services
             dto.ForWeekOf = cutup.ForWeekOf;
             dto.Status = cutup.Status;
             dto.HasVideo = cutup.Status == CutupStatus.Ready && cutup.StorageKey != null;
+            dto.ProgressPercent = cutup.ProgressPercent;
             dto.PlayCount = cutup.Clips!.Count;
-            dto.DurationMs = cutup.Clips.Sum(p => p.EndMs - p.StartMs);
+            dto.DurationMs = dto.HasVideo && cutup.DurationMs != null
+                ? cutup.DurationMs.Value
+                : cutup.Clips.Sum(p => p.EndMs - p.StartMs);
             dto.CreatedBy = Labels.FullName(cutup.CreatedBy!);
             dto.CreatedAt = cutup.CreatedAt;
             dto.CanManage = AccessRules.CanManageFilm(currentUser);
 
-            // Who else it is shared with is the coaches' business
+            // Who else it is shared with, and why a video could not be made, are the coaches' business
             if (currentUser.IsCoach)
             {
                 dto.SharedWith = SharingInWords(cutup);
+                dto.FailureReason = cutup.Status == CutupStatus.Failed ? cutup.FailureReason : null;
             }
 
             return dto;

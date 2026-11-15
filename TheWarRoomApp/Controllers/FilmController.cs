@@ -11,9 +11,13 @@ namespace TheWarRoomApp.Controllers
     {
         private readonly HttpClient _client;
 
+        // Video files go through a client of their own (see Program.cs)
+        private readonly HttpClient _files;
+
         public FilmController(IHttpClientFactory httpClientFactory)
         {
             _client = httpClientFactory.CreateClient("WarRoomAPI");
+            _files = httpClientFactory.CreateClient("WarRoomAPIFiles");
         }
 
         // ---------- Games ----------
@@ -57,8 +61,17 @@ namespace TheWarRoomApp.Controllers
                 return await ApiFailureAsync(response);
             }
 
-            var game = await response.Content.ReadFromJsonAsync<GameDetailDto>();
-            return View(game);   // Game View
+            var setup = await GetSetupAsync();
+            if (setup == null)
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            return View(new FilmGameViewModel
+            {
+                Game = (await response.Content.ReadFromJsonAsync<GameDetailDto>())!,
+                Setup = setup
+            });   // Game View
         }
 
         // GET: Film/CreateGame
@@ -193,6 +206,167 @@ namespace TheWarRoomApp.Controllers
             else if (await StoreRefusalMessageAsync(response))   // 409 the game has video
             {
                 return RedirectToAction(nameof(Game), new { id });
+            }
+
+            return await ApiFailureAsync(response);
+        }
+
+        // ---------- Uploading a video ----------
+
+        // GET: Film/Upload?gameId=5
+        public async Task<IActionResult> Upload(int gameId)
+        {
+            var response = await _client.GetAsync($"api/Game/{gameId}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ApiFailureAsync(response);
+            }
+
+            var setup = await GetSetupAsync();
+            if (setup == null)
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            var game = (await response.Content.ReadFromJsonAsync<GameDetailDto>())!;
+
+            return View(new FilmGameViewModel { Game = game, Setup = setup });   // Upload View
+        }
+
+        // The three actions below are called by the upload page's script (video-upload.js), one after another.
+        // They answer with a status code and a short text instead of a page.
+
+        // POST: Film/StartUpload   (tells the API about the file; the answer says where the browser sends it)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StartUpload([FromForm] StartUploadDto upload)
+        {
+            if (!ModelState.IsValid)   // check for validation errors
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, FirstError());
+            }
+
+            var response = await _client.PostAsJsonAsync("api/Video", upload);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ScriptFailureAsync(response);   // 409 not a video file, too large, or no storage
+            }
+
+            var ticket = (await response.Content.ReadFromJsonAsync<UploadTicketDto>())!;   // 201 Created
+
+            // With a signed link the file goes straight to film storage. Without one it is sent to this site.
+            return Json(new
+            {
+                videoId = ticket.VideoId,
+                url = ticket.UploadUrl ?? Url.Action(nameof(UploadFile), new { id = ticket.VideoId }),
+                throughSite = ticket.UploadUrl == null,
+                contentType = ticket.ContentType
+            });
+        }
+
+        // PUT: Film/UploadFile/5   (the file itself, when film storage has no signed links)
+        [HttpPut]
+        [ValidateAntiForgeryToken]
+        [DisableRequestSizeLimit]   // the API stops reading at the largest size that is taken
+        public async Task<IActionResult> UploadFile(int id)
+        {
+            // The file is passed on to the API as it arrives, without being held in memory or on disk here
+            var file = new StreamContent(Request.Body);
+            file.Headers.ContentLength = Request.ContentLength;
+
+            using var response = await _files.PutAsync($"api/Video/{id}/file", file, HttpContext.RequestAborted);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ScriptFailureAsync(response);
+            }
+
+            return NoContent();   // 204 No Content
+        }
+
+        // POST: Film/FinishUpload/5   (the API checks the file that arrived)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FinishUpload(int id)
+        {
+            var response = await _client.PostAsync($"api/Video/{id}/complete", null);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ScriptFailureAsync(response);   // 409 with the reason the file cannot be used
+            }
+
+            TempData["Message"] = "The video was uploaded and checked. It can be cut into plays now.";
+            return Json(new { url = Url.Action(nameof(Video), new { id }) });
+        }
+
+        // POST: Film/CancelUpload/5   (an upload that was stopped leaves no record behind)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelUpload(int id)
+        {
+            var response = await _client.GetAsync($"api/Video/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                // Only a video that never became ready is removed this way
+                var video = (await response.Content.ReadFromJsonAsync<VideoDetailDto>())!;
+                if (video.Status != VideoStatus.Ready)
+                {
+                    await _client.DeleteAsync($"api/Video/{id}");
+                }
+            }
+
+            return NoContent();   // 204 No Content
+        }
+
+        // GET: Film/Stream/5   (the video itself, for the player on the video's page)
+        public async Task<IActionResult> Stream(int id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"api/Video/{id}/file");
+
+            // A player asks for the part of the video it needs next
+            if (Request.Headers.TryGetValue("Range", out var range))
+            {
+                request.Headers.TryAddWithoutValidation("Range", range.ToString());
+            }
+
+            var response = await _files.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, HttpContext.RequestAborted);
+            if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Found)
+            {
+                return new RelayedFileResult(response);   // 200, 206 Partial Content, or 302 to a signed link
+            }
+
+            using (response)
+            {
+                return StatusCode((int)response.StatusCode);   // a player has no use for a page: 401, 403, 404 or 416 as it is
+            }
+        }
+
+        // GET: Film/DeleteVideo/5
+        public async Task<IActionResult> DeleteVideo(int id)
+        {
+            var response = await _client.GetAsync($"api/Video/{id}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ApiFailureAsync(response);
+            }
+
+            var video = await response.Content.ReadFromJsonAsync<VideoDetailDto>();
+            return View(video);   // Delete confirmation View
+        }
+
+        // POST: Film/DeleteVideo/5
+        [HttpPost, ActionName("DeleteVideo")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteVideoConfirmed(int id, int gameId)
+        {
+            var response = await _client.DeleteAsync($"api/Video/{id}");
+            if (response.IsSuccessStatusCode)   // 204 No Content
+            {
+                TempData["Message"] = "The video was deleted.";
+                return RedirectToAction(nameof(Game), new { id = gameId });
+            }
+            else if (await StoreRefusalMessageAsync(response))   // 409 its plays are used in a cutup
+            {
+                return RedirectToAction(nameof(Video), new { id });
             }
 
             return await ApiFailureAsync(response);
@@ -337,7 +511,130 @@ namespace TheWarRoomApp.Controllers
             return RedirectToAction(nameof(Video), new { id = videoId });
         }
 
+        // The two actions below are called by the editor on a video's page (clip-editor.js).
+        // They answer with the list of plays as the server draws it, or with a status code and a short text.
+
+        // POST: Film/SavePlay   (a new play, or a change to one, marked on the video itself)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SavePlay([FromForm] PlayEditModel model)
+        {
+            if (!ModelState.IsValid)   // check for validation errors
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, FirstError());
+            }
+
+            // A tagged play needs all of its tag; an untagged one needs none of it
+            bool tagged = model.PlayType != null;
+            if (tagged && (model.OffenceTeamId == null || model.Down == null || model.Distance == null))
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, "A tagged play needs the team on offence, the down and the yards to go.");
+            }
+            if (!tagged && (model.Down != null || model.Distance != null))
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, "Choose run or pass to tag the play, or clear the down and the yards to go.");
+            }
+
+            var clip = new SaveClipDto
+            {
+                VideoId = model.VideoId,
+                StartMs = model.StartMs,
+                EndMs = model.EndMs,
+                Title = model.Title,
+                Tag = tagged
+                    ? new SavePlayTagDto
+                    {
+                        PlayType = model.PlayType!.Value,
+                        OffenceTeamId = model.OffenceTeamId!.Value,
+                        Down = model.Down!.Value,
+                        Distance = model.Distance!.Value
+                    }
+                    : null
+            };
+
+            var response = model.Id == 0
+                ? await _client.PostAsJsonAsync("api/Clip", clip)            // 201 Created
+                : await _client.PutAsJsonAsync($"api/Clip/{model.Id}", clip);   // 204 No Content
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ScriptFailureAsync(response);   // 409 for example it ends after the end of the video
+            }
+
+            return await PlayListAsync(model.VideoId);
+        }
+
+        // POST: Film/DeletePlay
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePlay([FromForm] int id, [FromForm] int videoId)
+        {
+            var response = await _client.DeleteAsync($"api/Clip/{id}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ScriptFailureAsync(response);   // 409 the play is used in a cutup
+            }
+
+            return await PlayListAsync(videoId);
+        }
+
+        // POST: Film/SaveDrawings   (the arrows and text drawn on a play; sending none takes them away)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveDrawings([FromForm] int id, [FromForm] int videoId, [FromForm] string? annotationsJson)
+        {
+            var response = await _client.PutAsJsonAsync($"api/Clip/{id}/annotations", new SaveAnnotationsDto { AnnotationsJson = annotationsJson });
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ScriptFailureAsync(response);   // 409 for example a drawing outside the play
+            }
+
+            return await PlayListAsync(videoId);
+        }
+
         // ---------- Helpers ----------
+
+        // Whether this server can take video. Null when the API refuses (players).
+        private async Task<FilmSetupDto?> GetSetupAsync()
+        {
+            var response = await _client.GetAsync("api/FilmSetup");
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<FilmSetupDto>();
+        }
+
+        // For actions that are called by a script: the API's status code and its message, as they are.
+        // The script shows the message; a page would be of no use to it.
+        private async Task<IActionResult> ScriptFailureAsync(HttpResponseMessage response)
+        {
+            string message = await response.Content.ReadAsStringAsync();
+
+            return StatusCode((int)response.StatusCode, response.StatusCode == HttpStatusCode.Conflict || response.StatusCode == HttpStatusCode.Forbidden
+                ? message
+                : "That could not be done. Reload the page and try again.");
+        }
+
+        // The first validation message of what a script sent
+        private string FirstError()
+        {
+            return ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).FirstOrDefault(m => !string.IsNullOrEmpty(m))
+                ?? "What was sent could not be read.";
+        }
+
+        // The list of a video's plays, drawn by the server, for the editor to put on the page
+        private async Task<IActionResult> PlayListAsync(int videoId)
+        {
+            var response = await _client.GetAsync($"api/Video/{videoId}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return await ScriptFailureAsync(response);
+            }
+
+            var video = (await response.Content.ReadFromJsonAsync<VideoDetailDto>())!;
+            return PartialView("_PlayList", new PlayListViewModel { Video = video, OnTheVideo = video.HasFile });
+        }
 
         // The teams on film, for the drop-downs of the game form. Null when the API refuses (players).
         private async Task<List<ScoutedTeamDto>?> GetTeamsAsync()

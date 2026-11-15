@@ -24,6 +24,7 @@ namespace TheWarRoomAPI.Services
                 EndMs = clip.EndMs,
                 Title = clip.Title,
                 Tag = ToDto(clip.Tag),
+                AnnotationsJson = clip.AnnotationsJson,
                 CutupCount = clip.CutupClips?.Count ?? 0
             };
         }

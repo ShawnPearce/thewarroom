@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using TheWarRoomAPI.Data;
 using TheWarRoomAPI.Filters;
@@ -49,6 +50,23 @@ namespace TheWarRoomAPI
             // The clock is injected so the time-based rules can be tested
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+
+            // Film: where video files are kept, and the ffmpeg programs that read and make them.
+            // "Film:Storage" chooses between a folder on this computer and an Amazon S3 bucket.
+            builder.Services.Configure<FilmOptions>(builder.Configuration.GetSection(FilmOptions.Section));
+            builder.Services.AddSingleton<IFilmStorage>(services =>
+            {
+                var options = services.GetRequiredService<IOptions<FilmOptions>>();
+
+                return string.Equals(options.Value.Storage, "S3", StringComparison.OrdinalIgnoreCase)
+                    ? new S3FilmStorage(options)
+                    : new LocalFilmStorage(options, services.GetRequiredService<IHostEnvironment>());
+            });
+            builder.Services.AddSingleton<IVideoTools, FfmpegVideoTools>();
+
+            // Cutups are made into videos in the background, one at a time (see CutupRenderWorker)
+            builder.Services.AddScoped<CutupRenderer>();
+            builder.Services.AddHostedService<CutupRenderWorker>();
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ITeamService, TeamService>();

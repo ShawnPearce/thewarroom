@@ -1,0 +1,83 @@
+@model FilmGameViewModel
+
+@{
+    var game = Model.Game;
+    ViewData["Title"] = "Upload a video";
+    string largest = DisplayText.FileSize(Model.Setup.MaxUploadBytes);
+}
+
+<partial name="_Trail" model="@(new List<PageLink> {
+    new PageLink("Game film", Url.Action("Index")),
+    new PageLink(DisplayText.Matchup(game), Url.Action("Game", new { id = game.Id })),
+    new PageLink("Upload a video", null) })" />
+
+<h1 class="h3">Upload a video</h1>
+<p class="text-muted">
+    Film of @DisplayText.Matchup(game), @DisplayText.Date(game.GameDate).
+    Once it is uploaded, the video can be played here and cut into plays.
+</p>
+<hr />
+
+@if (Model.Setup.Problem != null)
+{
+    <div class="alert alert-warning" role="status">
+        Video cannot be uploaded on this server yet. @Model.Setup.Problem
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-8 col-lg-6">
+            @* The upload script (video-upload.js) attaches itself to this form. Nothing is sent by the form itself. *@
+            <form data-video-upload
+                  data-game-id="@game.Id"
+                  data-max-bytes="@Model.Setup.MaxUploadBytes"
+                  data-largest="@largest"
+                  data-start-url="@Url.Action("StartUpload")"
+                  data-finish-url="@Url.Action("FinishUpload")"
+                  data-cancel-url="@Url.Action("CancelUpload")">
+                @Html.AntiForgeryToken()
+
+                <div class="form-group">
+                    <label for="uploadTitle" class="control-label">Title</label>
+                    <input id="uploadTitle" name="Title" class="form-control" maxlength="100" required autocomplete="off"
+                           value="@(game.Videos.Count == 0 ? "Full game" : "")" />
+                    <div class="form-text">For example "Full game" or "End zone angle"</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="uploadFile" class="control-label">Video file</label>
+                    <input id="uploadFile" name="File" type="file" class="form-control" required
+                           accept="video/mp4,video/quicktime,.mp4,.m4v,.mov" />
+                    <div class="form-text">
+                        An MP4 or MOV file with H.264 video, up to @largest. It is kept in @Model.Setup.Storage.
+                    </div>
+                </div>
+
+                <div class="alert alert-danger d-none" role="alert" data-role="upload-error"></div>
+
+                <div class="d-none mb-3" data-role="upload-progress">
+                    <div class="mb-1" role="status" data-role="upload-status"></div>
+                    <progress class="wr-upload-bar" max="100" value="0" data-role="upload-bar" aria-label="How much of the file has been sent"></progress>
+                    <div class="small text-muted" data-role="upload-detail"></div>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Upload" class="btn btn-primary" data-role="upload-start" />
+                    <button type="button" class="btn btn-outline-secondary d-none" data-role="upload-cancel">Cancel the upload</button>
+                </div>
+            </form>
+            <p class="small text-muted">
+                Keep this page open until the upload has finished. A long game can take a while, depending on your connection.
+            </p>
+        </div>
+    </div>
+}
+
+<div>
+    <a asp-action="Game" asp-route-id="@game.Id">Back to the game</a>
+</div>
+
+@section Scripts {
+    <script src="~/js/film/video-upload.js" asp-append-version="true"></script>
+}

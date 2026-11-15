@@ -43,6 +43,17 @@ namespace TheWarRoomApp
                 client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]!);
             }).AddHttpMessageHandler<ApiUserHeaderHandler>();
 
+            // Video files pass between the browser and the API through a client of their own.
+            // A long video takes more than the usual 100 seconds, and when the API answers with a signed link
+            // to film storage, that answer is handed to the browser as it is instead of being followed here.
+            builder.Services.AddHttpClient("WarRoomAPIFiles", client =>
+                {
+                    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]!);
+                    client.Timeout = Timeout.InfiniteTimeSpan;
+                })
+                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false })
+                .AddHttpMessageHandler<ApiUserHeaderHandler>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

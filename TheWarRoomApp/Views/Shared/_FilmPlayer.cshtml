@@ -1,0 +1,32 @@
+@model FilmPlayerViewModel
+
+@* The video player of the film pages: the video with controls of its own, which also work from the keyboard.
+   The script film-player.js attaches itself to it. *@
+<div class="wr-film" data-film-player>
+    <div class="wr-film-stage" data-role="stage">
+        <video preload="metadata" playsinline src="@Model.Source" aria-label="@Model.Label"></video>
+        <div class="wr-film-message d-none" role="status" data-role="film-message"></div>
+    </div>
+    <div class="wr-film-controls">
+        <input type="range" class="form-range" min="0" max="0" step="0.05" value="0" data-role="seek" aria-label="Place in the video" />
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-primary btn-sm wr-film-play" data-command="play" title="Play or pause (Space)">Play</button>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Move through the video">
+                <button type="button" class="btn btn-outline-primary" data-command="back" title="Back 5 seconds (Left arrow)">&minus;5 s</button>
+                <button type="button" class="btn btn-outline-primary" data-command="frame-back" title="Back one picture (comma key)" aria-label="Back one picture">&lsaquo; 1</button>
+                <button type="button" class="btn btn-outline-primary" data-command="frame-forward" title="Forward one picture (full stop key)" aria-label="Forward one picture">1 &rsaquo;</button>
+                <button type="button" class="btn btn-outline-primary" data-command="forward" title="Forward 5 seconds (Right arrow)">+5 s</button>
+            </div>
+            <span class="wr-film-time" data-role="time">0:00.0 / 0:00</span>
+            <label class="ms-auto small text-muted mb-0" for="filmSpeed">Speed</label>
+            <select id="filmSpeed" class="form-select form-select-sm w-auto" data-role="speed">
+                <option value="0.25">&frac14;</option>
+                <option value="0.5">&frac12;</option>
+                <option value="1" selected>Normal</option>
+                <option value="1.5">1.5&times;</option>
+                <option value="2">2&times;</option>
+            </select>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-command="fullscreen" title="Full screen (F)">Full screen</button>
+        </div>
+    </div>
+</div>

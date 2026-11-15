@@ -22,6 +22,9 @@ namespace TheWarRoomAPI.DTOs
         // Empty when the play has not been tagged
         public PlayTagDto? Tag { get; set; }
 
+        // What was drawn on the play, as JSON (see Diagrams/FilmDrawings.cs); empty when nothing was
+        public string? AnnotationsJson { get; set; }
+
         // How many cutups use this clip. A clip that is used cannot be deleted.
         public int CutupCount { get; set; }
     }

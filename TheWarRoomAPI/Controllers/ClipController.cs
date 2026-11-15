@@ -98,6 +98,30 @@ namespace TheWarRoomAPI.Controllers
             }
         }
 
+        // PUT: api/Clip/5/annotations   (the arrows and text drawn on the play; sending none takes them away)
+        [HttpPut("{id}/annotations")]
+        public async Task<IActionResult> SaveAnnotations(int id, SaveAnnotationsDto dto)
+        {
+            try
+            {
+                var result = await _clipService.SaveAnnotationsAsync(CurrentUser, id, dto);
+                if (!result)
+                {
+                    return NotFound();   // 404 Not Found
+                }
+
+                return NoContent();   // 204 No Content
+            }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);   // 409 Conflict (a drawing outside the play, for example)
+            }
+        }
+
         // DELETE: api/Clip/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClip(int id)
