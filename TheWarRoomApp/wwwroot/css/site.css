@@ -9,6 +9,7 @@
    7. Film: player, clip editor, drawings
    8. Tendencies and study time
    9. The landing page and the sign-in pages
+   10. The guide
 
    The colours come from a football broadcast: the night sky over the stadium, the blue line of scrimmage
    and the yellow first-down line. Blue is for whatever can be pressed. Yellow marks where you are. */
@@ -385,12 +386,23 @@ dt {
   padding: 0.15rem 0.5rem 0;
 }
 
+/* The list of sections. If it is longer than the screen is tall it scrolls by itself, and the foot of the menu stays.
+   It reaches to both edges of the menu so that the yellow line beside the open section is not cut off. */
 .wr-nav {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   gap: 2px;
-  margin-top: 1.4rem;
+  min-height: 0;
+  margin: 1.4rem -0.75rem 0;
+  padding: 0 0.75rem 0.25rem;
+  overflow-y: auto;
+  scrollbar-color: var(--wr-ink-600) transparent;
+  scrollbar-width: thin;
+}
+
+.wr-nav > * {
+  flex: 0 0 auto;
 }
 
 .wr-nav-heading {
@@ -456,11 +468,15 @@ dt {
   outline-color: var(--wr-yellow-400);
 }
 
-/* Who is signed in, at the foot of the menu */
-.wr-sidebar-user {
-  margin-top: 1rem;
-  padding-top: 0.75rem;
+/* The foot of the menu: the guide, and who is signed in */
+.wr-sidebar-foot {
+  flex: 0 0 auto;
+  padding-top: 0.6rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wr-sidebar-user {
+  margin-top: 0.4rem;
 }
 
 .wr-user {
@@ -646,7 +662,7 @@ dt {
   font-weight: 600;
 }
 
-.wr-site-link:hover {
+.wr-site-link:hover, .wr-site-link.active {
   color: #fff;
   text-decoration: none;
 }
@@ -655,9 +671,13 @@ dt {
   white-space: nowrap;
 }
 
-/* On a phone the bar keeps to the name and the one button; the landing page itself offers registration */
+/* On a phone the bar keeps to the name, the guide and the one button; the landing page itself offers registration */
 @media (max-width: 575.98px) {
-  .wr-site-link {
+  .wr-site-nav {
+    gap: 0.9rem;
+  }
+
+  .wr-site-link:not(.wr-site-link-always) {
     display: none;
   }
 }
@@ -1849,7 +1869,30 @@ a.wr-tile:hover {
 .wr-hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.75rem;
+}
+
+/* A quieter way on, beside the buttons: the guide. It is a button without a frame, so it lines up with them. */
+.wr-hero-link {
+  --bs-btn-padding-x: 0.6rem;
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: var(--wr-yellow-400);
+  --bs-btn-active-color: var(--wr-yellow-400);
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-border-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.wr-hero-link .wr-icon, .wr-role-more .wr-icon {
+  transition: transform 0.14s ease;
+}
+
+.wr-hero-link:hover .wr-icon, a.wr-role:hover .wr-role-more .wr-icon {
+  transform: translateX(3px);
 }
 
 .wr-hero-note {
@@ -1966,6 +2009,18 @@ a.wr-tile:hover {
   right: -0.9rem;
 }
 
+/* On a narrow screen the line keeps inside the page's edge, or the page would scroll sideways by a hair */
+@media (max-width: 575.98px) {
+  .wr-showcase-art::before {
+    left: -0.55rem;
+  }
+
+  .wr-showcase-flip .wr-showcase-art::before {
+    left: auto;
+    right: -0.55rem;
+  }
+}
+
 .wr-showcase-title {
   margin-bottom: 0.9rem;
   font-size: clamp(1.55rem, 2.6vw, 2.1rem);
@@ -2075,7 +2130,38 @@ a.wr-tile:hover {
   margin: 0;
   color: var(--wr-slate-400);
   font-size: 0.9375rem;
+  font-weight: 400;
   line-height: 1.55;
+}
+
+/* Each role's box opens the guide written for it */
+a.wr-role {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: background-color 0.14s ease, border-color 0.14s ease;
+}
+
+a.wr-role:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  background-color: rgba(255, 255, 255, 0.07);
+  text-decoration: none;
+}
+
+a.wr-role:focus-visible {
+  outline: 2px solid var(--wr-yellow-400);
+  outline-offset: 3px;
+}
+
+.wr-role-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding-top: 1.1rem;
+  color: var(--wr-yellow-400);
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 /* The last word before the foot of the page */
@@ -2219,6 +2305,1202 @@ a.wr-tile:hover {
 
 .wr-auth-caption .wr-eyebrow {
   color: var(--wr-slate-300);
+}
+
+/* ---------- 10. The guide ---------- */
+
+/* The guide is laid out by the room it has itself, since it stands in two frames: beside the side menu
+   when signed in, across the whole page when not. */
+.wr-guide {
+  container-type: inline-size;
+  container-name: guide;
+}
+
+/* A place that is jumped to stops below the bars that stay at the top of the screen */
+.wr-guide-body {
+  --wr-guide-top: 0px;
+  --wr-guide-offset: 4.75rem;
+}
+
+@media (max-width: 991.98px) {
+  .wr-app .wr-guide-body {
+    --wr-guide-top: 3.5rem;
+    --wr-guide-offset: 8.25rem;
+  }
+}
+
+html:has(.wr-guide) {
+  scroll-behavior: smooth;
+}
+
+/* The opening band: dark, with the three roles to choose from */
+.wr-guide-hero {
+  position: relative;
+  background: linear-gradient(115deg, var(--wr-ink-950) 0%, var(--wr-ink-850) 58%, var(--wr-blue-900) 140%);
+  color: var(--wr-slate-300);
+}
+
+/* Yard lines, faintly, as on the landing page */
+.wr-guide-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 5rem);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent 92%);
+  mask-image: linear-gradient(180deg, #000, transparent 92%);
+  pointer-events: none;
+}
+
+.wr-guide-hero > div {
+  position: relative;
+}
+
+/* Not signed in: the band runs the whole width and begins under the see-through bar */
+.wr-site .wr-guide-hero {
+  padding: 7.25rem 0 2.75rem;
+}
+
+/* Signed in: a rounded band at the top of the page, like the dashboard's greeting */
+.wr-app .wr-guide-hero {
+  margin-bottom: 1.5rem;
+  padding: 1.75rem 1.5rem 1.5rem;
+  border-radius: var(--wr-radius-xl);
+}
+
+.wr-guide-hero .wr-eyebrow {
+  color: var(--wr-slate-300);
+}
+
+.wr-guide-title {
+  margin: 0 0 0.9rem;
+  color: #fff;
+  font-size: clamp(2rem, 4.6vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.032em;
+  line-height: 1.05;
+}
+
+.wr-app .wr-guide-title {
+  font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+}
+
+.wr-guide-lead {
+  max-width: 38rem;
+  margin: 0;
+  color: var(--wr-slate-300);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+/* The three roles. The one that is open is a white card with the yellow line under it. */
+.wr-guide-roles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.9rem;
+}
+
+.wr-guide-role {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: var(--wr-radius-lg);
+  background-color: rgba(255, 255, 255, 0.045);
+  color: var(--wr-slate-300);
+  transition: background-color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.wr-guide-role:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+  background-color: rgba(255, 255, 255, 0.09);
+  color: var(--wr-slate-300);
+  text-decoration: none;
+}
+
+.wr-guide-role:focus-visible {
+  outline: 2px solid var(--wr-yellow-400);
+  outline-offset: 3px;
+}
+
+.wr-guide-role-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.7rem;
+  background-color: rgba(255, 214, 10, 0.12);
+  color: var(--wr-yellow-400);
+}
+
+.wr-guide-role-text {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.wr-guide-role-name {
+  color: #fff;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.wr-guide-role-sub {
+  display: none;
+  color: var(--wr-slate-400);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.wr-guide-role-you {
+  position: absolute;
+  top: -0.6rem;
+  right: 0.85rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  background-color: var(--wr-yellow-400);
+  color: var(--wr-ink-900);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.wr-guide-role.active {
+  border-color: #fff;
+  background-color: #fff;
+  box-shadow: var(--wr-shadow-lg);
+}
+
+.wr-guide-role.active::after {
+  content: "";
+  position: absolute;
+  left: 1.1rem;
+  right: 1.1rem;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background-color: var(--wr-yellow-400);
+}
+
+.wr-guide-role.active .wr-guide-role-icon {
+  background-color: var(--wr-blue-50);
+  color: var(--wr-blue-600);
+}
+
+.wr-guide-role.active .wr-guide-role-name {
+  color: var(--wr-ink-850);
+}
+
+.wr-guide-role.active .wr-guide-role-sub {
+  color: var(--wr-slate-600);
+}
+
+/* On a narrow screen the three roles are three short buttons in a row */
+@container guide (max-width: 34rem) {
+  .wr-guide-roles {
+    gap: 0.4rem;
+  }
+
+  .wr-guide-role {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 0.35rem 0.9rem;
+    text-align: center;
+  }
+
+  .wr-guide-role-name {
+    font-size: 0.8125rem;
+  }
+
+  .wr-guide-role-you {
+    right: 50%;
+    transform: translateX(50%);
+  }
+}
+
+@container guide (min-width: 46rem) {
+  .wr-guide-role-sub {
+    display: block;
+  }
+}
+
+.wr-site .wr-guide-body {
+  padding-top: 2.25rem;
+  padding-bottom: 4rem;
+}
+
+/* All three guides are on the page; the one named by data-open is shown */
+.wr-guide[data-open="head-coach"] [data-guide-panel]:not([data-guide-panel="head-coach"]),
+.wr-guide[data-open="coaches"] [data-guide-panel]:not([data-guide-panel="coaches"]),
+.wr-guide[data-open="players"] [data-guide-panel]:not([data-guide-panel="players"]) {
+  display: none;
+}
+
+/* A guide: the list of its parts, then the parts. On a narrow page the list is a row that stays at the top
+   for as long as the guide is on the screen, which is why the three stand in one plain block here. */
+.wr-guide-side {
+  display: contents;
+}
+
+.wr-guide-main {
+  min-width: 0;
+}
+
+.wr-guide-search {
+  position: relative;
+  margin-bottom: 1.1rem;
+}
+
+.wr-guide-search .wr-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  color: var(--wr-slate-400);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.wr-guide-search .form-control {
+  padding-left: 2.35rem;
+  border-radius: 999px;
+}
+
+.wr-guide-nav {
+  position: sticky;
+  top: calc(var(--wr-guide-top) + 0.5rem);
+  z-index: 1010;
+  margin-bottom: 1.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--wr-line);
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--wr-shadow-md);
+}
+
+.wr-guide-nav-title {
+  display: none;
+}
+
+.wr-guide-nav ul {
+  display: flex;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  border-radius: 999px;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.wr-guide-nav ul::-webkit-scrollbar {
+  display: none;
+}
+
+.wr-guide-nav a {
+  display: block;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  color: var(--wr-slate-600);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.wr-guide-nav a:hover {
+  background-color: var(--wr-slate-100);
+  color: var(--wr-ink-850);
+  text-decoration: none;
+}
+
+.wr-guide-nav a.active {
+  background-color: var(--wr-ink-850);
+  color: #fff;
+}
+
+/* With room for it, the list stands beside the guide and follows the reader down the page */
+@container guide (min-width: 58rem) {
+  .wr-guide-body {
+    --wr-guide-offset: 1.5rem;
+  }
+
+  .wr-guide-cols {
+    display: grid;
+    grid-template-columns: 14.5rem minmax(0, 1fr);
+    align-items: start;
+    gap: 3rem;
+  }
+
+  .wr-guide-side {
+    position: sticky;
+    top: 1.5rem;
+    display: block;
+    max-height: calc(100vh - 3rem);
+    padding: 0.25rem;
+    overflow-y: auto;
+  }
+
+  .wr-guide-search {
+    margin-bottom: 1.25rem;
+  }
+
+  .wr-guide-nav {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  .wr-guide-nav-title {
+    display: block;
+    margin: 0 0 0.65rem;
+    color: var(--wr-slate-500);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .wr-guide-nav ul {
+    display: grid;
+    gap: 0.05rem;
+    overflow: visible;
+    border-left: 2px solid var(--wr-line);
+    border-radius: 0;
+  }
+
+  .wr-guide-nav a {
+    margin-left: -2px;
+    padding: 0.38rem 0.9rem;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+    font-size: 0.875rem;
+    white-space: normal;
+  }
+
+  .wr-guide-nav a:hover {
+    border-left-color: var(--wr-slate-300);
+    background-color: transparent;
+  }
+
+  /* The yellow line marks where you are, as it does in the menu */
+  .wr-guide-nav a.active {
+    border-left-color: var(--wr-yellow-500);
+    background-color: transparent;
+    color: var(--wr-ink-850);
+  }
+}
+
+.wr-guide-count {
+  margin: 0 0 1.25rem;
+  color: var(--wr-slate-600);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.wr-guide-empty {
+  margin: 0;
+  padding: 2rem 1rem;
+  border: 1px dashed var(--wr-slate-300);
+  border-radius: var(--wr-radius-lg);
+  color: var(--wr-slate-600);
+  text-align: center;
+}
+
+/* One part of a guide: its icon and heading, then its cards */
+.wr-guide-section {
+  margin-bottom: 3rem;
+  scroll-margin-top: var(--wr-guide-offset);
+}
+
+.wr-guide-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 1.15rem;
+}
+
+.wr-guide-head-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.75rem;
+  background-color: var(--wr-ink-850);
+  color: var(--wr-yellow-400);
+}
+
+.wr-guide-head h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.wr-guide-head p {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--wr-slate-600);
+  line-height: 1.55;
+}
+
+/* A card: one thing to do, with its steps */
+.wr-guide-task, .wr-guide-card {
+  margin-bottom: 0.9rem;
+  padding: 1.2rem 1.3rem 1.3rem;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius-lg);
+  background-color: #fff;
+  box-shadow: var(--wr-shadow-xs);
+}
+
+.wr-guide-task {
+  scroll-margin-top: var(--wr-guide-offset);
+}
+
+/* The card a link has just jumped to */
+.wr-guide-task:target {
+  border-color: var(--wr-blue-300);
+  box-shadow: 0 0 0 0.2rem rgba(51, 104, 255, 0.14);
+}
+
+.wr-guide-task-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+}
+
+.wr-guide-task h4, .wr-guide-card h4 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.35;
+}
+
+.wr-guide-card h4 {
+  margin-bottom: 0.9rem;
+}
+
+.wr-guide-task > p:not([class]) {
+  margin: 0.8rem 0 0;
+  line-height: 1.6;
+}
+
+/* "Step 2" in front of a heading, where the cards are done in order */
+.wr-guide-step {
+  display: inline-block;
+  margin-right: 0.6rem;
+  padding: 0.14rem 0.5rem;
+  border-radius: 0.4rem;
+  background-color: var(--wr-blue-600);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  vertical-align: 0.14em;
+}
+
+/* Who the card is for, when it is not for everyone the guide is written for */
+.wr-guide-who {
+  padding: 0.12rem 0.6rem;
+  border-radius: 999px;
+  background-color: var(--wr-yellow-100);
+  color: var(--wr-yellow-800);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Where in the menu the card starts */
+.wr-guide-where {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.65rem 0 0;
+  padding: 0.22rem 0.75rem 0.22rem 0.65rem;
+  border-radius: 999px;
+  background-color: var(--wr-slate-100);
+  color: var(--wr-slate-700);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Three short lines: the sign of a menu */
+.wr-guide-where::before {
+  content: "";
+  width: 0.75rem;
+  height: 0.625rem;
+  background:
+    linear-gradient(var(--wr-slate-400) 0 0) top / 100% 2px no-repeat,
+    linear-gradient(var(--wr-slate-400) 0 0) center / 100% 2px no-repeat,
+    linear-gradient(var(--wr-slate-400) 0 0) bottom / 100% 2px no-repeat;
+}
+
+.wr-guide-main i {
+  color: var(--wr-slate-400);
+  font-style: normal;
+}
+
+/* Numbered steps, joined by a thin line */
+.wr-guide-steps {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: wr-step;
+}
+
+.wr-guide-steps > li {
+  position: relative;
+  min-height: 1.65rem;
+  padding-left: 2.4rem;
+  line-height: 1.6;
+  counter-increment: wr-step;
+}
+
+.wr-guide-steps > li::before {
+  content: counter(wr-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  background-color: var(--wr-blue-100);
+  color: var(--wr-blue-800);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.wr-guide-steps > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: calc(0.825rem - 1px);
+  top: 1.65rem;
+  bottom: -0.65rem;
+  width: 2px;
+  background-color: var(--wr-blue-50);
+}
+
+/* Points that have no order */
+.wr-guide-points {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.95rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wr-guide-points > li {
+  position: relative;
+  padding-left: 1.3rem;
+  line-height: 1.6;
+}
+
+.wr-guide-points > li::before {
+  content: "";
+  position: absolute;
+  left: 0.25rem;
+  top: 0.62em;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background-color: var(--wr-blue-500);
+}
+
+/* The name of a button, written the way the button looks */
+.wr-ui {
+  padding: 0.08rem 0.42rem;
+  border: 1px solid var(--wr-slate-300);
+  border-bottom-width: 2px;
+  border-radius: 0.4rem;
+  background-color: #fff;
+  color: var(--wr-ink-850);
+  font-size: 0.875em;
+  font-weight: 600;
+  line-height: 1.5;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.wr-guide kbd {
+  display: inline-block;
+  min-width: 1.7em;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--wr-slate-300);
+  border-bottom-width: 2px;
+  border-radius: 0.35rem;
+  background-color: var(--wr-slate-50);
+  color: var(--wr-ink-850);
+  font-family: inherit;   /* the page's own lettering: there the letter O cannot be taken for a zero */
+  font-size: 0.8125em;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Something worth knowing about a card. The amber one is a warning. */
+.wr-guide-note {
+  margin: 0.95rem 0 0;
+  padding: 0.7rem 0.95rem;
+  border-left: 3px solid var(--wr-blue-400);
+  border-radius: 0 var(--wr-radius) var(--wr-radius) 0;
+  background-color: var(--wr-blue-50);
+  color: var(--wr-slate-700);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.wr-guide-note + .wr-guide-note {
+  margin-top: 0.5rem;
+}
+
+.wr-guide-note b {
+  color: var(--wr-ink-850);
+}
+
+.wr-guide-warn {
+  border-left-color: var(--wr-yellow-500);
+  background-color: var(--wr-amber-50);
+}
+
+/* The keys of an editor */
+.wr-guide-keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+  gap: 0.5rem 1.5rem;
+  margin: 1rem 0 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius);
+  background-color: var(--wr-slate-25);
+}
+
+.wr-guide-keys > div {
+  display: grid;
+  grid-template-columns: 7.75rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.wr-guide-keys dt {
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.wr-guide-keys dd {
+  margin: 0;
+  color: var(--wr-slate-700);
+  font-size: 0.9rem;
+}
+
+/* A word and what it means, row by row */
+.wr-guide-terms {
+  margin: 0.95rem 0 0;
+}
+
+.wr-guide-terms > div {
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr);
+  gap: 0.15rem 1rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--wr-slate-100);
+}
+
+.wr-guide-terms > div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.wr-guide-terms > div:last-child {
+  padding-bottom: 0;
+}
+
+.wr-guide-terms dt {
+  color: var(--wr-ink-850);
+  font-weight: 700;
+}
+
+.wr-guide-terms dd {
+  margin: 0;
+  color: var(--wr-slate-700);
+  line-height: 1.55;
+}
+
+@container guide (max-width: 34rem) {
+  .wr-guide-terms > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* What a role can do, and what it cannot, side by side */
+.wr-guide-glance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
+  gap: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.wr-guide-glance .wr-guide-card {
+  margin-bottom: 0;
+}
+
+.wr-guide-yes, .wr-guide-no, .wr-guide-facts {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wr-guide-yes li, .wr-guide-no li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  line-height: 1.5;
+}
+
+.wr-guide-yes .wr-icon, .wr-guide-no .wr-icon, .wr-guide-tick {
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0.25rem;
+  border-radius: 50%;
+  background-color: var(--wr-green-50);
+  color: var(--wr-green-600);
+  stroke-width: 2.6;
+}
+
+.wr-guide-yes .wr-icon, .wr-guide-no .wr-icon {
+  margin-top: 0.05rem;
+}
+
+.wr-guide-no .wr-icon {
+  background-color: var(--wr-slate-100);
+  color: var(--wr-slate-500);
+}
+
+.wr-guide-facts li {
+  position: relative;
+  padding-left: 1.05rem;
+  line-height: 1.55;
+}
+
+.wr-guide-facts li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  width: 3px;
+  height: 1em;
+  border-radius: 3px;
+  background-color: var(--wr-yellow-400);
+}
+
+.wr-guide-small {
+  margin: 0.9rem 0 0;
+  color: var(--wr-muted);
+  font-size: 0.875rem;
+}
+
+/* Tables in the guide */
+.wr-guide-table {
+  --bs-table-bg: transparent;
+  margin: 1.1rem 0 0;
+  font-size: 0.9375rem;
+}
+
+/* A table that scrolls sideways keeps the words written for screen readers inside it;
+   left to themselves they would stand outside and make the whole page scroll sideways */
+.wr-guide .table-responsive {
+  position: relative;
+}
+
+/* A table inside a card needs no sheet of its own */
+.wr-guide-task > .table-responsive {
+  margin: 1.1rem 0 0;
+  box-shadow: none;
+}
+
+.wr-guide-card > .table-responsive {
+  margin-bottom: 0;
+  border: 0;
+  border-radius: var(--wr-radius);
+  box-shadow: none;
+}
+
+.wr-guide-card > .table-responsive > .wr-guide-table, .wr-guide-task > .table-responsive > .wr-guide-table {
+  margin-top: 0;
+}
+
+.wr-guide-table > :not(caption) > * > * {
+  padding: 0.7rem 0.75rem;
+  vertical-align: top;
+}
+
+.wr-guide-table > tbody > tr > th {
+  color: var(--wr-ink-850);
+  font-weight: 600;
+}
+
+.wr-guide-table > tbody > tr > td {
+  color: var(--wr-slate-700);
+}
+
+.wr-guide-table > tbody > tr:last-child > * {
+  border-bottom-width: 0;
+}
+
+.wr-guide-table > tbody > tr:hover > * {
+  --bs-table-bg-state: transparent;
+  background-color: transparent;
+}
+
+/* Two roles compared: the two columns share the room evenly */
+.wr-guide-compare > tbody > tr > td {
+  width: 35%;
+}
+
+/* On a narrow screen a wide table scrolls sideways. Its first column stays where it is, and a line says so. */
+.wr-guide-swipe {
+  display: none;
+  margin: 0 0.25rem 0.75rem;
+  color: var(--wr-muted);
+  font-size: 0.8125rem;
+}
+
+/* The name of a group of rows stays in sight when the table is scrolled sideways */
+.wr-guide-table-group > th > span {
+  position: sticky;
+  left: 0.75rem;
+  display: inline-block;
+}
+
+@container guide (max-width: 46rem) {
+  .wr-guide-swipe {
+    display: block;
+  }
+
+  .wr-guide-matrix .wr-guide-table {
+    min-width: 37rem;
+  }
+
+  .wr-guide-matrix .wr-guide-table > thead > tr > th:first-child,
+  .wr-guide-matrix .wr-guide-table > tbody > tr:not(.wr-guide-table-group) > th {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    width: 10.5rem;
+    box-shadow: 1px 0 0 var(--wr-line);
+  }
+
+  .wr-guide-matrix .wr-guide-table > tbody > tr:not(.wr-guide-table-group) > th {
+    background-color: #fff;
+  }
+
+  /* Two roles compared: each row becomes a small block with the two roles under each other */
+  .wr-guide-compare, .wr-guide-compare > tbody, .wr-guide-compare > tbody > tr, .wr-guide-compare > tbody > tr > * {
+    display: block;
+    width: auto;
+  }
+
+  .wr-guide-compare > thead {
+    display: none;
+  }
+
+  .wr-guide-compare > tbody > tr {
+    padding: 0.8rem 0;
+    border-top: 1px solid var(--wr-line);
+  }
+
+  .wr-guide-compare > tbody > tr:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .wr-guide-compare > tbody > tr:last-child {
+    padding-bottom: 0;
+  }
+
+  .wr-guide-compare > tbody > tr > * {
+    padding: 0;
+    border: 0;
+  }
+
+  .wr-guide-compare > tbody > tr > td {
+    display: grid;
+    grid-template-columns: 6.75rem minmax(0, 1fr);
+    gap: 0.6rem;
+    width: auto;
+    margin-top: 0.4rem;
+  }
+
+  .wr-guide-compare > tbody > tr > td::before {
+    padding-top: 0.2rem;
+    color: var(--wr-slate-500);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .wr-guide-compare > tbody > tr > td:nth-of-type(1)::before {
+    content: "Coordinator";
+  }
+
+  .wr-guide-compare > tbody > tr > td:nth-of-type(2)::before {
+    content: "Position coach";
+  }
+}
+
+/* The three switches of a coach: the name, how a new coach starts, and what it does */
+.wr-guide-switches {
+  margin: 1.1rem 0 0;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius);
+}
+
+.wr-guide-switches > div {
+  padding: 0.8rem 1rem 0.85rem;
+  border-top: 1px solid var(--wr-line);
+}
+
+.wr-guide-switches > div:first-child {
+  border-top: 0;
+}
+
+.wr-guide-switches dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  color: var(--wr-ink-850);
+  font-weight: 700;
+}
+
+.wr-guide-switches dd {
+  margin: 0.3rem 0 0;
+  color: var(--wr-slate-700);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.wr-guide-default {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background-color: var(--wr-slate-100);
+  color: var(--wr-slate-700);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wr-guide-default-on {
+  background-color: var(--wr-green-50);
+  color: var(--wr-green-800);
+}
+
+/* Every role side by side: a tick, a dash, or a few words */
+.wr-guide-matrix {
+  padding: 0.4rem 0.6rem 1.1rem;
+}
+
+.wr-guide-matrix .wr-guide-table {
+  min-width: 42rem;
+}
+
+.wr-guide-matrix .wr-guide-table > thead > tr > th:not(:first-child),
+.wr-guide-matrix .wr-guide-table > tbody > tr > td {
+  width: 14%;
+  text-align: center;
+}
+
+.wr-guide-matrix .wr-guide-table > tbody > tr > td {
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.wr-guide-table > tbody > .wr-guide-table-group > th {
+  padding-top: 1.35rem;
+  padding-bottom: 0.45rem;
+  border-bottom-color: var(--wr-slate-300);
+  color: var(--wr-blue-700);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wr-guide-dash {
+  color: var(--wr-slate-400);
+  font-weight: 700;
+}
+
+.wr-guide-footnotes {
+  margin: 0 0.75rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid var(--wr-line);
+  color: var(--wr-slate-600);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.wr-guide-footnotes p {
+  margin: 0 0 0.35rem;
+}
+
+.wr-guide-footnotes p:last-child {
+  margin-bottom: 0;
+}
+
+/* How to read the lines of a play */
+.wr-guide-legend {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius);
+  background-color: var(--wr-slate-25);
+}
+
+.wr-guide-legend > p {
+  margin: 0 0 0.5rem;
+  color: var(--wr-ink-850);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* A question that opens to its answer */
+.wr-guide-faq {
+  margin-bottom: 0.6rem;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius-lg);
+  background-color: #fff;
+  box-shadow: var(--wr-shadow-xs);
+}
+
+.wr-guide-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1.2rem;
+  border-radius: var(--wr-radius-lg);
+  color: var(--wr-ink-850);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.wr-guide-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.wr-guide-faq summary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.2rem;
+  border-right: 2px solid var(--wr-slate-400);
+  border-bottom: 2px solid var(--wr-slate-400);
+  transform: translateY(-0.15rem) rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.wr-guide-faq[open] summary::after {
+  transform: translateY(0.1rem) rotate(225deg);
+}
+
+.wr-guide-faq p {
+  margin: 0;
+  padding: 0 1.2rem 1.05rem;
+  color: var(--wr-slate-700);
+  line-height: 1.6;
+}
+
+/* Under the guides: every role side by side, and the words the site uses */
+.wr-guide-extra {
+  margin-top: 4.5rem;
+  scroll-margin-top: var(--wr-guide-offset);
+}
+
+.wr-guide-extra-head {
+  max-width: 44rem;
+  margin-bottom: 1.5rem;
+}
+
+.wr-guide-extra-head h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.12;
+}
+
+.wr-guide-extra-head p:last-child {
+  margin: 0;
+  color: var(--wr-slate-600);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+.wr-guide-words {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 0.9rem;
+  margin: 0;
+}
+
+.wr-guide-words > div {
+  padding: 1.05rem 1.15rem 1.1rem;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius-lg);
+  background-color: #fff;
+  box-shadow: var(--wr-shadow-xs);
+}
+
+.wr-guide-words dt {
+  margin-bottom: 0.3rem;
+  color: var(--wr-ink-850);
+  font-weight: 700;
+}
+
+.wr-guide-words dd {
+  margin: 0;
+  color: var(--wr-slate-700);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.wr-guide-cta {
+  margin-top: 4.5rem;
 }
 
 /* People who ask their device for less movement get none */

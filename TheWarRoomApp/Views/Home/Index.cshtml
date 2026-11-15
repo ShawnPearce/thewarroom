@@ -22,6 +22,7 @@
                 <div class="wr-hero-actions">
                     <a class="btn btn-warning btn-lg" asp-controller="Account" asp-action="Register">Register your team</a>
                     <a class="btn btn-outline-light btn-lg" asp-controller="Account" asp-action="Login">Sign in</a>
+                    <a class="btn btn-lg wr-hero-link" asp-action="Guide">Read the guide<svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
                 </div>
                 <p class="wr-hero-note">Registration is free. Each team works in its own private workspace.</p>
             }
@@ -29,6 +30,7 @@
             {
                 <div class="wr-hero-actions">
                     <a class="btn btn-warning btn-lg" asp-controller="Account" asp-action="Login">Sign in</a>
+                    <a class="btn btn-lg wr-hero-link" asp-action="Guide">Read the guide<svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
                 </div>
                 <p class="wr-hero-note">Each team works in its own private workspace. Accounts are given out by the team's head coach.</p>
             }
@@ -229,29 +231,37 @@
         <div class="wr-section-head">
             <p class="wr-eyebrow">Who it is for</p>
             <h2 class="wr-section-title">Built for the whole staff, and the players</h2>
-            <p class="wr-section-lead">Everyone signs in to the same team workspace and sees what their role needs.</p>
+            <p class="wr-section-lead">
+                Everyone signs in to the same team workspace and sees what their role needs.
+                The guide walks each role through it, step by step.
+            </p>
         </div>
+        @* Each box opens the guide written for that role *@
         <div class="wr-role-grid">
-            <div class="wr-role">
-                <span class="wr-role-icon"><svg class="wr-icon"><use href="#i-shield"></use></svg></span>
+            <a class="wr-role" asp-action="Guide" asp-route-role="head-coach">
+                <span class="wr-role-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-shield"></use></svg></span>
                 <h3>Head coach</h3>
                 <p>Sets up the team, gives out accounts and permissions, and has the final say on the playbook.</p>
-            </div>
-            <div class="wr-role">
-                <span class="wr-role-icon"><svg class="wr-icon"><use href="#i-groups"></use></svg></span>
+                <span class="wr-role-more">Head coach guide<svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+            </a>
+            <a class="wr-role" asp-action="Guide" asp-route-role="coaches">
+                <span class="wr-role-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-groups"></use></svg></span>
                 <h3>Coordinators</h3>
                 <p>Run their side of the ball: groups, positions, the depth chart and the schedule.</p>
-            </div>
-            <div class="wr-role">
-                <span class="wr-role-icon"><svg class="wr-icon"><use href="#i-playbook"></use></svg></span>
+                <span class="wr-role-more">Coaches' guide<svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+            </a>
+            <a class="wr-role" asp-action="Guide" asp-route-role="coaches">
+                <span class="wr-role-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-playbook"></use></svg></span>
                 <h3>Position coaches</h3>
                 <p>Work with the groups they coach: depth, film and changes to the playbook.</p>
-            </div>
-            <div class="wr-role">
-                <span class="wr-role-icon"><svg class="wr-icon"><use href="#i-film"></use></svg></span>
+                <span class="wr-role-more">Coaches' guide<svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+            </a>
+            <a class="wr-role" asp-action="Guide" asp-route-role="players">
+                <span class="wr-role-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-film"></use></svg></span>
                 <h3>Players</h3>
                 <p>See where they stand, study the film shared with them and follow their own study time.</p>
-            </div>
+                <span class="wr-role-more">Players' guide<svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+            </a>
         </div>
     </div>
 </section>

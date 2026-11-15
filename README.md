@@ -64,6 +64,23 @@ between the browser and the bucket, over links the API signs. JavaScript is used
 | `wwwroot/js/film` | The upload page, the video player, the clip editor, the drawings over the video, and the page that plays a cutup |
 | `wwwroot/js/charts` | The tendency charts (Chart.js) |
 | `wwwroot/js/study` | The study timer on playbook pages and on film |
+| `wwwroot/js/guide.js` | The guide page: switching between the three guides, the list that follows the reader, and its search |
+
+### The guide
+
+`Home/Guide` is the site's own documentation, open to everyone, signed in or not. It has one guide for each kind of user:
+the head coach, the assistant coaches (coordinators and position coaches) and the players. Each guide goes through that
+role's pages step by step, with the names of the menu entries and buttons as they are on the screen. Under the guides,
+one table shows what every role may do, and a short list explains the words the site uses.
+
+- **Where it is linked.** The landing page (top bar, opening band and one box per role), the sign-in page, the foot of
+  the side menu and the foot of every page.
+- **Which guide opens.** The one the address asks for (`?role=head-coach`, `coaches` or `players`), else the reader's
+  own role, else the head coach's. All three are on the page, so switching needs no reload; without JavaScript the
+  roles at the top are ordinary links.
+- **Where the words are.** `Views/Home/Guide.cshtml` and one partial per role beside it. What every coach does
+  (depth chart, schedule, playbook, film, cutups, tendencies, study time) is written once, in `_GuideCoachTasks.cshtml`,
+  and shown in both coaching guides. A page whose buttons or rules change needs its part of the guide changed with it.
 
 ### The look of the site
 

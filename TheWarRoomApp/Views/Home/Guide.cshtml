@@ -1,0 +1,363 @@
+@using Microsoft.AspNetCore.Html
+
+@functions {
+    // The two marks of the "Who can do what" table: a tick for yes and a dash for no, each with its word for a screen reader
+    private static IHtmlContent Yes()
+    {
+        return new HtmlString("<svg class=\"wr-icon wr-guide-tick\" aria-hidden=\"true\"><use href=\"#i-tick\"></use></svg><span class=\"visually-hidden\">Yes</span>");
+    }
+
+    private static IHtmlContent No()
+    {
+        return new HtmlString("<span class=\"wr-guide-dash\" aria-hidden=\"true\">&ndash;</span><span class=\"visually-hidden\">No</span>");
+    }
+}
+
+@{
+    ViewData["Title"] = "Guide";
+    ViewData["FullWidth"] = true;
+
+    bool signedIn = User.Identity?.IsAuthenticated == true;
+
+    // Set by the controller: the reader's own guide ("" when not signed in) and the guide that is open
+    string ownRole = ViewData["OwnGuide"] as string ?? "";
+    string openRole = ViewData["OpenGuide"] as string ?? "head-coach";
+
+    // Not signed in, the page lays out the whole width itself, so its parts are centred here
+    string width = signedIn ? "" : "container";
+}
+
+@* How to use the site, role by role. All three guides are on the page and the stylesheet shows the open one (data-open).
+   A role at the top is a link that loads the page with that guide open; guide.js switches without loading. *@
+<div class="wr-guide" id="guide-top" data-guide data-open="@openRole">
+    <header class="wr-guide-hero">
+        <div class="@width">
+            <p class="wr-eyebrow">Guide</p>
+            <h1 class="wr-guide-title">Pick your role. <span class="wr-mark">Get to work.</span></h1>
+            <p class="wr-guide-lead">
+                Step-by-step help for head coaches, assistant coaches and players.
+                Every step uses the names you see on the screen.
+            </p>
+
+            <nav class="wr-guide-roles" aria-label="Guides">
+                <a class="wr-guide-role @(openRole == "head-coach" ? "active" : "")" asp-action="Guide" asp-route-role="head-coach"
+                   data-guide-role="head-coach" aria-current="@(openRole == "head-coach" ? "page" : null)">
+                    <span class="wr-guide-role-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-shield"></use></svg></span>
+                    <span class="wr-guide-role-text">
+                        <span class="wr-guide-role-name">Head coach</span>
+                        <span class="wr-guide-role-sub">Runs the team: accounts, permissions and the final say on the playbook.</span>
+                    </span>
+                    @if (ownRole == "head-coach")
+                    {
+                        <span class="wr-guide-role-you">Your role</span>
+                    }
+                </a>
+                <a class="wr-guide-role @(openRole == "coaches" ? "active" : "")" asp-action="Guide" asp-route-role="coaches"
+                   data-guide-role="coaches" aria-current="@(openRole == "coaches" ? "page" : null)">
+                    <span class="wr-guide-role-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-staff"></use></svg></span>
+                    <span class="wr-guide-role-text">
+                        <span class="wr-guide-role-name">Assistant coaches</span>
+                        <span class="wr-guide-role-sub">Coordinators and position coaches: depth, playbook and film for their groups.</span>
+                    </span>
+                    @if (ownRole == "coaches")
+                    {
+                        <span class="wr-guide-role-you">Your role</span>
+                    }
+                </a>
+                <a class="wr-guide-role @(openRole == "players" ? "active" : "")" asp-action="Guide" asp-route-role="players"
+                   data-guide-role="players" aria-current="@(openRole == "players" ? "page" : null)">
+                    <span class="wr-guide-role-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-users"></use></svg></span>
+                    <span class="wr-guide-role-text">
+                        <span class="wr-guide-role-name">Players</span>
+                        <span class="wr-guide-role-sub">Where you stand, what to study and the film shared with you.</span>
+                    </span>
+                    @if (ownRole == "players")
+                    {
+                        <span class="wr-guide-role-you">Your role</span>
+                    }
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="wr-guide-body @width">
+        <section class="wr-guide-panel" data-guide-panel="head-coach" aria-labelledby="head-coach-title">
+            <h2 class="visually-hidden" id="head-coach-title">Head coach guide</h2>
+            <partial name="_GuideHeadCoach" />
+        </section>
+
+        <section class="wr-guide-panel" data-guide-panel="coaches" aria-labelledby="coaches-title">
+            <h2 class="visually-hidden" id="coaches-title">Assistant coaches guide</h2>
+            <partial name="_GuideCoaches" />
+        </section>
+
+        <section class="wr-guide-panel" data-guide-panel="players" aria-labelledby="players-title">
+            <h2 class="visually-hidden" id="players-title">Players guide</h2>
+            <partial name="_GuidePlayers" />
+        </section>
+
+        @* ---------- Every role, side by side ---------- *@
+        <section class="wr-guide-extra" id="roles">
+            <div class="wr-guide-extra-head">
+                <p class="wr-eyebrow">Every role, side by side</p>
+                <h2>Who can do what</h2>
+                <p>The site shows each person the pages and buttons their role may use. This is the whole list.</p>
+            </div>
+
+            <div class="wr-guide-card wr-guide-matrix">
+                <p class="wr-guide-swipe">Swipe the table sideways to see every role.</p>
+                <div class="table-responsive">
+                    <table class="table wr-guide-table">
+                        <thead>
+                            <tr>
+                                <th scope="col"><span class="visually-hidden">What</span></th>
+                                <th scope="col">Head coach</th>
+                                <th scope="col">Coordinator</th>
+                                <th scope="col">Position coach</th>
+                                <th scope="col">Player</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="wr-guide-table-group"><th colspan="5" scope="colgroup"><span>Team</span></th></tr>
+                            <tr>
+                                <th scope="row">Add coaches and players, reset passwords, deactivate accounts</th>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Set permissions and change the team's settings</th>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Choose which coaches coach a group</th>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Add and change groups and positions, choose a group's players</th>
+                                <td>@Yes()</td>
+                                <td>Own unit</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Edit a player's roster details</th>
+                                <td>@Yes()</td>
+                                <td>Own unit</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">See the roster, the coaching staff and the groups</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                            </tr>
+
+                            <tr class="wr-guide-table-group"><th colspan="5" scope="colgroup"><span>Game plan</span></th></tr>
+                            <tr>
+                                <th scope="row">See the depth chart and the schedule</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Set the order at a position</th>
+                                <td>@Yes()</td>
+                                <td>Own groups <sup>1</sup></td>
+                                <td>Own groups <sup>1</sup></td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Start a new depth chart week</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Delete a depth chart week</th>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Add and change schedule events</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Record attendance</th>
+                                <td>@Yes()</td>
+                                <td>Yes <sup>1</sup></td>
+                                <td>Yes <sup>1</sup></td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">See attendance</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>Own only</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Read the playbook</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>Own units, approved plays</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Draw and change formations and plays</th>
+                                <td>@Yes()</td>
+                                <td>Own units <sup>2</sup></td>
+                                <td>Own units <sup>2</sup></td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Approve or reject playbook changes</th>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                                <td>@No()</td>
+                            </tr>
+
+                            <tr class="wr-guide-table-group"><th colspan="5" scope="colgroup"><span>Film room</span></th></tr>
+                            <tr>
+                                <th scope="row">Game film: upload, cut into plays, tag and draw</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Cutups: build, make the video and share</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Watch a cutup</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>When shared with them</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Tendencies</th>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@Yes()</td>
+                                <td>@No()</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Study time</th>
+                                <td>Every player</td>
+                                <td>Own groups</td>
+                                <td>Own groups</td>
+                                <td>Own only</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="wr-guide-footnotes">
+                    <p><sup>1</sup> Unless the head coach has switched it off for that coach. Attendance also needs tracking switched on for the team.</p>
+                    <p><sup>2</sup> Sent to the head coach for approval, unless the head coach has given that coach the right to publish.</p>
+                    <p>
+                        <b>Own groups</b> are the position groups a coach is assigned to; for a coordinator, also every group in their unit.
+                        <b>Own unit</b> is the coordinator's unit. <b>Own units</b> are the units those groups belong to: offence, defence or special teams.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        @* ---------- The words the site uses ---------- *@
+        <section class="wr-guide-extra" id="words">
+            <div class="wr-guide-extra-head">
+                <p class="wr-eyebrow">Plain words</p>
+                <h2>What the site calls things</h2>
+            </div>
+
+            <dl class="wr-guide-words">
+                <div>
+                    <dt>Unit</dt>
+                    <dd>One of the three sides of the team: offence, defence or special teams.</dd>
+                </div>
+                <div>
+                    <dt>Position group</dt>
+                    <dd>Players who are coached together, such as Receivers or Linebackers. Coaches and players are assigned to groups.</dd>
+                </div>
+                <div>
+                    <dt>Position</dt>
+                    <dd>A spot on the depth chart with a short code, such as QB, X or MLB. Each position belongs to one group.</dd>
+                </div>
+                <div>
+                    <dt>Depth chart</dt>
+                    <dd>The order of players at every position for one week. First place is the starter.</dd>
+                </div>
+                <div>
+                    <dt>Formation</dt>
+                    <dd>Where the players line up before the snap. A formation holds its plays.</dd>
+                </div>
+                <div>
+                    <dt>Play</dt>
+                    <dd>In the playbook: a formation with routes, blocks and motion drawn on it. On film: one play cut out of a game's video.</dd>
+                </div>
+                <div>
+                    <dt>Approval</dt>
+                    <dd>A coach's change to the playbook waits for the head coach's decision. Players see it once it is approved.</dd>
+                </div>
+                <div>
+                    <dt>Tag</dt>
+                    <dd>What a play on film was: a run or a pass, the down, the yards to go and the team on offence.</dd>
+                </div>
+                <div>
+                    <dt>Cutup</dt>
+                    <dd>Plays chosen from film, in a chosen order, made into one video and shared with players.</dd>
+                </div>
+                <div>
+                    <dt>Tendency</dt>
+                    <dd>How often a team ran and how often it passed in a situation, counted from tagged plays.</dd>
+                </div>
+                <div>
+                    <dt>Study time</dt>
+                    <dd>The time a player actively spent on shared film and on playbook pages.</dd>
+                </div>
+                <div>
+                    <dt>Temporary password</dt>
+                    <dd>The password the head coach passes on for a new or reset account. It is replaced at the first sign-in.</dd>
+                </div>
+            </dl>
+        </section>
+
+        @if (!signedIn)
+        {
+            <div class="wr-cta wr-guide-cta">
+                <div>
+                    <h2>Ready when your staff is.</h2>
+                    <p>Sign in to open your team's workspace.</p>
+                </div>
+                <div class="wr-cta-actions">
+                    <a class="btn btn-warning btn-lg" asp-controller="Account" asp-action="Login">Sign in</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/guide.js" asp-append-version="true"></script>
+}

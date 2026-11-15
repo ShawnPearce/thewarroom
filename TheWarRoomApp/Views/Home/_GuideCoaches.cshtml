@@ -1,0 +1,321 @@
+@* The guide for coordinators and position coaches: what each of the two can do, the first sign-in,
+   then the work every coach does *@
+<div class="wr-guide-cols">
+    <div class="wr-guide-side">
+        <div class="wr-guide-search" hidden data-guide-search-box>
+            <svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-search"></use></svg>
+            <input type="search" class="form-control" placeholder="Search this guide" aria-label="Search the assistant coaches guide" autocomplete="off" data-guide-search />
+        </div>
+        <nav class="wr-guide-nav" aria-label="Assistant coaches guide">
+            <p class="wr-guide-nav-title">Assistant coaches guide</p>
+            <ul>
+                <li><a href="#ac-glance">At a glance</a></li>
+                <li><a href="#ac-start">Your first sign-in</a></li>
+                <li><a href="#ac-depth">Depth chart</a></li>
+                <li><a href="#ac-schedule">Schedule and attendance</a></li>
+                <li><a href="#ac-playbook">Playbook</a></li>
+                <li><a href="#ac-approvals">Your change requests</a></li>
+                <li><a href="#ac-film">Game film</a></li>
+                <li><a href="#ac-cutups">Cutups</a></li>
+                <li><a href="#ac-tendencies">Tendencies</a></li>
+                <li><a href="#ac-study">Study time</a></li>
+                <li><a href="#ac-team">Roster and groups</a></li>
+                <li><a href="#ac-questions">Common questions</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="wr-guide-main">
+        <p class="wr-guide-count" role="status" hidden data-guide-count></p>
+
+        @* ---------- At a glance ---------- *@
+        <section class="wr-guide-section" id="ac-glance">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-staff"></use></svg></span>
+                <div>
+                    <h3>At a glance</h3>
+                    <p>You coach part of the team. What you can change depends on your role and on the position groups the head coach gave you.</p>
+                </div>
+            </header>
+
+            <div class="wr-guide-card">
+                <h4>Coordinator or position coach?</h4>
+                <div class="table-responsive">
+                    <table class="table wr-guide-table wr-guide-compare">
+                        <thead>
+                            <tr>
+                                <th scope="col"><span class="visually-hidden">What</span></th>
+                                <th scope="col">Coordinator</th>
+                                <th scope="col">Position coach</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">Your groups</th>
+                                <td>Every group in your unit, plus any other group you are assigned to</td>
+                                <td>The groups you are assigned to</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Set the order on the depth chart</th>
+                                <td>At the positions of your groups</td>
+                                <td>At the positions of your groups</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Start a new depth chart week</th>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Add and change schedule events</th>
+                                <td>Yes</td>
+                                <td>No, read only</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Take attendance</th>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Draw and change the playbook</th>
+                                <td>Your unit's playbook, and those of your other groups' units</td>
+                                <td>The playbooks of your groups' units</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Game film, cutups and tendencies</th>
+                                <td>Yes, all of it</td>
+                                <td>Yes, all of it</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Study time</th>
+                                <td>The players of your groups</td>
+                                <td>The players of your groups</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Groups, positions and a group's players</th>
+                                <td>In your unit</td>
+                                <td>No, read only</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Edit a player's roster details</th>
+                                <td>Players of your unit</td>
+                                <td>No, read only</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="wr-guide-glance">
+                <div class="wr-guide-card">
+                    <h4>Three things the head coach can change for you</h4>
+                    <ul class="wr-guide-facts" role="list">
+                        <li><b>Publish playbook changes without approval:</b> off unless the head coach switches it on. Until then your changes wait for approval.</li>
+                        <li><b>Edit the depth chart:</b> on unless the head coach switches it off.</li>
+                        <li><b>Record attendance:</b> on unless the head coach switches it off.</li>
+                    </ul>
+                    <p class="wr-guide-small">Your dashboard shows all three under <b>Your permissions</b>.</p>
+                </div>
+                <div class="wr-guide-card">
+                    <h4>Only the head coach can</h4>
+                    <ul class="wr-guide-no" role="list">
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-minus"></use></svg>Add coaches and players, and reset passwords</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-minus"></use></svg>Choose which coaches coach a group</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-minus"></use></svg>Approve or reject playbook changes</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-minus"></use></svg>Change the team's settings and delete a depth chart week</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        @* ---------- Your first sign-in ---------- *@
+        <section class="wr-guide-section" id="ac-start">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-key"></use></svg></span>
+                <div>
+                    <h3>Your first sign-in</h3>
+                    <p>Your head coach makes your account. Two minutes and you are in.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="ac-sign-in">
+                <div class="wr-guide-task-head">
+                    <h4>Sign in for the first time</h4>
+                </div>
+                <ol class="wr-guide-steps" role="list">
+                    <li>Get your sign-in email and your temporary password from the head coach.</li>
+                    <li>On the main page, choose <span class="wr-ui">Sign in</span> and enter them.</li>
+                    <li>You are asked to choose your own password. Enter the temporary one as <b>Current password</b>, then a new one of at least 8 characters, twice.</li>
+                    <li>Choose <span class="wr-ui">Change password</span>. You land on your dashboard.</li>
+                </ol>
+            </article>
+
+            <article class="wr-guide-task" id="ac-check-role">
+                <div class="wr-guide-task-head">
+                    <h4>Check your role and your groups</h4>
+                </div>
+                <ul class="wr-guide-points" role="list">
+                    <li>Your role and team are written under your name, at the bottom of the menu.</li>
+                    <li>Your groups are in your row under Team <i aria-hidden="true">&rsaquo;</i> Coaching staff.</li>
+                    <li>What the head coach lets you do is on your dashboard, under <b>Your permissions</b>.</li>
+                </ul>
+                <p class="wr-guide-note">A group is missing? Only the head coach can add you to it.</p>
+            </article>
+
+            <article class="wr-guide-task" id="ac-menu">
+                <div class="wr-guide-task-head">
+                    <h4>Find your way around</h4>
+                </div>
+                <dl class="wr-guide-terms">
+                    <div>
+                        <dt>Dashboard</dt>
+                        <dd>Your week on one page: the next event, this week's depth chart, playbook changes that are waiting, and the cutups.</dd>
+                    </div>
+                    <div>
+                        <dt>Game plan</dt>
+                        <dd>Depth chart, Schedule, Playbook and Approvals.</dd>
+                    </div>
+                    <div>
+                        <dt>Film room</dt>
+                        <dd>Game film, Cutups, Tendencies and Teams on film.</dd>
+                    </div>
+                    <div>
+                        <dt>Team</dt>
+                        <dd>Roster, Coaching staff, Groups and positions, and Study time.</dd>
+                    </div>
+                </dl>
+                <p class="wr-guide-note">On a phone, the menu opens from the button at the top left.</p>
+            </article>
+
+            <article class="wr-guide-task" id="ac-password">
+                <div class="wr-guide-task-head">
+                    <h4>Change or recover your password</h4>
+                </div>
+                <ul class="wr-guide-points" role="list">
+                    <li><b>To change it:</b> click your name at the bottom of the menu and choose <span class="wr-ui">Change password</span>.</li>
+                    <li><b>Forgot it?</b> Ask the head coach to reset it. You get a new temporary password and choose your own again at the next sign-in.</li>
+                </ul>
+                <p class="wr-guide-note">A sign-in ends by itself after 30 minutes without activity. Just sign in again.</p>
+            </article>
+        </section>
+
+        <partial name="_GuideCoachTasks" model='"ac"' />
+
+        @* ---------- Roster and groups ---------- *@
+        <section class="wr-guide-section" id="ac-team">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-users"></use></svg></span>
+                <div>
+                    <h3>Roster and groups</h3>
+                    <p>Who is on the team, who coaches whom, and the position groups everything else is built on.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="ac-look-up">
+                <div class="wr-guide-task-head">
+                    <h4>Look someone up</h4>
+                </div>
+                <ul class="wr-guide-points" role="list">
+                    <li><b>A player:</b> open Team <i aria-hidden="true">&rsaquo;</i> Roster and click the name. You see the roster details, the position groups and the player's coaches.</li>
+                    <li><b>A coach:</b> open Team <i aria-hidden="true">&rsaquo;</i> Coaching staff for every coach's role, groups and email.</li>
+                    <li><b>A group:</b> open Team <i aria-hidden="true">&rsaquo;</i> Groups and positions and click its name for its positions, coaches and players.</li>
+                </ul>
+            </article>
+
+            <article class="wr-guide-task" id="ac-manage-groups">
+                <div class="wr-guide-task-head">
+                    <h4>Look after the groups of your unit</h4>
+                    <span class="wr-guide-who">Coordinators</span>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Team <i aria-hidden="true">&rsaquo;</i> Groups and positions</p>
+                <ol class="wr-guide-steps" role="list">
+                    <li>To add a group, choose <span class="wr-ui">Add a group</span> beside your unit, type the <b>Name</b> and choose <span class="wr-ui">Create</span>.</li>
+                    <li>Click a group's name to open it. <span class="wr-ui">Rename</span> changes its name.</li>
+                    <li>Choose <b>Add a position</b> and give it a short <b>Code</b> for the depth chart, such as X or MLB, and a <b>Name</b>.</li>
+                    <li>Choose <b>Change players</b>, tick everyone who belongs to the group and choose <span class="wr-ui">Save</span>.</li>
+                </ol>
+                <p class="wr-guide-note">
+                    A player has to be in a position's group before they can go on its depth chart, and a player can be in several groups.
+                    Which coaches coach a group is chosen by the head coach.
+                </p>
+                <p class="wr-guide-note wr-guide-warn">
+                    A group is deleted only after its positions, and a position only when no depth chart lists a player there.
+                    Each position code is used once per team.
+                </p>
+            </article>
+
+            <article class="wr-guide-task" id="ac-edit-player">
+                <div class="wr-guide-task-head">
+                    <h4>Update a player's details or status</h4>
+                    <span class="wr-guide-who">Coordinators</span>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Team <i aria-hidden="true">&rsaquo;</i> Roster</p>
+                <ol class="wr-guide-steps" role="list">
+                    <li>Choose <span class="wr-ui">Edit</span> at the end of the player's row.</li>
+                    <li>Change the jersey number, grade, height or weight, or set the <b>Status</b> to Active, Injured or Inactive.</li>
+                    <li>Choose <span class="wr-ui">Save</span>.</li>
+                </ol>
+                <p class="wr-guide-note">
+                    This works for players in the groups of your unit. An injured player stays on the depth chart with an <b>Injured</b> badge;
+                    an inactive player cannot be added to one.
+                </p>
+            </article>
+        </section>
+
+        @* ---------- Common questions ---------- *@
+        <section class="wr-guide-section" id="ac-questions">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-help"></use></svg></span>
+                <div>
+                    <h3>Common questions</h3>
+                    <p>When something is missing or will not save, the reason is usually one of these.</p>
+                </div>
+            </header>
+
+            <details class="wr-guide-faq">
+                <summary>I do not see Edit on the depth chart.</summary>
+                <p>
+                    The position is outside your groups, or the head coach has switched off depth chart editing for your account.
+                    Check your groups under Coaching staff and your permissions on your dashboard, then ask the head coach.
+                </p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>My new play has not reached the players.</summary>
+                <p>
+                    It is waiting for the head coach. Open Game plan, then Approvals: your change is on the <b>Waiting</b> tab until it is approved.
+                    Players keep seeing the approved version in the meantime.
+                </p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>I cannot change a formation or a play.</summary>
+                <p>
+                    Either a change to it is already waiting for approval, or its playbook is outside the units you coach.
+                    A waiting change of your own can be revised or withdrawn under Approvals.
+                </p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>I cannot record attendance.</summary>
+                <p>
+                    The reason is written at the top of the attendance sheet: tracking is switched off for the team, the head coach has switched it off
+                    for your account, or the event has not come yet. Attendance opens on the day of the event.
+                </p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>A player says they cannot see my cutup.</summary>
+                <p>
+                    Open the cutup and read <b>Shared with</b>. A cutup shared with nobody is seen by coaches only. Choose <span class="wr-ui">Share</span>
+                    and tick the team, the player's group or the player.
+                </p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>A play will not delete.</summary>
+                <p>It is used in a cutup. Take it out of that cutup first, then delete it.</p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>A player is missing from my study time list.</summary>
+                <p>You see the players of the groups you coach. A player in none of your groups is not on your list.</p>
+            </details>
+        </section>
+
+        <p class="wr-guide-empty" hidden data-guide-empty>Nothing in this guide matches. Try another word, such as "attendance" or "cutup".</p>
+    </div>
+</div>

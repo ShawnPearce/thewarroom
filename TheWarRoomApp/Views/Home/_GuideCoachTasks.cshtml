@@ -1,0 +1,647 @@
+@model string
+
+@* The work every coach does, written once for both coaching guides.
+   The model says which guide it is shown in: "hc" for the head coach, "ac" for coordinators and position coaches.
+   It is also the start of every id, so that each guide has its own places to jump to. *@
+@{
+    string p = Model;
+    bool head = p == "hc";
+}
+
+@* ---------- Depth chart ---------- *@
+<section class="wr-guide-section" id="@(p)-depth">
+    <header class="wr-guide-head">
+        <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-depth"></use></svg></span>
+        <div>
+            <h3>Depth chart</h3>
+            <p>Who starts and who backs up at every position. There is one chart per week, with a tab each for offence, defence and special teams.</p>
+        </div>
+    </header>
+
+    <article class="wr-guide-task" id="@(p)-new-week">
+        <div class="wr-guide-task-head">
+            <h4>Start a new week</h4>
+            @if (!head)
+            {
+                <span class="wr-guide-who">Coordinators</span>
+            }
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Depth chart</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Choose <span class="wr-ui">New week</span>.</li>
+            <li>Under <b>Week of</b>, pick any day of that week. The chart is kept for the week starting on that Monday.</li>
+            <li>Add a <b>Label</b> if you like, such as the opponent's name.</li>
+            <li>Under <b>Start from</b>, choose a copy of an earlier week, or <b>An empty depth chart</b>.</li>
+            <li>Choose <span class="wr-ui">Create</span>.</li>
+        </ol>
+        <p class="wr-guide-note">
+            <b>Tip.</b> Start from a copy of last week, then move only the names that changed.
+            A copy leaves out players who have since been deactivated or have left a position's group.
+        </p>
+        @if (!head)
+        {
+            <p class="wr-guide-note">Position coaches cannot start a week. Ask your coordinator or the head coach.</p>
+        }
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-order">
+        <div class="wr-guide-task-head">
+            <h4>Set the order at a position</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Depth chart</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Pick the <b>Week</b>, then the tab for the unit: <b>Offence</b>, <b>Defence</b> or <b>Special teams</b>.</li>
+            <li>Choose <span class="wr-ui">Edit</span> at the end of the position's row.</li>
+            <li>Under <b>Add a player</b>, pick the player and choose <span class="wr-ui">Add to the bottom</span>.</li>
+            <li>Use <span class="wr-ui">&uarr;</span> and <span class="wr-ui">&darr;</span> to move a player up or down. First place is the starter.</li>
+            <li>Choose <span class="wr-ui">Remove</span> to take a player off the position.</li>
+        </ol>
+        <p class="wr-guide-note">
+            Every change is saved at once. There is nothing to approve: the team sees the new order the next time they open the chart.
+        </p>
+        <p class="wr-guide-note">
+            Only active players in the position's group can be placed there.
+            The same player can be listed at several positions, but only once at each.
+        </p>
+        @if (!head)
+        {
+            <p class="wr-guide-note wr-guide-warn">
+                <b>No Edit link?</b> You see <span class="wr-ui">Edit</span> only at the positions you coach.
+                If it is missing, the position is outside your groups, or the head coach has switched off depth chart editing for your account.
+            </p>
+        }
+    </article>
+
+    @if (head)
+    {
+        <article class="wr-guide-task" id="@(p)-delete-week">
+            <div class="wr-guide-task-head">
+                <h4>Delete a week</h4>
+                <span class="wr-guide-who">Only you</span>
+            </div>
+            <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Depth chart</p>
+            <ol class="wr-guide-steps" role="list">
+                <li>Pick the <b>Week</b>.</li>
+                <li>At the bottom of the page, choose <span class="wr-ui">Delete this week's depth chart</span> and confirm.</li>
+            </ol>
+            <p class="wr-guide-note wr-guide-warn"><b>Careful.</b> A deleted week cannot be brought back.</p>
+        </article>
+    }
+</section>
+
+@* ---------- Schedule and attendance ---------- *@
+<section class="wr-guide-section" id="@(p)-schedule">
+    <header class="wr-guide-head">
+        <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-calendar"></use></svg></span>
+        <div>
+            <h3>Schedule and attendance</h3>
+            <p>Practices, games and meetings for the whole team, with an attendance sheet for each one.</p>
+        </div>
+    </header>
+
+    <article class="wr-guide-task" id="@(p)-add-event">
+        <div class="wr-guide-task-head">
+            <h4>Add an event</h4>
+            @if (!head)
+            {
+                <span class="wr-guide-who">Coordinators</span>
+            }
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Schedule</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Choose <span class="wr-ui">Add an event</span>.</li>
+            <li>Pick the <b>Type</b>: Practice, Game or Meeting.</li>
+            <li>Fill in the <b>Title</b>, the <b>Date</b>, when it <b>Starts</b> and the <b>Location</b>. <b>Ends</b> and <b>Notes</b> are optional.</li>
+            <li>Choose <span class="wr-ui">Create</span>.</li>
+        </ol>
+        <p class="wr-guide-note">
+            To change or remove an event, use <span class="wr-ui">Edit</span> or <span class="wr-ui">Delete</span> at the end of its row.
+            @if (head)
+            {
+                <text>Once attendance has been recorded for an event, you are the only one who can delete it.</text>
+            }
+            else
+            {
+                <text>Once attendance has been recorded for an event, only the head coach can delete it.</text>
+            }
+        </p>
+        @if (!head)
+        {
+            <p class="wr-guide-note">Position coaches can read the schedule and take attendance, but cannot add or change events.</p>
+        }
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-attendance">
+        <div class="wr-guide-task-head">
+            <h4>Take attendance</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Schedule</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Choose <span class="wr-ui">Attendance</span> at the end of the event's row.</li>
+            <li>For each player choose <b>Present</b>, <b>Late</b>, <b>Absent</b> or <b>Excused</b>. The dash clears a choice.</li>
+            <li>Choose <span class="wr-ui">Save</span>, or <span class="wr-ui">Mark the rest present and save</span> to fill in everyone you left blank.</li>
+        </ol>
+        <p class="wr-guide-note">
+            Attendance can be recorded from the day of the event, not before.
+            @if (head)
+            {
+                <text>It works only while <b>Attendance tracking</b> is switched on under Team settings.</text>
+            }
+            else
+            {
+                <text>It works only while the head coach has attendance tracking switched on for the team.</text>
+            }
+        </p>
+        @if (!head)
+        {
+            <p class="wr-guide-note wr-guide-warn">
+                <b>Sheet cannot be changed?</b> The reason is written at the top of the sheet:
+                tracking is switched off for the team, or the head coach has switched off attendance for your account.
+            </p>
+        }
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-attendance-summary">
+        <div class="wr-guide-task-head">
+            <h4>See attendance over time</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Schedule</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Choose <span class="wr-ui">Attendance summary</span>.</li>
+            <li>Set <b>From</b> and <b>To</b> and choose <span class="wr-ui">Show</span>, or leave them empty to count every event.</li>
+            <li>Each row shows how often a player was present, late, absent or excused.</li>
+        </ol>
+    </article>
+</section>
+
+@* ---------- Playbook ---------- *@
+<section class="wr-guide-section" id="@(p)-playbook">
+    <header class="wr-guide-head">
+        <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-playbook"></use></svg></span>
+        <div>
+            <h3>Playbook</h3>
+            <p>Three playbooks: offence, defence and special teams. A playbook holds formations, and each formation holds its plays.</p>
+        </div>
+    </header>
+
+    <article class="wr-guide-task" id="@(p)-read-playbook">
+        <div class="wr-guide-task-head">
+            <h4>Find a formation or a play</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Playbook</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Choose <span class="wr-ui">Open</span> on a playbook.</li>
+            <li>Click a formation's drawing to open it and see its plays.</li>
+            <li>Click a play to see its drawing and its coaching notes.</li>
+        </ol>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-draw-formation">
+        <div class="wr-guide-task-head">
+            <h4>Draw a formation</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Playbook</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Open the playbook and choose <span class="wr-ui">New formation</span>.</li>
+            <li>Under <b>Start from</b>, pick a formation to copy, or <b>An empty field</b>.</li>
+            <li>Choose <span class="wr-ui">Player</span> and click on the field to place each of your players. <span class="wr-ui">Opponent</span> places the other side.</li>
+            <li>With <span class="wr-ui">Select</span>, drag a player to move it, or click it to change its <b>Label</b> and <b>Shape</b>.</li>
+            <li>Type the <b>Name</b> and save.</li>
+        </ol>
+        <p class="wr-guide-note">A formation holds the players only. Routes, blocks and motion are drawn on its plays.</p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-draw-play">
+        <div class="wr-guide-task-head">
+            <h4>Draw a play</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Playbook</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Open a formation and choose <span class="wr-ui">New play</span>. The formation's players are already on the field.</li>
+            <li>Choose <span class="wr-ui">Route</span>, <span class="wr-ui">Block</span> or <span class="wr-ui">Motion</span>, then click the player it belongs to.</li>
+            <li>Click each point of the line in turn. Click the last point again, or press <kbd>Enter</kbd>, to finish. <kbd>Esc</kbd> cancels.</li>
+            <li>Choose <span class="wr-ui">Text</span> and click on the field to add a label.</li>
+            <li>Type the play's <b>Name</b> and its <b>Coaching notes</b>, then save.</li>
+        </ol>
+        <p class="wr-guide-note">
+            <b>Tip.</b> Click a line with <span class="wr-ui">Select</span> and drag its square points to reshape it.
+            <span class="wr-ui">Undo</span>, <span class="wr-ui">Redo</span> and <span class="wr-ui">Delete</span> are above the field.
+        </p>
+        <dl class="wr-guide-keys" aria-label="Keys in the play designer">
+            <div><dt><kbd>V</kbd></dt><dd>Select and move</dd></div>
+            <div><dt><kbd>P</kbd></dt><dd>Add a player</dd></div>
+            <div><dt><kbd>O</kbd></dt><dd>Add an opponent</dd></div>
+            <div><dt><kbd>R</kbd></dt><dd>Route</dd></div>
+            <div><dt><kbd>B</kbd></dt><dd>Block</dd></div>
+            <div><dt><kbd>M</kbd></dt><dd>Motion before the snap</dd></div>
+            <div><dt><kbd>T</kbd></dt><dd>Text</dd></div>
+            <div><dt><kbd>Delete</kbd></dt><dd>Delete what is selected</dd></div>
+            <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>Undo</dd></div>
+            <div><dt><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Z</kbd></dt><dd>Redo</dd></div>
+        </dl>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-save-playbook">
+        <div class="wr-guide-task-head">
+            <h4>What saving does</h4>
+        </div>
+        @if (head)
+        {
+            <ul class="wr-guide-points" role="list">
+                <li>Your button reads <span class="wr-ui">Save and publish</span>. The change is live at once for everyone who can read that playbook, players included.</li>
+                <li>Your coaches' button reads <span class="wr-ui">Send for approval</span>. Their changes wait for you under <a href="#hc-approvals">Approvals</a>, unless you have given them the publish right.</li>
+            </ul>
+        }
+        else
+        {
+            <ul class="wr-guide-points" role="list">
+                <li>Your button reads <span class="wr-ui">Send for approval</span>. The change goes to the head coach, and players keep seeing the approved version until it is approved.</li>
+                <li>If the head coach has given you the publish right, the button reads <span class="wr-ui">Save and publish</span> and the change is live at once.</li>
+                <li>While a change is waiting, the formation or play shows a yellow notice and cannot be changed again until the head coach decides.</li>
+                <li>You can change the playbooks of the units you coach: a coordinator their own unit, every coach the units of their groups.</li>
+            </ul>
+        }
+        <p class="wr-guide-note">
+            <b>Sign-in ran out while you were drawing?</b> This browser keeps a copy of a drawing that was not saved.
+            Open the designer again and choose <span class="wr-ui">Bring it back</span>.
+        </p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-change-play">
+        <div class="wr-guide-task-head">
+            <h4>Change or delete a formation or play</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Playbook</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Open the formation or play.</li>
+            <li>Choose <span class="wr-ui">Edit formation</span> or <span class="wr-ui">Edit play</span>, change the drawing and save.</li>
+            <li>To remove it, choose <span class="wr-ui">Delete</span> instead.</li>
+        </ol>
+        <p class="wr-guide-note">
+            A formation can be deleted only when it has no plays left.
+            When you edit a formation, <span class="wr-ui">Save as new formation</span> leaves the old one as it is and adds your drawing under the new name.
+        </p>
+    </article>
+</section>
+
+@* ---------- Approvals ---------- *@
+@if (head)
+{
+    <section class="wr-guide-section" id="hc-approvals">
+        <header class="wr-guide-head">
+            <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+            <div>
+                <h3>Approvals</h3>
+                <p>Playbook changes from your coaches wait here until you decide. Players keep seeing the approved playbook in the meantime.</p>
+            </div>
+        </header>
+
+        <article class="wr-guide-task" id="hc-review">
+            <div class="wr-guide-task-head">
+                <h4>Approve or reject a change</h4>
+                <span class="wr-guide-who">Only you</span>
+            </div>
+            <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Approvals</p>
+            <ol class="wr-guide-steps" role="list">
+                <li>On the <b>Waiting</b> tab, choose <span class="wr-ui">Review</span> beside a change.</li>
+                <li>Compare the two drawings: <b>Current version</b> beside <b>Proposed</b>. Rings mark what is new or changed.</li>
+                <li>Add a <b>Note for the coach</b> if you like. The coach sees it with your decision.</li>
+                <li>Choose <span class="wr-ui">Approve</span> or <span class="wr-ui">Reject</span>.</li>
+            </ol>
+            <p class="wr-guide-note">An approved change is live at once. The <b>History</b> tab keeps the changes that were approved, rejected, withdrawn or published directly.</p>
+            <p class="wr-guide-note wr-guide-warn">
+                <b>Approve is switched off?</b> The formation or play was changed after the request was made.
+                Reject the request and ask the coach to make the change again on the current version.
+            </p>
+        </article>
+
+        <article class="wr-guide-task" id="hc-skip-approval">
+            <div class="wr-guide-task-head">
+                <h4>Let a coach publish without approval</h4>
+                <span class="wr-guide-who">Only you</span>
+            </div>
+            <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Team <i aria-hidden="true">&rsaquo;</i> Coaching staff</p>
+            <ol class="wr-guide-steps" role="list">
+                <li>Choose <span class="wr-ui">Edit</span> beside the coach.</li>
+                <li>Under <b>Permissions</b>, tick <b>Publish playbook changes without approval</b>.</li>
+                <li>Choose <span class="wr-ui">Save permissions</span>.</li>
+            </ol>
+            <p class="wr-guide-note">The coach still publishes only inside the playbooks they coach. Everything they publish is listed under <b>History</b>.</p>
+        </article>
+    </section>
+}
+else
+{
+    <section class="wr-guide-section" id="ac-approvals">
+        <header class="wr-guide-head">
+            <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+            <div>
+                <h3>Your change requests</h3>
+                <p>Follow the playbook changes you sent to the head coach, and fix or cancel one that is still waiting.</p>
+            </div>
+        </header>
+
+        <article class="wr-guide-task" id="ac-follow-request">
+            <div class="wr-guide-task-head">
+                <h4>Follow a change you sent</h4>
+            </div>
+            <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Approvals</p>
+            <ol class="wr-guide-steps" role="list">
+                <li>The <b>Waiting</b> tab lists what is waiting for the head coach. Yours are marked <b>Your request</b>.</li>
+                <li>Open one to see the current version beside what you proposed.</li>
+                <li>Look under <b>History</b> for the decision: <b>Approved</b> or <b>Rejected</b>, with the head coach's note.</li>
+            </ol>
+        </article>
+
+        <article class="wr-guide-task" id="ac-revise-request">
+            <div class="wr-guide-task-head">
+                <h4>Fix or cancel a waiting change</h4>
+            </div>
+            <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Approvals</p>
+            <ol class="wr-guide-steps" role="list">
+                <li>Open your request from the <b>Waiting</b> tab.</li>
+                <li>Choose <span class="wr-ui">Revise the drawing</span> to replace what you proposed, then <span class="wr-ui">Save my changes</span>.</li>
+                <li>Or choose <span class="wr-ui">Withdraw the request</span> to cancel it.</li>
+            </ol>
+            <p class="wr-guide-note">Only the coach who made a request can revise or withdraw it. A request to delete cannot be revised: withdraw it instead.</p>
+            <p class="wr-guide-note wr-guide-warn">
+                <b>"Can no longer be approved"?</b> The formation or play was changed after you sent your request.
+                Withdraw it and make your change again on the current version.
+            </p>
+        </article>
+    </section>
+}
+
+@* ---------- Game film ---------- *@
+<section class="wr-guide-section" id="@(p)-film">
+    <header class="wr-guide-head">
+        <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-film"></use></svg></span>
+        <div>
+            <h3>Game film</h3>
+            <p>Upload a game, cut it into plays and tag each one. Game film is for coaches: players see only the cutups you share with them.</p>
+        </div>
+    </header>
+
+    <article class="wr-guide-task" id="@(p)-add-game">
+        <div class="wr-guide-task-head">
+            <h4><span class="wr-guide-step">Step 1</span>Add the game</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Game film</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Choose <span class="wr-ui">Add a game</span>.</li>
+            <li>Pick the <b>Away team</b> and the <b>Home team</b>.</li>
+            <li>Set the <b>Date</b>. A <b>Label</b> such as "Week 3" or "Scout film" is optional.</li>
+            <li>Choose <span class="wr-ui">Create</span>.</li>
+        </ol>
+        <p class="wr-guide-note">
+            <b>Opponent not in the list?</b> Add it first under Film room <i aria-hidden="true">&rsaquo;</i> Teams on film, with <span class="wr-ui">Add an opponent</span>.
+            Film of two other teams, for scouting, is added the same way.
+        </p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-upload">
+        <div class="wr-guide-task-head">
+            <h4><span class="wr-guide-step">Step 2</span>Upload the video</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Game film</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Open the game and choose <span class="wr-ui">Upload a video</span>.</li>
+            <li>Give it a <b>Title</b>, such as "Full game" or "End zone angle".</li>
+            <li>Choose the <b>Video file</b>: an MP4 or MOV file with H.264 video. The page shows the largest size it takes.</li>
+            <li>Choose <span class="wr-ui">Upload</span> and keep the page open until it has finished.</li>
+        </ol>
+        <p class="wr-guide-note">
+            After the upload the video is checked: its status goes from <b>Being checked</b> to <b>Ready</b>.
+            If it says <b>Could not be used</b>, upload another file and delete that record.
+        </p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-cut-plays">
+        <div class="wr-guide-task-head">
+            <h4><span class="wr-guide-step">Step 3</span>Cut the video into plays</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Game film</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Open the game, then its video.</li>
+            <li>Play to the start of a play and press <kbd>I</kbd>, or choose <span class="wr-ui">Mark start</span>.</li>
+            <li>Let it run to the end of the play and press <kbd>O</kbd>, or choose <span class="wr-ui">Mark end</span>. The video stops there.</li>
+            <li>Tag the play: <kbd>R</kbd> for a run or <kbd>P</kbd> for a pass, <kbd>1</kbd> to <kbd>4</kbd> for the down, <kbd>D</kbd> to type the yards to go.</li>
+            <li>Press <kbd>Enter</kbd>, or choose <span class="wr-ui">Save play</span>. The play joins the list and the editor is ready for the next one.</li>
+        </ol>
+        <p class="wr-guide-note">
+            <b>Why tag?</b> Only tagged plays count in the tendency charts.
+            Leave kicks, and anything else that is neither a run nor a pass, as <b>Not tagged</b>.
+        </p>
+        <p class="wr-guide-note">
+            <b>Tip.</b> The <span class="wr-ui">&minus;</span> and <span class="wr-ui">+</span> buttons move a mark by a tenth of a second,
+            and <span class="wr-ui">Play it</span> plays what you marked.
+        </p>
+        <dl class="wr-guide-keys" aria-label="Keys in the film editor">
+            <div><dt><kbd>Space</kbd></dt><dd>Play or pause</dd></div>
+            <div><dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>5 seconds back or forward</dd></div>
+            <div><dt><kbd>Shift</kbd> <kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>1 second back or forward</dd></div>
+            <div><dt><kbd>,</kbd> <kbd>.</kbd></dt><dd>One picture back or forward</dd></div>
+            <div><dt><kbd>I</kbd> <kbd>O</kbd></dt><dd>Mark the start, mark the end</dd></div>
+            <div><dt><kbd>R</kbd> <kbd>P</kbd> <kbd>U</kbd></dt><dd>Run, pass, not tagged</dd></div>
+            <div><dt><kbd>1</kbd> to <kbd>4</kbd></dt><dd>The down</dd></div>
+            <div><dt><kbd>D</kbd></dt><dd>Type the yards to go</dd></div>
+            <div><dt><kbd>T</kbd></dt><dd>The other team on offence</dd></div>
+            <div><dt><kbd>Enter</kbd></dt><dd>Save the play</dd></div>
+            <div><dt><kbd>Esc</kbd></dt><dd>Start a new play</dd></div>
+        </dl>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-draw-on-film">
+        <div class="wr-guide-task-head">
+            <h4>Draw on a play</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Game film</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>On the video's page, click a play's time in the list of plays to open it.</li>
+            <li>Move the video to the moment you want to explain and choose <span class="wr-ui">Stop the video here and draw</span>.</li>
+            <li>Choose <span class="wr-ui">Arrow</span> and drag across the picture, or choose <span class="wr-ui">Text</span>, type it and click where it goes. Pick a <b>Colour</b> that shows up.</li>
+            <li>Set <b>Stop for (seconds)</b>: how long the video stands still, from 1 to 10.</li>
+            <li>Choose <span class="wr-ui">Save drawing</span>.</li>
+        </ol>
+        <p class="wr-guide-note">Whenever the play is shown, in a cutup too, the video stands still on that moment with your drawing over it.</p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-fix-play">
+        <div class="wr-guide-task-head">
+            <h4>Fix or delete a play</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Game film</p>
+        <ul class="wr-guide-points" role="list">
+            <li>Click a play's time in the list to open it, change its marks or its tag, and save.</li>
+            <li>Choose <span class="wr-ui">Delete</span> beside a play to remove it.</li>
+            <li><span class="wr-ui">Add a play</span> lets you type a play's start and end instead of marking them.</li>
+        </ul>
+        <p class="wr-guide-note wr-guide-warn">
+            A play that is used in a cutup cannot be deleted: take it out of the cutup first.
+            A game is deleted only after its video, and a video only after its plays are out of every cutup.
+        </p>
+    </article>
+</section>
+
+@* ---------- Cutups ---------- *@
+<section class="wr-guide-section" id="@(p)-cutups">
+    <header class="wr-guide-head">
+        <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-cutups"></use></svg></span>
+        <div>
+            <h3>Cutups</h3>
+            <p>A cutup is a set of plays you choose, in the order you choose, made into one video with the time between plays gone.</p>
+        </div>
+    </header>
+
+    <article class="wr-guide-task" id="@(p)-build-cutup">
+        <div class="wr-guide-task-head">
+            <h4><span class="wr-guide-step">Step 1</span>Choose the plays</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Cutups</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Choose <span class="wr-ui">New cutup</span> and give it a <b>Name</b>. In the <b>Description</b>, tell players what to look for.</li>
+            <li>Choose <span class="wr-ui">Create</span>, then <span class="wr-ui">Add plays</span>.</li>
+            <li>Pick a <b>Game</b>. Narrow the list by <b>Team on offence</b>, <b>Play</b> or <b>Down</b> and choose <span class="wr-ui">Show</span>.</li>
+            <li>Tick the plays you want and choose <span class="wr-ui">Add the ticked plays</span>.</li>
+            <li>On the cutup, use <span class="wr-ui">&uarr;</span> and <span class="wr-ui">&darr;</span> to set the order, and <span class="wr-ui">Take out</span> to remove a play.</li>
+        </ol>
+        <p class="wr-guide-note">A cutup holds up to 200 plays, from as many games as you like.</p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-make-video">
+        <div class="wr-guide-task-head">
+            <h4><span class="wr-guide-step">Step 2</span>Make the video</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Cutups</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>When the plays and their order are right, choose <span class="wr-ui">Make the video</span>.</li>
+            <li>The cutup shows how far the video has come. You can leave the page: the work goes on.</li>
+            <li>When it shows <b>Video ready</b>, the cutup plays on its page and every play is a place to jump to.</li>
+        </ol>
+        <p class="wr-guide-note">
+            Cutup videos have no sound. If a cutup shows <b>The video could not be made</b>, choose <span class="wr-ui">Try again</span>.
+        </p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-share-cutup">
+        <div class="wr-guide-task-head">
+            <h4><span class="wr-guide-step">Step 3</span>Share it with players</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Cutups</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Open the cutup and choose <span class="wr-ui">Share</span>.</li>
+            <li>Tick <b>The whole team</b>, one or more <b>Position groups</b>, or <b>Single players</b>.</li>
+            <li>Choose <span class="wr-ui">Save</span>.</li>
+        </ol>
+        <p class="wr-guide-note">
+            Players find it under <b>My film</b>. Coaches always see every cutup, and a cutup shared with nobody is seen by coaches only.
+            You can share before the video is ready: until it is, players see the list of plays.
+        </p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-change-cutup">
+        <div class="wr-guide-task-head">
+            <h4>Change a cutup later</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Cutups</p>
+        <ul class="wr-guide-points" role="list">
+            <li><span class="wr-ui">Edit</span> changes its name, its description and the week it is for.</li>
+            <li><span class="wr-ui">Change the plays</span> turns it back into a draft, so plays can be added, taken out and put in another order.</li>
+            <li><span class="wr-ui">Delete</span> removes the cutup. Its plays stay on the game film.</li>
+        </ul>
+        <p class="wr-guide-note wr-guide-warn">
+            <b>Careful.</b> <span class="wr-ui">Change the plays</span> throws away the video that was made. It has to be made again afterwards.
+        </p>
+        <p class="wr-guide-note">
+            A cutup that has been made into a video keeps its own copy of every play.
+            Changing a play on the game film afterwards does not change that cutup.
+        </p>
+    </article>
+</section>
+
+@* ---------- Tendencies ---------- *@
+<section class="wr-guide-section" id="@(p)-tendencies">
+    <header class="wr-guide-head">
+        <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-chart"></use></svg></span>
+        <div>
+            <h3>Tendencies</h3>
+            <p>How often a team ran and how often it passed, counted from the plays you tagged on film.</p>
+        </div>
+    </header>
+
+    <article class="wr-guide-task" id="@(p)-read-tendencies">
+        <div class="wr-guide-task-head">
+            <h4>See what a team does by down and distance</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> Tendencies</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>Pick the <b>Team on offence</b>.</li>
+            <li>Narrow it by <b>Down</b> and by <b>Distance to go</b> if you like: short (1 to 3 yards), medium (4 to 6), long (7 to 10) or very long (11 or more).</li>
+            <li>Under <b>Games</b>, untick any game to leave it out, then choose <span class="wr-ui">Show</span>.</li>
+            <li>Read the run and pass share, and how many plays it comes from.</li>
+            <li>Choose <b>See these plays</b> to list the plays behind the number. Every box of <b>Every down and distance</b> opens its plays too.</li>
+        </ol>
+        <p class="wr-guide-note">
+            <b>Read the sample size.</b> A share from 3 plays tells you much less than one from 30.
+            <b>No data</b> means no tagged play matches what you chose.
+        </p>
+        <p class="wr-guide-note">These numbers describe what was recorded. They do not predict the next play.</p>
+    </article>
+</section>
+
+@* ---------- Study time ---------- *@
+<section class="wr-guide-section" id="@(p)-study">
+    <header class="wr-guide-head">
+        <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-clock"></use></svg></span>
+        <div>
+            <h3>Study time</h3>
+            <p>How much time each player put into film and the playbook, week by week. Only players are timed, never coaches.</p>
+        </div>
+    </header>
+
+    <article class="wr-guide-task" id="@(p)-team-study">
+        <div class="wr-guide-task-head">
+            <h4>See how the week went</h4>
+        </div>
+        <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Team <i aria-hidden="true">&rsaquo;</i> Study time</p>
+        <ol class="wr-guide-steps" role="list">
+            <li>The table shows this week: <b>Signed in</b>, <b>Film</b>, <b>Playbook</b> and <b>Sign-ins</b> for each player.</li>
+            <li>Use <span class="wr-ui">&larr; Earlier</span> and <span class="wr-ui">Later &rarr;</span> to change the week. <span class="wr-ui">This week</span> brings you back.</li>
+            <li>Click a player's name for their record week by week.</li>
+        </ol>
+        <p class="wr-guide-note">
+            @if (head)
+            {
+                <text>You see every player. A coordinator or position coach sees the players of the groups they coach.</text>
+            }
+            else
+            {
+                <text>You see the players of the groups you coach. A coordinator sees every group in their unit.</text>
+            }
+        </p>
+    </article>
+
+    <article class="wr-guide-task" id="@(p)-study-measured">
+        <div class="wr-guide-task-head">
+            <h4>How the three numbers are counted</h4>
+        </div>
+        <dl class="wr-guide-terms">
+            <div>
+                <dt>Signed in</dt>
+                <dd>From each sign-in to the last thing done on the site. A sign-in ends by signing out, or by itself after 30 minutes without activity.</dd>
+            </div>
+            <div>
+                <dt>Film</dt>
+                <dd>Only while a shared film is playing in the tab the player is looking at. Pausing the video or hiding the tab stops it.</dd>
+            </div>
+            <div>
+                <dt>Playbook</dt>
+                <dd>Only while a playbook page is in front of the player and they are using it. It stops after a minute without activity, or when the tab is hidden.</dd>
+            </div>
+        </dl>
+        <p class="wr-guide-note">
+            A week runs from Monday to Sunday. Two open tabs never count the same minute twice.
+            These numbers show activity, not proof of learning.
+        </p>
+    </article>
+</section>

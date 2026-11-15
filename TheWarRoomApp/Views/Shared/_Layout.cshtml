@@ -124,29 +124,36 @@
                         }
                     </nav>
 
-                    <div class="wr-sidebar-user dropup">
-                        <button class="wr-user" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="wr-avatar" aria-hidden="true">@initials</span>
-                            <span class="wr-user-text">
-                                <span class="wr-user-name">@name</span>
-                                <span class="wr-user-role">@User.GetRoleLabel() &middot; @User.GetTeamName()</span>
-                            </span>
-                            <svg class="wr-icon wr-icon-sm"><use href="#i-chevron"></use></svg>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="ChangePassword">
-                                    <svg class="wr-icon wr-icon-sm"><use href="#i-key"></use></svg>Change password
-                                </a>
-                            </li>
-                            <li>
-                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit" class="dropdown-item">
-                                        <svg class="wr-icon wr-icon-sm"><use href="#i-signout"></use></svg>Sign out
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
+                    @* The foot of the menu stays in sight however long the list above it is: the guide, then who is signed in *@
+                    <div class="wr-sidebar-foot">
+                        <a class="wr-nav-link @AtAction("Home", "Guide")" asp-area="" asp-controller="Home" asp-action="Guide">
+                            <svg class="wr-icon"><use href="#i-book"></use></svg><span>Guide</span>
+                        </a>
+
+                        <div class="wr-sidebar-user dropup">
+                            <button class="wr-user" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="wr-avatar" aria-hidden="true">@initials</span>
+                                <span class="wr-user-text">
+                                    <span class="wr-user-name">@name</span>
+                                    <span class="wr-user-role">@User.GetRoleLabel() &middot; @User.GetTeamName()</span>
+                                </span>
+                                <svg class="wr-icon wr-icon-sm"><use href="#i-chevron"></use></svg>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="ChangePassword">
+                                        <svg class="wr-icon wr-icon-sm"><use href="#i-key"></use></svg>Change password
+                                    </a>
+                                </li>
+                                <li>
+                                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                        <button type="submit" class="dropdown-item">
+                                            <svg class="wr-icon wr-icon-sm"><use href="#i-signout"></use></svg>Sign out
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -182,21 +189,23 @@
             </main>
 
             <footer class="wr-footer">
-                &copy; 2026 The War Room &middot; <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                &copy; 2026 The War Room &middot; <a asp-area="" asp-controller="Home" asp-action="Guide">Guide</a>
+                &middot; <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
             </footer>
         </div>
     </div>
 }
 else
 {
-    @* Not signed in: a plain bar across the top. Over the landing page's picture it is see-through. *@
+    @* Not signed in: a plain bar across the top. Over the landing page's picture and the guide's dark band it is see-through. *@
     <header class="wr-site-header @(fullWidth && controller == "Home" ? "wr-site-header-over" : "")">
         <div class="container wr-site-header-row">
             <a class="wr-brand" asp-area="" asp-controller="Home" asp-action="Index">
                 <img src="~/favicon.svg" alt="" width="32" height="32"/>
                 <span>The War Room</span>
             </a>
-            <nav class="wr-site-nav" aria-label="Account">
+            <nav class="wr-site-nav" aria-label="Site">
+                <a class="wr-site-link wr-site-link-always @AtAction("Home", "Guide")" asp-area="" asp-controller="Home" asp-action="Guide">Guide</a>
                 @if (Site.Value.AllowRegistration)
                 {
                     <a class="wr-site-link" asp-area="" asp-controller="Account" asp-action="Register">Register your team</a>
@@ -229,7 +238,10 @@ else
                 <img src="~/favicon.svg" alt="" width="24" height="24"/>
                 <span>The War Room</span>
             </span>
-            <span>&copy; 2026 The War Room &middot; <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a></span>
+            <span>
+                &copy; 2026 The War Room &middot; <a asp-area="" asp-controller="Home" asp-action="Guide">Guide</a>
+                &middot; <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </span>
         </div>
     </footer>
 }

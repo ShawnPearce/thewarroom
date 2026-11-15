@@ -1,0 +1,410 @@
+@* The guide for players: what they can see, the first sign-in, then each page of theirs *@
+<div class="wr-guide-cols">
+    <div class="wr-guide-side">
+        <div class="wr-guide-search" hidden data-guide-search-box>
+            <svg class="wr-icon wr-icon-sm" aria-hidden="true"><use href="#i-search"></use></svg>
+            <input type="search" class="form-control" placeholder="Search this guide" aria-label="Search the players guide" autocomplete="off" data-guide-search />
+        </div>
+        <nav class="wr-guide-nav" aria-label="Players guide">
+            <p class="wr-guide-nav-title">Players guide</p>
+            <ul>
+                <li><a href="#pl-glance">At a glance</a></li>
+                <li><a href="#pl-start">Your first sign-in</a></li>
+                <li><a href="#pl-dashboard">Your dashboard</a></li>
+                <li><a href="#pl-depth">Depth chart</a></li>
+                <li><a href="#pl-schedule">Schedule and attendance</a></li>
+                <li><a href="#pl-playbook">Playbook</a></li>
+                <li><a href="#pl-film">My film</a></li>
+                <li><a href="#pl-study">My study time</a></li>
+                <li><a href="#pl-team">Your team</a></li>
+                <li><a href="#pl-questions">Common questions</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="wr-guide-main">
+        <p class="wr-guide-count" role="status" hidden data-guide-count></p>
+
+        @* ---------- At a glance ---------- *@
+        <section class="wr-guide-section" id="pl-glance">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-users"></use></svg></span>
+                <div>
+                    <h3>At a glance</h3>
+                    <p>Everything you need for the week is here to read and watch. The only thing you change is your own password.</p>
+                </div>
+            </header>
+
+            <div class="wr-guide-glance">
+                <div class="wr-guide-card">
+                    <h4>You can</h4>
+                    <ul class="wr-guide-yes" role="list">
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>See the depth chart and where you stand each week</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>See the schedule and your own attendance</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Read the playbook of the units you play in</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Watch the film your coaches shared with you</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Follow your own study time</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Look up teammates, coaches and position groups</li>
+                    </ul>
+                </div>
+                <div class="wr-guide-card">
+                    <h4>Good to know</h4>
+                    <ul class="wr-guide-facts" role="list">
+                        <li>Your coaches see your attendance and your study time. Other players do not.</li>
+                        <li>You see approved plays only. A play a coach is still working on appears once the head coach approves it.</li>
+                        <li>Game film is for coaches. You watch the cutups they share with you.</li>
+                        <li>The site sends no email. Your password comes from your head coach.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        @* ---------- Your first sign-in ---------- *@
+        <section class="wr-guide-section" id="pl-start">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-key"></use></svg></span>
+                <div>
+                    <h3>Your first sign-in</h3>
+                    <p>Your head coach makes your account. Two minutes and you are in.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="pl-sign-in">
+                <div class="wr-guide-task-head">
+                    <h4>Sign in for the first time</h4>
+                </div>
+                <ol class="wr-guide-steps" role="list">
+                    <li>Get your sign-in email and your temporary password from your head coach.</li>
+                    <li>On the main page, choose <span class="wr-ui">Sign in</span> and enter them.</li>
+                    <li>You are asked to choose your own password. Enter the temporary one as <b>Current password</b>, then a new one of at least 8 characters, twice.</li>
+                    <li>Choose <span class="wr-ui">Change password</span>. You land on your dashboard.</li>
+                </ol>
+                <p class="wr-guide-note">On a phone, the menu opens from the button at the top left.</p>
+            </article>
+
+            <article class="wr-guide-task" id="pl-password">
+                <div class="wr-guide-task-head">
+                    <h4>Change or recover your password</h4>
+                </div>
+                <ul class="wr-guide-points" role="list">
+                    <li><b>To change it:</b> click your name at the bottom of the menu and choose <span class="wr-ui">Change password</span>.</li>
+                    <li><b>Forgot it?</b> Ask your head coach to reset it. You get a new temporary password and choose your own again at the next sign-in.</li>
+                </ul>
+                <p class="wr-guide-note">A sign-in ends by itself after 30 minutes without activity. Just sign in again.</p>
+            </article>
+        </section>
+
+        @* ---------- Your dashboard ---------- *@
+        <section class="wr-guide-section" id="pl-dashboard">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-dashboard"></use></svg></span>
+                <div>
+                    <h3>Your dashboard</h3>
+                    <p>The first page after you sign in: your week at a glance.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="pl-tiles">
+                <div class="wr-guide-task-head">
+                    <h4>Read the four boxes at the top</h4>
+                </div>
+                <dl class="wr-guide-terms">
+                    <div>
+                        <dt>Next up</dt>
+                        <dd>Your next practice, game or meeting, with its day and time.</dd>
+                    </div>
+                    <div>
+                        <dt>Your spots</dt>
+                        <dd>Where you stand on this week's depth chart.</dd>
+                    </div>
+                    <div>
+                        <dt>Film for you</dt>
+                        <dd>How many cutups your coaches have shared with you.</dd>
+                    </div>
+                    <div>
+                        <dt>Study time this week</dt>
+                        <dd>The time you have put into film and the playbook since Monday.</dd>
+                    </div>
+                </dl>
+                <p class="wr-guide-note">Click a box to open its page. The cards underneath give the details, and <b>Dashboard</b> at the top of the menu brings you back.</p>
+            </article>
+        </section>
+
+        @* ---------- Depth chart ---------- *@
+        <section class="wr-guide-section" id="pl-depth">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-depth"></use></svg></span>
+                <div>
+                    <h3>Depth chart</h3>
+                    <p>Who starts and who backs up at every position, week by week.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="pl-spots">
+                <div class="wr-guide-task-head">
+                    <h4>See where you stand</h4>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Depth chart</p>
+                <ol class="wr-guide-steps" role="list">
+                    <li>Read <b>Your spots this week</b> at the top. Each line is a position and your place there, such as "1st of 2".</li>
+                    <li>First place carries a green <b>Starter</b> badge. You can be listed at more than one position.</li>
+                    <li>Choose the <b>Offence</b>, <b>Defence</b> or <b>Special teams</b> tab to see the whole chart.</li>
+                    <li>Pick another <b>Week</b> to look back.</li>
+                </ol>
+                <p class="wr-guide-note">
+                    <b>Not listed?</b> Your coaches have not placed you this week. The chart is set by the coaches, and a change shows the next time you open the page.
+                </p>
+            </article>
+        </section>
+
+        @* ---------- Schedule and attendance ---------- *@
+        <section class="wr-guide-section" id="pl-schedule">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-calendar"></use></svg></span>
+                <div>
+                    <h3>Schedule and attendance</h3>
+                    <p>Every practice, game and meeting, and what was recorded for you at each one.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="pl-upcoming">
+                <div class="wr-guide-task-head">
+                    <h4>See what is coming up</h4>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Schedule</p>
+                <ol class="wr-guide-steps" role="list">
+                    <li>The <b>Upcoming</b> tab lists everything from today onwards. <b>Past</b> shows what has been.</li>
+                    <li>Beside <b>Show</b>, choose Practices, Games or Meetings to see one kind only.</li>
+                    <li>Click an event's name for its time, its location and the coaches' notes.</li>
+                </ol>
+            </article>
+
+            <article class="wr-guide-task" id="pl-attendance">
+                <div class="wr-guide-task-head">
+                    <h4>Check your attendance</h4>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Schedule</p>
+                <ol class="wr-guide-steps" role="list">
+                    <li>Choose <span class="wr-ui">My attendance</span>.</li>
+                    <li>Each row is an event with what was recorded for you: Present, Late, Absent or Excused.</li>
+                </ol>
+                <p class="wr-guide-note">
+                    Only coaches can record or change attendance. If a row is wrong, tell your coach.
+                    You see your own record only.
+                </p>
+            </article>
+        </section>
+
+        @* ---------- Playbook ---------- *@
+        <section class="wr-guide-section" id="pl-playbook">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-playbook"></use></svg></span>
+                <div>
+                    <h3>Playbook</h3>
+                    <p>The formations and plays of the units you play in. A playbook holds formations, and each formation holds its plays.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="pl-study-play">
+                <div class="wr-guide-task-head">
+                    <h4>Study a play</h4>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Game plan <i aria-hidden="true">&rsaquo;</i> Playbook</p>
+                <ol class="wr-guide-steps" role="list">
+                    <li>Choose <span class="wr-ui">Open</span> on a playbook.</li>
+                    <li>Click a formation's drawing to see where everyone lines up, and its plays.</li>
+                    <li>Click a play to see its drawing.</li>
+                    <li>Read the <b>Coaching notes</b> beside the drawing: they say what your coach wants from the play.</li>
+                </ol>
+                <div class="wr-guide-legend">
+                    <p>Reading the lines on a play</p>
+                    <partial name="_DiagramLegend" />
+                </div>
+                <p class="wr-guide-note">
+                    Your own team is drawn in white, each player with a short label such as the position. The opponent is drawn in grey.
+                </p>
+            </article>
+
+            <article class="wr-guide-task" id="pl-which-playbooks">
+                <div class="wr-guide-task-head">
+                    <h4>Which playbooks you see</h4>
+                </div>
+                <ul class="wr-guide-points" role="list">
+                    <li>You see the playbook of every unit you have a position group in: offence, defence or special teams.</li>
+                    <li>You always see the approved version. When the head coach approves a change, it is there the next time you open the play.</li>
+                </ul>
+                <p class="wr-guide-note wr-guide-warn">
+                    <b>"No playbook is shared with you yet"?</b> You are not in a position group yet. Ask your coach to add you to yours.
+                </p>
+            </article>
+        </section>
+
+        @* ---------- My film ---------- *@
+        <section class="wr-guide-section" id="pl-film">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-film"></use></svg></span>
+                <div>
+                    <h3>My film</h3>
+                    <p>The cutups your coaches shared with you, with one of your position groups, or with the whole team.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="pl-watch">
+                <div class="wr-guide-task-head">
+                    <h4>Watch a cutup</h4>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> My film</p>
+                <ol class="wr-guide-steps" role="list">
+                    <li>Each card is one cutup. Read its description first: it says what to look for.</li>
+                    <li>Choose <span class="wr-ui">Open</span> and play the video.</li>
+                    <li>Under the video, the <b>Plays</b> list shows every play. Click a play's time to jump straight to it.</li>
+                </ol>
+                <p class="wr-guide-note">
+                    <b>The video stops by itself?</b> That is your coach's drawing: the picture stands still for a few seconds with arrows or text over it, then carries on.
+                </p>
+                <p class="wr-guide-note">
+                    Cutups have no sound. If a film says its video is not ready yet, you see its list of plays for now. Open it again a little later.
+                </p>
+            </article>
+        </section>
+
+        @* ---------- My study time ---------- *@
+        <section class="wr-guide-section" id="pl-study">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-clock"></use></svg></span>
+                <div>
+                    <h3>My study time</h3>
+                    <p>The site counts the time you actively spend on film and on the playbook. You always see when it is counting.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="pl-timer">
+                <div class="wr-guide-task-head">
+                    <h4>Know when the timer is running</h4>
+                </div>
+                <p>Playbook pages and film pages show a small label at the top. It reads one of three things:</p>
+                <dl class="wr-guide-terms">
+                    <div>
+                        <dt>Study timer running</dt>
+                        <dd>Time is being counted.</dd>
+                    </div>
+                    <div>
+                        <dt>Study timer paused</dt>
+                        <dd>Nothing is counted right now. Play the video, or go back to using the page, and it starts again.</dd>
+                    </div>
+                    <div>
+                        <dt>Study timer stopped</dt>
+                        <dd>The page is no longer counting. Reload it to carry on.</dd>
+                    </div>
+                </dl>
+                <ul class="wr-guide-points" role="list">
+                    <li><b>On film,</b> it counts only while the video is playing in the tab you are looking at. Pausing the video or switching tabs pauses it.</li>
+                    <li><b>On the playbook,</b> it counts only while the page is in front of you and you are using it. It pauses after a minute without activity.</li>
+                </ul>
+                <p class="wr-guide-note">Two open tabs never count the same minute twice.</p>
+            </article>
+
+            <article class="wr-guide-task" id="pl-numbers">
+                <div class="wr-guide-task-head">
+                    <h4>See your numbers</h4>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Film room <i aria-hidden="true">&rsaquo;</i> My study time</p>
+                <dl class="wr-guide-terms">
+                    <div>
+                        <dt>Signed in</dt>
+                        <dd>From each sign-in to the last thing you did on the site.</dd>
+                    </div>
+                    <div>
+                        <dt>Film</dt>
+                        <dd>The time shared film was playing in front of you.</dd>
+                    </div>
+                    <div>
+                        <dt>Playbook</dt>
+                        <dd>The time you were actively reading playbook pages.</dd>
+                    </div>
+                    <div>
+                        <dt>Sign-ins</dt>
+                        <dd>How many times you signed in that week.</dd>
+                    </div>
+                </dl>
+                <p class="wr-guide-note">
+                    A week runs from Monday to Sunday. Your head coach and the coaches of your position groups see these numbers. Other players do not.
+                </p>
+                <p class="wr-guide-note">There are no deadlines and nothing to complete. The numbers show activity. They are not a grade.</p>
+            </article>
+        </section>
+
+        @* ---------- Your team ---------- *@
+        <section class="wr-guide-section" id="pl-team">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-groups"></use></svg></span>
+                <div>
+                    <h3>Your team</h3>
+                    <p>Teammates, coaches and position groups, all under Team in the menu.</p>
+                </div>
+            </header>
+
+            <article class="wr-guide-task" id="pl-look-up">
+                <div class="wr-guide-task-head">
+                    <h4>Look someone up</h4>
+                </div>
+                <dl class="wr-guide-terms">
+                    <div>
+                        <dt>Roster</dt>
+                        <dd>Every player with jersey number, grade, position groups and status. Click your own name for your details and your coaches.</dd>
+                    </div>
+                    <div>
+                        <dt>Coaching staff</dt>
+                        <dd>Every coach, with their role and the groups they coach.</dd>
+                    </div>
+                    <div>
+                        <dt>Groups and positions</dt>
+                        <dd>The position groups of each unit, with their positions, coaches and players.</dd>
+                    </div>
+                </dl>
+                <p class="wr-guide-note">Something about you is wrong, such as your jersey number or your group? Tell your coach, who can have it changed.</p>
+            </article>
+        </section>
+
+        @* ---------- Common questions ---------- *@
+        <section class="wr-guide-section" id="pl-questions">
+            <header class="wr-guide-head">
+                <span class="wr-guide-head-icon"><svg class="wr-icon" aria-hidden="true"><use href="#i-help"></use></svg></span>
+                <div>
+                    <h3>Common questions</h3>
+                    <p>Quick answers to what players ask most.</p>
+                </div>
+            </header>
+
+            <details class="wr-guide-faq">
+                <summary>I forgot my password.</summary>
+                <p>Ask your head coach to reset it. You get a new temporary password and choose your own again when you sign in.</p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>My playbook is empty.</summary>
+                <p>A playbook is shared with the players of its unit's position groups. Ask your coach to add you to your group.</p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>I am not on the depth chart.</summary>
+                <p>Your coaches have not placed you this week, or you are not in the position's group yet. Ask your position coach.</p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>A teammate has film that I do not have.</summary>
+                <p>Coaches share each cutup with the whole team, with position groups or with single players. You see what was shared with you or with one of your groups.</p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>My study time did not go up.</summary>
+                <p>
+                    Check the label at the top of the page. It has to read <b>Study timer running</b>: the video playing, or the playbook page in use, in the tab in front of you.
+                    If it reads <b>stopped</b>, reload the page.
+                </p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>My attendance is wrong.</summary>
+                <p>Tell your coach. Only coaches can record or change attendance.</p>
+            </details>
+        </section>
+
+        <p class="wr-guide-empty" hidden data-guide-empty>Nothing in this guide matches. Try another word, such as "film" or "password".</p>
+    </div>
+</div>

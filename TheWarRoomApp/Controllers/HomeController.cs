@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TheWarRoomApp.Infrastructure;
 using TheWarRoomApp.Models;
 
 namespace TheWarRoomApp.Controllers
@@ -104,6 +105,24 @@ namespace TheWarRoomApp.Controllers
             }
 
             return View(model);   // Dashboard View
+        }
+
+        // GET: Home/Guide
+        // GET: Home/Guide?role=players
+        // How to use the site, role by role. Anyone may read it, signed in or not.
+        [AllowAnonymous]
+        public IActionResult Guide(string? role)
+        {
+            string[] guides = { "head-coach", "coaches", "players" };
+
+            // The guide written for the reader's own role; nobody's when not signed in
+            string own = User.IsHeadCoach() ? guides[0] : User.IsCoach() ? guides[1] : User.IsPlayer() ? guides[2] : string.Empty;
+
+            // The open guide is the one the address asks for, else the reader's own, else the first
+            ViewData["OwnGuide"] = own;
+            ViewData["OpenGuide"] = guides.Contains(role) ? role : own != string.Empty ? own : guides[0];
+
+            return View();   // Guide View
         }
 
         // GET: Home/Privacy
