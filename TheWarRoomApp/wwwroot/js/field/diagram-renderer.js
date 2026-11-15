@@ -7,20 +7,20 @@
     var Model = window.WarRoom.DiagramModel;
 
     var COLOURS = {
-        field: '#f3f8f3',
-        yardLine: '#cfdccf',
-        hashMark: '#b3c4b3',
+        field: '#f1f7f1',
+        yardLine: '#d3e2d3',
+        hashMark: '#b9cdb9',
         sideline: '#8fa58f',
-        scrimmage: '#1e3a66',
+        scrimmage: '#1a41bd',
         ball: '#7a4a21',
         ownFill: '#ffffff',
-        ownStroke: '#13233f',
-        oppFill: '#dee2e6',
-        oppStroke: '#6c757d',
-        path: '#13233f',
-        text: '#13233f',
-        selection: '#0d6efd',
-        draft: '#0d6efd'
+        ownStroke: '#0e1627',
+        oppFill: '#e2e8f0',
+        oppStroke: '#5b6980',
+        path: '#0e1627',
+        text: '#0e1627',
+        selection: '#3368ff',
+        draft: '#3368ff'
     };
 
     // In yards. Linemen stand two yards apart, so a marker has to be a little narrower than that.

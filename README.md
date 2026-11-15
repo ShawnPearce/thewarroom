@@ -65,6 +65,21 @@ between the browser and the bucket, over links the API signs. JavaScript is used
 | `wwwroot/js/charts` | The tendency charts (Chart.js) |
 | `wwwroot/js/study` | The study timer on playbook pages and on film |
 
+### The look of the site
+
+One stylesheet, `wwwroot/css/site.css`, on top of Bootstrap. It starts with the colours and measures as CSS variables,
+then dresses Bootstrap's own parts (buttons, forms, tables, cards, badges) in them, so the pages keep their plain Bootstrap markup.
+
+- **Colours.** They come from a football broadcast: a night-navy frame, the blue of the line of scrimmage for whatever
+  can be pressed, and the yellow of the first-down line as the one highlight. Runs are blue and passes are yellow wherever
+  plays are listed or charted; on the charts the yellow is a step darker so it can be told from white, and every share is
+  printed on its part of the bar as well.
+- **Frame.** Signed in, the menu stands at the side (`Views/Shared/_Layout.cshtml`) and slides in on a phone.
+  Not signed in, the landing page and the sign-in pages fill the whole width.
+- **Lettering and icons.** The lettering is the one each device already has, so no font is downloaded. The icons are
+  drawn in `Views/Shared/_Icons.cshtml`, and the logo mark is `wwwroot/favicon.svg`.
+- **Pictures.** The three photographs on the landing and sign-in pages are in `wwwroot/img`, each in two sizes.
+
 ## Running it
 
 You need the .NET 10 SDK. For video you also need ffmpeg (with ffprobe) on the computer the API runs on:

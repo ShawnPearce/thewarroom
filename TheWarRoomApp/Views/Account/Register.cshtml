@@ -2,66 +2,78 @@
 
 @{
     ViewData["Title"] = "Register your team";
+    ViewData["FullWidth"] = true;
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <h1 class="h3">Register your team</h1>
-        <p class="text-muted">
-            This creates a private workspace for your team. You become its head coach and add your coaches and players from there.
-        </p>
-        <hr />
-        <form asp-action="Register">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<section class="wr-auth">
+    <div class="wr-auth-panel">
+        <div class="wr-auth-form wr-auth-wide">
+            <h1 class="wr-auth-title">Register your team</h1>
+            <p class="wr-auth-lead">
+                This creates a private workspace for your team. You become its head coach and add your coaches and players from there.
+            </p>
 
-            <div class="form-group">
-                <label asp-for="TeamName" class="control-label"></label>
-                <input asp-for="TeamName" class="form-control" />
-                <span asp-validation-for="TeamName" class="text-danger"></span>
-            </div>
+            <form asp-action="Register">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="row">
-                <div class="form-group col-sm-6">
-                    <label asp-for="FirstName" class="control-label"></label>
-                    <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
-                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="TeamName" class="control-label"></label>
+                    <input asp-for="TeamName" class="form-control" />
+                    <span asp-validation-for="TeamName" class="text-danger"></span>
                 </div>
-                <div class="form-group col-sm-6">
-                    <label asp-for="LastName" class="control-label"></label>
-                    <input asp-for="LastName" class="form-control" autocomplete="family-name" />
-                    <span asp-validation-for="LastName" class="text-danger"></span>
+
+                <div class="row">
+                    <div class="form-group col-sm-6">
+                        <label asp-for="FirstName" class="control-label"></label>
+                        <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label asp-for="LastName" class="control-label"></label>
+                        <input asp-for="LastName" class="form-control" autocomplete="family-name" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" autocomplete="username" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="row">
-                <div class="form-group col-sm-6">
-                    <label asp-for="Password" class="control-label"></label>
-                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="Email" class="control-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="username" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
-                <div class="form-group col-sm-6">
-                    <label asp-for="ConfirmPassword" class="control-label"></label>
-                    <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+
+                <div class="row">
+                    <div class="form-group col-sm-6">
+                        <label asp-for="Password" class="control-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-sm-6">
+                        <label asp-for="ConfirmPassword" class="control-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <input type="submit" value="Register team" class="btn btn-primary" />
-            </div>
-        </form>
+                <div class="form-group">
+                    <input type="submit" value="Register team" class="btn btn-primary" />
+                </div>
+            </form>
 
-        <p>
-            Already have an account? <a asp-action="Login">Sign in</a>
-        </p>
+            <div class="wr-auth-foot">
+                <p>
+                    Already have an account? <a asp-action="Login">Sign in</a>
+                </p>
+            </div>
+        </div>
     </div>
-</div>
+    <div class="wr-auth-art">
+        <img src="~/img/depth-chart-board.webp" width="1672" height="941" alt="" />
+        <div class="wr-auth-caption">
+            <span class="wr-eyebrow">The War Room</span>
+            <p>Start with your roster. The depth chart follows.</p>
+        </div>
+    </div>
+</section>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

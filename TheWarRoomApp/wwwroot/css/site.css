@@ -1,5 +1,167 @@
+/* The War Room: the look of the whole site.
+
+   1. Colours and measures
+   2. The basics: text, links, focus
+   3. The frame: side menu, top bar, footer
+   4. Bootstrap's parts in the site's colours: buttons, forms, cards, tables, badges, notices, tabs
+   5. Team: dashboard, depth chart, schedule
+   6. Playbook
+   7. Film: player, clip editor, drawings
+   8. Tendencies and study time
+   9. The landing page and the sign-in pages
+
+   The colours come from a football broadcast: the night sky over the stadium, the blue line of scrimmage
+   and the yellow first-down line. Blue is for whatever can be pressed. Yellow marks where you are. */
+
+/* ---------- 1. Colours and measures ---------- */
+
+:root {
+  /* Night navy: the frame around every page */
+  --wr-ink-950: #060a13;
+  --wr-ink-900: #0a101d;
+  --wr-ink-850: #0e1627;
+  --wr-ink-800: #131d33;
+  --wr-ink-700: #1c2942;
+  --wr-ink-600: #2a3857;
+
+  /* Slate: text and lines on the light pages */
+  --wr-slate-25: #fbfcfe;
+  --wr-slate-50: #f6f8fb;
+  --wr-slate-100: #eef2f7;
+  --wr-slate-200: #e2e8f0;
+  --wr-slate-300: #cdd6e3;
+  --wr-slate-400: #97a5ba;
+  --wr-slate-500: #5b6980;
+  --wr-slate-600: #4a586e;
+  --wr-slate-700: #354155;
+  --wr-slate-800: #1f2a3c;
+
+  /* Scrimmage blue: buttons, links, whatever can be pressed */
+  --wr-blue-50: #eef4ff;
+  --wr-blue-100: #dce8ff;
+  --wr-blue-200: #bcd2ff;
+  --wr-blue-300: #8fb1ff;
+  --wr-blue-400: #5d8bff;
+  --wr-blue-500: #3368ff;
+  --wr-blue-600: #1f51e6;
+  --wr-blue-700: #1a41bd;
+  --wr-blue-800: #18379a;
+  --wr-blue-900: #172f7a;
+
+  /* First-down yellow: the one highlight */
+  --wr-yellow-100: #fff6c7;
+  --wr-yellow-300: #ffe46b;
+  --wr-yellow-400: #ffd60a;
+  --wr-yellow-500: #f2c200;
+  --wr-yellow-800: #7a5c00;
+
+  /* Turf green, flag red, and the amber and sky of notices */
+  --wr-green-50: #e7f6ed;
+  --wr-green-200: #bfe6cf;
+  --wr-green-600: #15803d;
+  --wr-green-800: #116b38;
+  --wr-red-50: #fdecec;
+  --wr-red-200: #f6c5c5;
+  --wr-red-600: #cf2f2f;
+  --wr-red-800: #a61b1b;
+  --wr-amber-50: #fff4d1;
+  --wr-amber-200: #f8dd94;
+  --wr-amber-800: #7a4b00;
+  --wr-sky-50: #e6f2fc;
+  --wr-sky-200: #b9daf6;
+  --wr-sky-800: #0b4f86;
+
+  /* Runs and passes: the two colours of the tendency charts and of the Run and Pass badges.
+     The pass colour is the yellow one step darker, where it can still be told from white on a chart. */
+  --wr-run: var(--wr-blue-600);
+  --wr-pass: #eda100;
+
+  --wr-page: var(--wr-slate-50);
+  --wr-line: var(--wr-slate-200);
+  --wr-text: var(--wr-slate-800);
+  --wr-heading: var(--wr-ink-850);
+  --wr-muted: var(--wr-slate-500);
+
+  --wr-radius-sm: 0.5rem;
+  --wr-radius: 0.625rem;
+  --wr-radius-lg: 0.875rem;
+  --wr-radius-xl: 1.25rem;
+
+  --wr-shadow-xs: 0 1px 2px rgba(14, 22, 39, 0.05);
+  --wr-shadow-sm: 0 1px 2px rgba(14, 22, 39, 0.06), 0 2px 6px rgba(14, 22, 39, 0.04);
+  --wr-shadow-md: 0 4px 10px rgba(14, 22, 39, 0.06), 0 12px 28px rgba(14, 22, 39, 0.08);
+  --wr-shadow-lg: 0 10px 24px rgba(14, 22, 39, 0.1), 0 28px 64px rgba(14, 22, 39, 0.16);
+  --wr-ring: 0 0 0 0.25rem rgba(51, 104, 255, 0.22);
+
+  /* The lettering each device already has: nothing has to be loaded */
+  --wr-font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --wr-sidebar-width: 16.5rem;
+
+  /* Bootstrap's own names, pointed at the colours above */
+  --bs-body-font-family: var(--wr-font);
+  --bs-body-color: var(--wr-text);
+  --bs-body-color-rgb: 31, 42, 60;
+  --bs-heading-color: var(--wr-heading);
+  --bs-secondary-color: var(--wr-muted);
+  --bs-emphasis-color: var(--wr-ink-850);
+  --bs-secondary-bg: var(--wr-slate-200);
+  --bs-tertiary-bg: var(--wr-slate-50);
+  --bs-border-color: var(--wr-line);
+  --bs-border-color-translucent: rgba(14, 22, 39, 0.1);
+
+  --bs-primary: var(--wr-blue-600);
+  --bs-primary-rgb: 31, 81, 230;
+  --bs-secondary: var(--wr-slate-600);
+  --bs-secondary-rgb: 74, 88, 110;
+  --bs-success: var(--wr-green-600);
+  --bs-success-rgb: 21, 128, 61;
+  --bs-danger: var(--wr-red-600);
+  --bs-danger-rgb: 207, 47, 47;
+  --bs-warning: #f5b70a;
+  --bs-warning-rgb: 245, 183, 10;
+  --bs-info: #2f9bdc;
+  --bs-info-rgb: 47, 155, 220;
+  --bs-light: var(--wr-slate-100);
+  --bs-light-rgb: 238, 242, 247;
+  --bs-dark: var(--wr-ink-850);
+  --bs-dark-rgb: 14, 22, 39;
+
+  --bs-primary-text-emphasis: var(--wr-blue-800);
+  --bs-primary-bg-subtle: var(--wr-blue-50);
+  --bs-primary-border-subtle: var(--wr-blue-200);
+  --bs-secondary-text-emphasis: var(--wr-slate-700);
+  --bs-secondary-bg-subtle: var(--wr-slate-100);
+  --bs-secondary-border-subtle: var(--wr-slate-300);
+  --bs-success-text-emphasis: var(--wr-green-800);
+  --bs-success-bg-subtle: var(--wr-green-50);
+  --bs-success-border-subtle: var(--wr-green-200);
+  --bs-danger-text-emphasis: var(--wr-red-800);
+  --bs-danger-bg-subtle: var(--wr-red-50);
+  --bs-danger-border-subtle: var(--wr-red-200);
+  --bs-warning-text-emphasis: var(--wr-amber-800);
+  --bs-warning-bg-subtle: var(--wr-amber-50);
+  --bs-warning-border-subtle: var(--wr-amber-200);
+  --bs-info-text-emphasis: var(--wr-sky-800);
+  --bs-info-bg-subtle: var(--wr-sky-50);
+  --bs-info-border-subtle: var(--wr-sky-200);
+
+  --bs-link-color: var(--wr-blue-600);
+  --bs-link-color-rgb: 31, 81, 230;
+  --bs-link-hover-color: var(--wr-blue-800);
+  --bs-link-hover-color-rgb: 24, 55, 154;
+
+  --bs-border-radius: var(--wr-radius);
+  --bs-border-radius-sm: var(--wr-radius-sm);
+  --bs-border-radius-lg: var(--wr-radius-lg);
+  --bs-focus-ring-color: rgba(51, 104, 255, 0.22);
+}
+
+/* ---------- 2. The basics ---------- */
+
 html {
-  font-size: 14px;
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
 }
 
 @media (min-width: 768px) {
@@ -8,17 +170,820 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
-  margin-bottom: 60px;
+  background-color: var(--wr-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: rgba(51, 104, 255, 0.22);
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+/* A heading that takes two lines breaks into two of about the same length */
+h1, h2, h3, .wr-auth-caption p {
+  text-wrap: balance;
+}
+
+/* The title of a page */
+main h1.h3 {
+  font-size: 1.625rem;
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+}
+
+main h2.h5, main h3.h5 {
+  font-size: 1.0625rem;
+}
+
+hr {
+  border-color: var(--wr-line);
+  opacity: 1;
+}
+
+/* Links are told apart by colour and weight; inside a sentence they also keep their line */
+a {
+  text-decoration: none;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+main a:not(.btn):not(.nav-link):not(.dropdown-item):not(.card) {
+  font-weight: 500;
+}
+
+main p a:not(.btn), main .alert a:not(.btn), main .form-text a {
+  text-decoration: underline;
+  text-decoration-color: rgba(31, 81, 230, 0.35);
+}
+
+main p a:not(.btn):hover, main .alert a:not(.btn):hover {
+  text-decoration-color: currentColor;
+}
+
+dt {
+  color: var(--wr-slate-600);
+  font-weight: 600;
+}
+
+/* Whatever the keyboard has reached shows a clear ring */
+:focus-visible {
+  outline: 2px solid var(--wr-blue-500);
+  outline-offset: 2px;
+}
+
+.btn:focus-visible, .form-control:focus, .form-select:focus, .form-check-input:focus {
+  outline: 0;
+  box-shadow: var(--wr-ring);
+}
+
+/* The first stop of the Tab key: straight to the page, past the menu */
+.wr-skip {
+  position: absolute;
+  left: 0.75rem;
+  top: -4rem;
+  z-index: 2000;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--wr-radius-sm);
+  background-color: #fff;
+  color: var(--wr-ink-850);
+  font-weight: 600;
+  box-shadow: var(--wr-shadow-md);
+  transition: top 0.15s ease;
+}
+
+.wr-skip:focus {
+  top: 0.75rem;
+}
+
+/* Icons (see the _Icons partial): thin lines in the colour of the text beside them */
+.wr-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.wr-icon {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wr-icon-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* A small label in capitals above a heading */
+.wr-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--wr-blue-600);
+}
+
+.wr-eyebrow::before {
+  content: "";
+  width: 1.5rem;
+  height: 3px;
+  border-radius: 3px;
+  background-color: var(--wr-yellow-400);
+}
+
+/* ---------- 3. The frame ---------- */
+
+.wr-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.wr-brand:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.wr-brand img {
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+/* Signed in: the menu at the side, the page beside it */
+.wr-shell {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.wr-sidebar {
+  flex: 0 0 auto;
+}
+
+/* Below the wide layout the menu is a panel that slides in */
+.wr-sidebar > .offcanvas-lg {
+  --bs-offcanvas-bg: var(--wr-ink-900);
+  --bs-offcanvas-color: var(--wr-slate-300);
+  --bs-offcanvas-width: 17.5rem;
+  --bs-offcanvas-border-width: 0;
+}
+
+.wr-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.1rem 0.75rem 0.85rem;
+  overflow-y: auto;
+  color: var(--wr-slate-300);
+}
+
+@media (min-width: 992px) {
+  .wr-sidebar {
+    position: sticky;
+    top: 0;
+    width: var(--wr-sidebar-width);
+    height: 100vh;
+    height: 100dvh;
+    background-color: var(--wr-ink-900);
+    border-right: 1px solid var(--wr-ink-800);
+  }
+
+  .wr-sidebar > .offcanvas-lg {
+    height: 100%;
+  }
+}
+
+.wr-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.15rem 0.5rem 0;
+}
+
+.wr-nav {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 1.4rem;
+}
+
+.wr-nav-heading {
+  padding: 1.15rem 0.75rem 0.4rem;
+  color: #7d8ba3;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.wr-nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--wr-radius);
+  color: var(--wr-slate-300);
+  font-size: 0.925rem;
+  font-weight: 500;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.wr-nav-link .wr-icon {
+  color: #7d8ba3;
+  transition: color 0.12s ease;
+}
+
+.wr-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-decoration: none;
+}
+
+.wr-nav-link:hover .wr-icon {
+  color: var(--wr-slate-300);
+}
+
+/* The section that is open: the yellow line stands beside it */
+.wr-nav-link.active {
+  background-color: rgba(255, 255, 255, 0.09);
+  color: #fff;
+  font-weight: 600;
+}
+
+.wr-nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: -0.75rem;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background-color: var(--wr-yellow-400);
+}
+
+.wr-nav-link.active .wr-icon {
+  color: var(--wr-yellow-400);
+}
+
+.wr-nav-link:focus-visible, .wr-user:focus-visible, .wr-topbar-menu:focus-visible {
+  outline-color: var(--wr-yellow-400);
+}
+
+/* Who is signed in, at the foot of the menu */
+.wr-sidebar-user {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wr-user {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 0;
+  border-radius: var(--wr-radius);
+  background-color: transparent;
+  color: var(--wr-slate-300);
+  text-align: left;
+  transition: background-color 0.12s ease;
+}
+
+.wr-user:hover, .wr-user[aria-expanded="true"] {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+.wr-user .wr-icon {
+  margin-left: auto;
+  color: #7d8ba3;
+}
+
+.wr-avatar {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--wr-blue-500), var(--wr-blue-800));
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.wr-user-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.wr-user-name {
+  overflow: hidden;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wr-user-role {
+  overflow: hidden;
+  color: #7d8ba3;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wr-sidebar-user .dropdown-menu {
+  width: 100%;
+}
+
+/* The page beside the menu */
+.wr-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0; /* a wide table scrolls inside the page instead of pushing it wider */
+}
+
+.wr-content {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .wr-content {
+    padding: 1.75rem 2rem 3rem;
+  }
+}
+
+/* The bar a narrow screen shows instead of the side menu */
+.wr-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 3.5rem;
+  padding: 0 0.75rem;
+  background-color: var(--wr-ink-900);
+}
+
+.wr-topbar-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: var(--wr-radius);
+  background-color: transparent;
+  color: #fff;
+}
+
+.wr-topbar-menu:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.wr-footer {
+  width: 100%;
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 1.5rem;
+  color: var(--wr-muted);
+  font-size: 0.8125rem;
+}
+
+@media (min-width: 768px) {
+  .wr-footer {
+    padding: 1rem 2rem 1.75rem;
+  }
+}
+
+.wr-footer a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Not signed in: a bar across the top and a foot across the bottom */
+.wr-site {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.wr-site > main {
+  flex: 1 1 auto;
+}
+
+.wr-site-header {
+  z-index: 10;
+  background-color: var(--wr-ink-900);
+}
+
+/* Over the landing page's picture the bar is see-through */
+.wr-site-header-over {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: transparent;
+}
+
+.wr-site-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 4.25rem;
+}
+
+.wr-site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.wr-site-link {
+  color: var(--wr-slate-300);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.wr-site-link:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.wr-site-nav .btn {
+  white-space: nowrap;
+}
+
+/* On a phone the bar keeps to the name and the one button; the landing page itself offers registration */
+@media (max-width: 575.98px) {
+  .wr-site-link {
+    display: none;
+  }
+}
+
+.wr-site-header .btn-light {
+  --bs-btn-padding-x: 1rem;
+  --bs-btn-padding-y: 0.4rem;
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: #fff;
+  --bs-btn-color: var(--wr-ink-850);
+  --bs-btn-hover-bg: var(--wr-slate-100);
+  --bs-btn-hover-border-color: var(--wr-slate-100);
+}
+
+.wr-page {
+  padding-top: 2.25rem;
+  padding-bottom: 3rem;
+}
+
+/* A message for a page that fills the whole width floats over its top */
+.wr-flash {
+  position: absolute;
+  top: 5rem;
+  left: 50%;
+  z-index: 20;
+  width: min(34rem, calc(100% - 2rem));
+  transform: translateX(-50%);
+}
+
+.wr-flash .alert {
+  box-shadow: var(--wr-shadow-md);
+}
+
+.wr-site-footer {
+  background-color: var(--wr-ink-950);
+  color: var(--wr-slate-400);
+  font-size: 0.875rem;
+}
+
+.wr-site-footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.wr-site-footer a {
+  color: var(--wr-slate-300);
+  text-decoration: underline;
+}
+
+.wr-brand-quiet {
+  font-size: 0.8125rem;
+  color: var(--wr-slate-300);
+}
+
+/* ---------- 4. Bootstrap's parts in the site's colours ---------- */
+
+/* Buttons */
+.btn {
+  --bs-btn-font-weight: 600;
+  --bs-btn-font-size: 0.9375rem;
+  --bs-btn-padding-x: 1rem;
+  --bs-btn-padding-y: 0.5rem;
+  --bs-btn-border-radius: var(--wr-radius);
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+}
+
+.btn:hover {
+  text-decoration: none;
+}
+
+.btn-sm, .btn-group-sm > .btn {
+  --bs-btn-font-size: 0.8125rem;
+  --bs-btn-padding-x: 0.7rem;
+  --bs-btn-padding-y: 0.3rem;
+  --bs-btn-border-radius: var(--wr-radius-sm);
+}
+
+.btn-lg {
+  --bs-btn-font-size: 1.0625rem;
+  --bs-btn-padding-x: 1.5rem;
+  --bs-btn-padding-y: 0.75rem;
+  --bs-btn-border-radius: 0.75rem;
+}
+
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--wr-blue-600);
+  --bs-btn-border-color: var(--wr-blue-600);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--wr-blue-700);
+  --bs-btn-hover-border-color: var(--wr-blue-700);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--wr-blue-800);
+  --bs-btn-active-border-color: var(--wr-blue-800);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--wr-blue-600);
+  --bs-btn-disabled-border-color: var(--wr-blue-600);
+  box-shadow: 0 1px 2px rgba(23, 47, 122, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* The second button of a page: white, with the blue kept for its words */
+.btn-outline-primary {
+  --bs-btn-color: var(--wr-blue-700);
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: var(--wr-blue-200);
+  --bs-btn-hover-color: var(--wr-blue-800);
+  --bs-btn-hover-bg: var(--wr-blue-50);
+  --bs-btn-hover-border-color: var(--wr-blue-300);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--wr-blue-600);
+  --bs-btn-active-border-color: var(--wr-blue-600);
+  --bs-btn-disabled-color: var(--wr-slate-400);
+  --bs-btn-disabled-bg: #fff;
+  --bs-btn-disabled-border-color: var(--wr-slate-200);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--wr-slate-700);
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: var(--wr-slate-300);
+  --bs-btn-hover-color: var(--wr-ink-850);
+  --bs-btn-hover-bg: var(--wr-slate-50);
+  --bs-btn-hover-border-color: var(--wr-slate-400);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--wr-slate-700);
+  --bs-btn-active-border-color: var(--wr-slate-700);
+  --bs-btn-disabled-color: var(--wr-slate-400);
+  --bs-btn-disabled-bg: #fff;
+  --bs-btn-disabled-border-color: var(--wr-slate-200);
+}
+
+.btn-success {
+  --bs-btn-bg: var(--wr-green-600);
+  --bs-btn-border-color: var(--wr-green-600);
+  --bs-btn-hover-bg: var(--wr-green-800);
+  --bs-btn-hover-border-color: var(--wr-green-800);
+  --bs-btn-active-bg: var(--wr-green-800);
+  --bs-btn-active-border-color: var(--wr-green-800);
+  --bs-btn-disabled-bg: var(--wr-green-600);
+  --bs-btn-disabled-border-color: var(--wr-green-600);
+}
+
+.btn-outline-success {
+  --bs-btn-color: var(--wr-green-800);
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: var(--wr-green-200);
+  --bs-btn-hover-color: var(--wr-green-800);
+  --bs-btn-hover-bg: var(--wr-green-50);
+  --bs-btn-hover-border-color: var(--wr-green-600);
+  --bs-btn-active-bg: var(--wr-green-600);
+  --bs-btn-active-border-color: var(--wr-green-600);
+}
+
+.btn-danger {
+  --bs-btn-bg: var(--wr-red-600);
+  --bs-btn-border-color: var(--wr-red-600);
+  --bs-btn-hover-bg: var(--wr-red-800);
+  --bs-btn-hover-border-color: var(--wr-red-800);
+  --bs-btn-active-bg: var(--wr-red-800);
+  --bs-btn-active-border-color: var(--wr-red-800);
+  --bs-btn-disabled-bg: var(--wr-red-600);
+  --bs-btn-disabled-border-color: var(--wr-red-600);
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--wr-red-800);
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: var(--wr-red-200);
+  --bs-btn-hover-color: var(--wr-red-800);
+  --bs-btn-hover-bg: var(--wr-red-50);
+  --bs-btn-hover-border-color: var(--wr-red-600);
+  --bs-btn-active-bg: var(--wr-red-600);
+  --bs-btn-active-border-color: var(--wr-red-600);
+}
+
+.btn-outline-warning {
+  --bs-btn-color: var(--wr-amber-800);
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: var(--wr-amber-200);
+  --bs-btn-hover-color: var(--wr-amber-800);
+  --bs-btn-hover-bg: var(--wr-amber-50);
+  --bs-btn-hover-border-color: #e0a800;
+  --bs-btn-active-color: var(--wr-ink-850);
+  --bs-btn-active-bg: #f5b70a;
+  --bs-btn-active-border-color: #f5b70a;
+}
+
+.btn-outline-info {
+  --bs-btn-color: var(--wr-sky-800);
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: var(--wr-sky-200);
+  --bs-btn-hover-color: var(--wr-sky-800);
+  --bs-btn-hover-bg: var(--wr-sky-50);
+  --bs-btn-hover-border-color: #2f9bdc;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--wr-sky-800);
+  --bs-btn-active-border-color: var(--wr-sky-800);
+}
+
+/* The yellow button: the one call on a dark page */
+.btn-warning {
+  --bs-btn-color: var(--wr-ink-900);
+  --bs-btn-bg: var(--wr-yellow-400);
+  --bs-btn-border-color: var(--wr-yellow-400);
+  --bs-btn-hover-color: var(--wr-ink-900);
+  --bs-btn-hover-bg: var(--wr-yellow-300);
+  --bs-btn-hover-border-color: var(--wr-yellow-300);
+  --bs-btn-active-color: var(--wr-ink-900);
+  --bs-btn-active-bg: var(--wr-yellow-500);
+  --bs-btn-active-border-color: var(--wr-yellow-500);
+  box-shadow: 0 6px 20px rgba(255, 214, 10, 0.22);
+}
+
+.btn-outline-light {
+  --bs-btn-border-color: rgba(255, 255, 255, 0.35);
+  --bs-btn-hover-color: var(--wr-ink-900);
+}
+
+/* A button that is styled as a link (a small Delete inside a table row) looks like the links next to it */
+.btn-link {
+  --bs-btn-color: var(--wr-blue-600);
+  --bs-btn-hover-color: var(--wr-blue-800);
+  --bs-btn-active-color: var(--wr-blue-800);
+  --bs-btn-font-weight: 500;
+  text-decoration: none;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1rem; /* forms built in the scaffold style get some space between their rows */
+}
+
+.control-label, .form-label, .col-form-label {
+  margin-bottom: 0.35rem;
+  color: var(--wr-slate-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.col-form-label {
+  margin-bottom: 0;
+}
+
+.form-control, .form-select {
+  border-color: var(--wr-slate-300);
+  border-radius: var(--wr-radius);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.form-control-sm, .form-select-sm {
+  border-radius: var(--wr-radius-sm);
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+.form-control:hover:not(:focus):not(:disabled), .form-select:hover:not(:focus):not(:disabled) {
+  border-color: var(--wr-slate-400);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--wr-blue-500);
+}
+
+.form-control::placeholder {
+  color: var(--wr-slate-400);
+}
+
+/* A phone zooms into a field whose letters are smaller than this */
+@media (max-width: 767.98px) {
+  .form-control, .form-select {
+    font-size: 16px;
+  }
+}
+
+.form-text {
+  color: var(--wr-muted);
+  font-size: 0.8125rem;
+}
+
+.form-check-input {
+  border-color: var(--wr-slate-400);
+}
+
+.form-check-input:checked {
+  background-color: var(--wr-blue-600);
+  border-color: var(--wr-blue-600);
+}
+
+.form-check-input:focus {
+  border-color: var(--wr-blue-500);
+}
+
+.form-range::-webkit-slider-thumb {
+  background-color: var(--wr-blue-600);
+}
+
+.form-range::-moz-range-thumb {
+  background-color: var(--wr-blue-600);
+}
+
+/* What jQuery validation marks: the field in red, its message small beneath it */
+.input-validation-error, .input-validation-error:focus {
+  border-color: var(--wr-red-600);
+}
+
+.field-validation-error {
+  display: inline-block;
+  margin-top: 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.validation-summary-errors ul {
+  margin-bottom: 1rem;
+  padding-left: 1.1rem;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -30,113 +995,392 @@ body {
   text-align: start;
 }
 
-/* ---------- The War Room colours ---------- */
-
-:root {
-  --wr-navy: #13233f;
-  --wr-navy-light: #1e3a66;
-  --wr-gold: #f2a900;
+/* Cards */
+.card {
+  --bs-card-bg: #fff;
+  --bs-card-border-color: var(--wr-line);
+  --bs-card-border-radius: var(--wr-radius-lg);
+  --bs-card-inner-border-radius: calc(var(--wr-radius-lg) - 1px);
+  --bs-card-cap-bg: #fff;
+  --bs-card-cap-padding-y: 0.85rem;
+  --bs-card-cap-padding-x: 1.25rem;
+  --bs-card-spacer-x: 1.25rem;
+  --bs-card-spacer-y: 1.15rem;
+  box-shadow: var(--wr-shadow-xs);
 }
 
-a {
-  color: var(--wr-navy-light);
+.card-header {
+  color: var(--wr-heading);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-/* A button that is styled as a link (a small Delete inside a table row) looks like the links next to it */
-.btn-link {
-  --bs-btn-color: var(--wr-navy-light);
-  --bs-btn-hover-color: var(--wr-navy);
-  --bs-btn-active-color: var(--wr-navy);
+/* Tables: a list of things stands on its own white sheet */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--wr-line);
+  --bs-table-striped-bg: var(--wr-slate-25);
+  margin-bottom: 1.25rem;
 }
 
-.wr-navbar {
-  background-color: var(--wr-navy);
-  border-bottom: 3px solid var(--wr-gold);
+.table > :not(caption) > * > * {
+  padding: 0.7rem 0.9rem;
 }
 
-.btn-primary {
-  --bs-btn-bg: var(--wr-navy);
-  --bs-btn-border-color: var(--wr-navy);
-  --bs-btn-hover-bg: var(--wr-navy-light);
-  --bs-btn-hover-border-color: var(--wr-navy-light);
-  --bs-btn-active-bg: #0d182c;
-  --bs-btn-active-border-color: #0d182c;
-  --bs-btn-disabled-bg: var(--wr-navy);
-  --bs-btn-disabled-border-color: var(--wr-navy);
+.table-sm > :not(caption) > * > * {
+  padding: 0.4rem 0.6rem;
 }
 
-.btn-outline-primary {
-  --bs-btn-color: var(--wr-navy);
-  --bs-btn-border-color: var(--wr-navy);
-  --bs-btn-hover-bg: var(--wr-navy);
-  --bs-btn-hover-border-color: var(--wr-navy);
-  --bs-btn-active-bg: var(--wr-navy);
-  --bs-btn-active-border-color: var(--wr-navy);
+.table > thead > tr > th {
+  border-bottom-color: var(--wr-line);
+  background-color: var(--wr-slate-50);
+  color: var(--wr-slate-600);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-/* Forms built in the scaffold style get some space between their rows */
-.form-group {
-  margin-bottom: 1rem;
+.table > tbody > tr:hover > * {
+  --bs-table-bg-state: var(--wr-slate-25);
 }
 
-/* ---------- Landing page ---------- */
-
-.wr-hero {
-  background: linear-gradient(135deg, var(--wr-navy) 0%, var(--wr-navy-light) 100%);
-  color: #fff;
-  border-radius: 0.75rem;
-  padding: 3rem 2rem;
+main .table-responsive {
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius-lg);
+  background-color: #fff;
+  box-shadow: var(--wr-shadow-xs);
 }
 
-.wr-hero .lead {
-  color: rgba(255, 255, 255, 0.85);
+main .table-responsive > .table {
+  margin-bottom: 0;
 }
 
-.wr-feature {
-  border-top: 3px solid var(--wr-gold);
-  height: 100%;
+main .table-responsive > .table > :last-child > tr:last-child > * {
+  border-bottom-width: 0;
 }
 
-/* ---------- Depth chart ---------- */
-
-/* Fixed layout keeps the rank columns the same width in every group's table */
-.wr-depth-chart {
-  table-layout: fixed;
+/* Inside a card the card is the sheet */
+main .card .table-responsive {
+  margin-bottom: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
-.wr-depth-chart th {
-  background-color: #f4f6f9;
+/* Badges: a soft tint with dark letters, easier on the eye in a long list */
+.badge {
+  --bs-badge-font-size: 0.75em;
+  --bs-badge-font-weight: 600;
+  --bs-badge-padding-x: 0.6em;
+  --bs-badge-padding-y: 0.38em;
+  --bs-badge-border-radius: 999px;
+  letter-spacing: 0.01em;
+}
+
+.badge.text-bg-primary {
+  background-color: var(--wr-blue-50) !important;
+  color: var(--wr-blue-800) !important;
+}
+
+.badge.text-bg-secondary {
+  background-color: var(--wr-slate-200) !important;
+  color: var(--wr-slate-700) !important;
+}
+
+.badge.text-bg-light {
+  background-color: var(--wr-slate-100) !important;
+  color: var(--wr-slate-700) !important;
+  box-shadow: inset 0 0 0 1px var(--wr-slate-200);
+}
+
+.badge.text-bg-success {
+  background-color: var(--wr-green-50) !important;
+  color: var(--wr-green-800) !important;
+}
+
+.badge.text-bg-warning {
+  background-color: var(--wr-amber-50) !important;
+  color: var(--wr-amber-800) !important;
+}
+
+.badge.text-bg-danger {
+  background-color: var(--wr-red-50) !important;
+  color: var(--wr-red-800) !important;
+}
+
+.badge.text-bg-info {
+  background-color: var(--wr-sky-50) !important;
+  color: var(--wr-sky-800) !important;
+}
+
+/* Notices */
+.alert {
+  --bs-alert-border-radius: 0.75rem;
+  --bs-alert-padding-x: 1.1rem;
+  --bs-alert-padding-y: 0.85rem;
+}
+
+.alert-link {
   font-weight: 600;
 }
 
-.wr-depth-chart td:first-child {
-  background-color: #fafbfc;
+/* Tabs: the open one is underlined */
+.nav-tabs {
+  --bs-nav-tabs-border-color: var(--wr-line);
+  --bs-nav-tabs-link-active-bg: transparent;
+  gap: 0.25rem;
 }
 
-/* ---------- Schedule ---------- */
+.nav-tabs .nav-link {
+  margin-bottom: -1px;
+  padding: 0.6rem 0.85rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--wr-muted);
+  font-weight: 600;
+}
 
-.wr-event-practice {
-  background-color: var(--wr-navy-light);
+.nav-tabs .nav-link:hover {
+  border-bottom-color: var(--wr-slate-300);
+  color: var(--wr-ink-850);
+  text-decoration: none;
+}
+
+.nav-tabs .nav-link.active {
+  border-bottom-color: var(--wr-blue-600);
+  color: var(--wr-ink-850);
+}
+
+/* The trail from a section down to the page being shown */
+.breadcrumb {
+  --bs-breadcrumb-divider: "\203A";
+  --bs-breadcrumb-divider-color: var(--wr-slate-400);
+  --bs-breadcrumb-item-active-color: var(--wr-slate-700);
+  --bs-breadcrumb-margin-bottom: 0.6rem;
+  font-size: 0.8125rem;
+}
+
+.breadcrumb a {
+  color: var(--wr-muted);
+}
+
+.breadcrumb a:hover {
+  color: var(--wr-blue-600);
+}
+
+/* Menus that drop down */
+.dropdown-menu {
+  --bs-dropdown-bg: #fff;
+  --bs-dropdown-border-color: var(--wr-line);
+  --bs-dropdown-border-radius: 0.75rem;
+  --bs-dropdown-padding-x: 0.35rem;
+  --bs-dropdown-padding-y: 0.35rem;
+  --bs-dropdown-font-size: 0.9rem;
+  --bs-dropdown-link-color: var(--wr-slate-800);
+  --bs-dropdown-link-hover-bg: var(--wr-slate-100);
+  --bs-dropdown-link-active-bg: var(--wr-blue-600);
+  box-shadow: var(--wr-shadow-lg);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--wr-radius-sm);
+  font-weight: 500;
+}
+
+.dropdown-item:hover {
+  text-decoration: none;
+}
+
+progress {
+  accent-color: var(--wr-blue-600);
+}
+
+/* ---------- 5. Team ---------- */
+
+/* The dashboard: a greeting, the week at a glance, then the details */
+.wr-welcome {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
+  margin-bottom: 1.25rem;
+  padding: 1.6rem 1.75rem;
+  overflow: hidden;
+  border-radius: var(--wr-radius-xl);
+  background: linear-gradient(115deg, var(--wr-ink-900) 0%, var(--wr-ink-800) 55%, var(--wr-blue-900) 130%);
   color: #fff;
+}
+
+/* Yard lines, faintly, down the right side */
+.wr-welcome::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 45%;
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 3.25rem);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000);
+  mask-image: linear-gradient(90deg, transparent, #000);
+  pointer-events: none;
+}
+
+.wr-welcome > * {
+  position: relative;
+  z-index: 1;
+}
+
+.wr-welcome .wr-eyebrow {
+  color: var(--wr-slate-300);
+}
+
+.wr-welcome-title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.1;
+}
+
+.wr-welcome-date {
+  margin: 0;
+  color: var(--wr-slate-300);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.wr-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.wr-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.05rem 1.15rem 1.1rem;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius-lg);
+  background-color: #fff;
+  box-shadow: var(--wr-shadow-xs);
+  color: inherit;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+}
+
+a.wr-tile:hover {
+  border-color: var(--wr-blue-300);
+  box-shadow: var(--wr-shadow-md);
+  color: inherit;
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.wr-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--wr-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wr-tile-label .wr-icon {
+  color: var(--wr-blue-600);
+}
+
+.wr-tile-value {
+  color: var(--wr-heading);
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+}
+
+.wr-tile-sub {
+  color: var(--wr-muted);
+  font-size: 0.875rem;
+}
+
+/* A card that opens a section: the yellow line runs across its top */
+.wr-feature {
+  height: 100%;
+  border-top: 3px solid var(--wr-yellow-400);
+}
+
+/* A card's heading with its icon */
+.wr-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.wr-card-title .wr-icon {
+  color: var(--wr-blue-600);
+}
+
+/* A link at the foot of a card that leads on to the full page */
+.wr-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.wr-more .wr-icon {
+  transition: transform 0.14s ease;
+}
+
+.wr-more:hover .wr-icon {
+  transform: translateX(3px);
+}
+
+/* Depth chart: fixed layout keeps the rank columns the same width in every group's table */
+.wr-depth-chart {
+  table-layout: fixed;
+  min-width: 36rem; /* on a phone the chart keeps a readable width and scrolls sideways */
+}
+
+.wr-depth-chart td:first-child {
+  background-color: var(--wr-slate-25);
+}
+
+/* Schedule: the kind of an event keeps its colour wherever events are listed */
+.wr-event-practice {
+  background-color: var(--wr-blue-50);
+  color: var(--wr-blue-800);
 }
 
 .wr-event-game {
-  background-color: var(--wr-gold);
-  color: #212529;
+  background-color: var(--wr-yellow-400);
+  color: var(--wr-ink-900);
 }
 
 .wr-event-meeting {
-  background-color: #6c757d;
-  color: #fff;
+  background-color: var(--wr-slate-200);
+  color: var(--wr-slate-700);
 }
 
-/* ---------- Playbook ---------- */
+/* ---------- 6. Playbook ---------- */
 
 /* A diagram takes the width it is given; the script sets its height from how much of the field it shows */
 .wr-diagram {
   display: block;
   width: 100%;
-  border-radius: 0.375rem;
+  border-radius: var(--wr-radius);
 }
 
 /* On a narrow screen a full diagram keeps a readable size and scrolls sideways instead of shrinking */
@@ -153,6 +1397,7 @@ a {
   color: inherit;
   height: 100%;
   overflow: hidden;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
 }
 
 .wr-diagram-card .wr-diagram {
@@ -160,8 +1405,11 @@ a {
 }
 
 .wr-diagram-card:hover, .wr-diagram-card:focus {
-  border-color: var(--wr-navy-light);
-  box-shadow: 0 0 0 0.15rem rgba(30, 58, 102, 0.2);
+  border-color: var(--wr-blue-300);
+  box-shadow: var(--wr-shadow-md);
+  color: inherit;
+  text-decoration: none;
+  transform: translateY(-2px);
 }
 
 /* The play designer */
@@ -172,7 +1420,7 @@ a {
 }
 
 .wr-diagram-edit:focus-visible {
-  outline: 2px solid var(--wr-gold);
+  outline: 3px solid var(--wr-blue-500);
   outline-offset: 2px;
 }
 
@@ -204,71 +1452,26 @@ a {
   border-color: #dc3545;
 }
 
-/* ---------- Film ---------- */
+/* ---------- 7. Film ---------- */
 
 /* Runs and passes keep the same two colours wherever plays are listed */
 .wr-play-run {
-  background-color: var(--wr-navy-light);
+  background-color: var(--wr-run);
   color: #fff;
 }
 
 .wr-play-pass {
-  background-color: var(--wr-gold);
-  color: #212529;
+  background-color: var(--wr-pass);
+  color: var(--wr-ink-900);
 }
 
-/* ---------- Tendencies ---------- */
-
-/* Chart.js sizes its canvas to the box it is in */
-.wr-chart {
-  position: relative;
-}
-
-.wr-chart-one {
-  height: 110px;
-}
-
-.wr-chart-four {
-  height: 240px;
-}
-
-.wr-tendency-figure {
-  font-size: 2.5rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-/* Run and pass as text: the same navy as the Run badge, and a darker gold than the Pass badge so it can be read */
-.wr-tendency-run {
-  color: var(--wr-navy-light);
-}
-
-.wr-tendency-pass {
-  color: #8a6100;
-}
-
-.wr-tendency-grid td {
-  min-width: 8.5rem;
-}
-
-/* ---------- Study time ---------- */
-
-/* The timer a player sees on film and playbook pages */
-.wr-study-timer {
-  margin-bottom: 1rem;
-}
-
-.wr-study-timer .badge {
-  margin-right: 0.35rem;
-}
-
-/* ---------- Film: the video player ---------- */
-
+/* The video player: a dark frame, like the room the film is watched in */
 .wr-film {
-  border: 1px solid var(--bs-border-color);
-  border-radius: 0.375rem;
+  border: 1px solid var(--wr-ink-800);
+  border-radius: var(--wr-radius-lg);
   overflow: hidden;
-  background-color: #fff;
+  background-color: var(--wr-ink-900);
+  box-shadow: var(--wr-shadow-md);
 }
 
 /* The picture keeps its shape inside a 16:9 box; what is left over stays black */
@@ -293,22 +1496,94 @@ a {
   transform: translate(-50%, -50%);
   max-width: 90%;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
+  border-radius: var(--wr-radius-sm);
   background-color: rgba(0, 0, 0, 0.8);
   color: #fff;
   text-align: center;
 }
 
 .wr-film-controls {
-  padding: 0.25rem 0.75rem 0.6rem;
+  padding: 0.35rem 0.85rem 0.75rem;
+  color: var(--wr-slate-300);
+}
+
+.wr-film-controls .form-range::-webkit-slider-runnable-track {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.wr-film-controls .form-range::-moz-range-track {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.wr-film-controls .form-range::-webkit-slider-thumb {
+  background-color: var(--wr-yellow-400);
+}
+
+.wr-film-controls .form-range::-moz-range-thumb {
+  background-color: var(--wr-yellow-400);
+}
+
+.wr-film-controls .btn-outline-primary {
+  --bs-btn-color: var(--wr-slate-200);
+  --bs-btn-bg: rgba(255, 255, 255, 0.05);
+  --bs-btn-border-color: rgba(255, 255, 255, 0.16);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: rgba(255, 255, 255, 0.13);
+  --bs-btn-hover-border-color: rgba(255, 255, 255, 0.3);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: rgba(255, 255, 255, 0.22);
+  --bs-btn-active-border-color: rgba(255, 255, 255, 0.36);
 }
 
 .wr-film-play {
+  --bs-btn-color: var(--wr-ink-900);
+  --bs-btn-bg: var(--wr-yellow-400);
+  --bs-btn-border-color: var(--wr-yellow-400);
+  --bs-btn-hover-color: var(--wr-ink-900);
+  --bs-btn-hover-bg: var(--wr-yellow-300);
+  --bs-btn-hover-border-color: var(--wr-yellow-300);
+  --bs-btn-active-color: var(--wr-ink-900);
+  --bs-btn-active-bg: var(--wr-yellow-500);
+  --bs-btn-active-border-color: var(--wr-yellow-500);
   min-width: 4.25rem;
+  box-shadow: none;
+}
+
+/* The row of controls stays on one line beside the list of plays */
+.wr-film-controls .btn-sm, .wr-film-controls .btn-group-sm > .btn {
+  --bs-btn-padding-x: 0.55rem;
+}
+
+.wr-film-controls .form-select-sm {
+  padding-left: 0.55rem;
+  padding-right: 1.75rem;
+  background-position: right 0.5rem center;
+}
+
+.wr-film-controls .text-muted {
+  color: var(--wr-slate-400) !important;
+}
+
+.wr-film-controls .form-select {
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cdd6e3' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  border-color: rgba(255, 255, 255, 0.16);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.wr-film-controls .form-select:hover:not(:focus) {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.wr-film-controls .form-select option {
+  color: var(--wr-ink-850);
 }
 
 /* Digits of equal width, so the readout does not jump about while the video plays */
 .wr-film-time {
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -334,14 +1609,12 @@ a {
   height: 1rem;
 }
 
-/* ---------- Film: the clip editor ---------- */
-
-/* The strip under the player: one block for every play, at its place in the video */
+/* The clip editor's strip under the player: one block for every play, at its place in the video */
 .wr-film-timeline {
   position: relative;
   height: 1.25rem;
-  border-radius: 0.25rem;
-  background-color: var(--bs-secondary-bg);
+  border-radius: 0.3rem;
+  background-color: var(--wr-slate-200);
   overflow: hidden;
   cursor: pointer;
 }
@@ -357,45 +1630,49 @@ a {
   top: 0.2rem;
   bottom: 0.2rem;
   min-width: 2px;
-  background-color: var(--bs-secondary);
+  background-color: var(--wr-blue-400);
 }
 
 /* The play that is being marked in the editor */
 .wr-film-selection {
   min-width: 3px;
-  background-color: rgba(220, 53, 69, 0.45);
-  border-left: 2px solid #dc3545;
-  border-right: 2px solid #dc3545;
+  background-color: rgba(207, 47, 47, 0.4);
+  border-left: 2px solid var(--wr-red-600);
+  border-right: 2px solid var(--wr-red-600);
 }
 
 /* Where the video is now */
 .wr-film-head {
   width: 2px !important;
-  background-color: #000;
+  background-color: var(--wr-ink-900);
 }
 
 /* The list of plays beside the player scrolls on its own, so the player stays in view */
 .wr-play-list {
   max-height: 34rem;
   overflow-y: auto;
-  border: 1px solid var(--bs-border-color);
-  border-radius: 0.375rem;
+  border: 1px solid var(--wr-line);
+  border-radius: var(--wr-radius-lg);
+  background-color: #fff;
+  box-shadow: var(--wr-shadow-xs);
 }
 
 .wr-play-list thead th {
   position: sticky;
   top: 0;
-  background-color: var(--bs-body-bg);
+  z-index: 1;
 }
 
 /* The play the video is showing at this moment */
-.wr-play-list tr.wr-play-now > td:first-child {
-  box-shadow: inset 3px 0 0 var(--wr-gold);
+.wr-play-list tr.wr-play-now > td {
+  --bs-table-bg-state: var(--wr-blue-50);
 }
 
-/* ---------- Film: drawings over the picture ---------- */
+.wr-play-list tr.wr-play-now > td:first-child {
+  box-shadow: inset 3px 0 0 var(--wr-yellow-400);
+}
 
-/* The canvas lies exactly over the picture (film-drawings.js places it) and lets clicks through to the video */
+/* Drawings over the picture: the canvas lies exactly over it (film-drawings.js places it) and lets clicks through */
 .wr-film-overlay {
   position: absolute;
   pointer-events: none;
@@ -406,6 +1683,553 @@ a {
   pointer-events: auto;
   cursor: crosshair;
   touch-action: none;
-  outline: 2px dashed var(--wr-gold);
+  outline: 2px dashed var(--wr-yellow-400);
   outline-offset: -2px;
+}
+
+/* ---------- 8. Tendencies and study time ---------- */
+
+/* Chart.js sizes its canvas to the box it is in */
+.wr-chart {
+  position: relative;
+}
+
+.wr-chart-one {
+  height: 110px;
+}
+
+.wr-chart-four {
+  height: 240px;
+}
+
+.wr-tendency-figure {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+/* Run and pass as text: the words stay in ink, and a block of the colour stands beside them */
+.wr-tendency-run, .wr-tendency-pass {
+  color: inherit;
+}
+
+.wr-tendency-figure.wr-tendency-run, .wr-tendency-figure.wr-tendency-pass {
+  padding-left: 0.85rem;
+  border-left: 0.4rem solid var(--wr-run);
+  color: var(--wr-heading);
+}
+
+.wr-tendency-figure.wr-tendency-pass {
+  border-left-color: var(--wr-pass);
+}
+
+.wr-tendency-figure.wr-tendency-run + .text-muted, .wr-tendency-figure.wr-tendency-pass + .text-muted {
+  padding-left: 1.25rem;
+}
+
+.wr-tendency-grid .wr-tendency-run::before, .wr-tendency-grid .wr-tendency-pass::before {
+  content: "";
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.4rem;
+  border-radius: 2px;
+  background-color: var(--wr-run);
+}
+
+.wr-tendency-grid .wr-tendency-pass::before {
+  background-color: var(--wr-pass);
+}
+
+.wr-tendency-grid td {
+  min-width: 8.5rem;
+}
+
+/* The timer a player sees on film and playbook pages */
+.wr-study-timer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--wr-line);
+  border-radius: 0.75rem;
+  background-color: #fff;
+}
+
+.wr-study-timer .badge.text-bg-success {
+  background-color: var(--wr-green-600) !important;
+  color: #fff !important;
+}
+
+/* ---------- 9. The landing page and the sign-in pages ---------- */
+
+/* The opening picture: the film room, darkest where the words stand */
+.wr-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: min(46rem, 100vh);
+  padding: 8rem 0 5.5rem;
+  overflow: hidden;
+  background-color: var(--wr-ink-950);
+  color: #fff;
+}
+
+.wr-hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 72% 30%;
+}
+
+.wr-hero-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(6, 10, 19, 0.97) 0%, rgba(6, 10, 19, 0.9) 34%, rgba(6, 10, 19, 0.45) 62%, rgba(6, 10, 19, 0.12) 100%),
+    linear-gradient(0deg, rgba(6, 10, 19, 0.92) 0%, rgba(6, 10, 19, 0) 34%);
+}
+
+.wr-hero-body {
+  position: relative;
+  max-width: 39rem;
+}
+
+/* On a phone the words stand on the picture itself, so it is darkened all over */
+@media (max-width: 767.98px) {
+  .wr-hero {
+    min-height: 0;
+    padding: 6.5rem 0 3.5rem;
+  }
+
+  .wr-hero-photo {
+    object-position: 62% 0;
+  }
+
+  .wr-hero-shade {
+    background: linear-gradient(180deg, rgba(6, 10, 19, 0.74) 0%, rgba(6, 10, 19, 0.9) 42%, rgba(6, 10, 19, 0.97) 100%);
+  }
+}
+
+.wr-hero .wr-eyebrow {
+  color: var(--wr-slate-300);
+}
+
+.wr-hero-title {
+  margin: 0 0 1.25rem;
+  color: #fff;
+  font-size: clamp(2.6rem, 6vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+/* The yellow line under the words that matter */
+.wr-mark {
+  background-image: linear-gradient(var(--wr-yellow-400), var(--wr-yellow-400));
+  background-repeat: no-repeat;
+  background-position: 0 92%;
+  background-size: 100% 0.14em;
+  padding-bottom: 0.06em;
+}
+
+.wr-hero-lead {
+  max-width: 34rem;
+  margin-bottom: 2rem;
+  color: var(--wr-slate-300);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.55;
+}
+
+.wr-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.wr-hero-note {
+  margin: 1.1rem 0 0;
+  color: var(--wr-slate-400);
+  font-size: 0.875rem;
+}
+
+.wr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 2.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wr-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--wr-slate-200);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.wr-chips .wr-icon {
+  color: var(--wr-yellow-400);
+}
+
+/* A part of the landing page */
+.wr-section {
+  padding: 4.5rem 0;
+}
+
+.wr-section-head {
+  max-width: 42rem;
+  margin: 0 auto 1rem;
+  text-align: center;
+}
+
+.wr-section-title {
+  margin-bottom: 0.85rem;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.wr-section-lead {
+  color: var(--wr-slate-600);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+/* One feature: its picture on one side, its words on the other, turn and turn about */
+.wr-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 2rem;
+  padding: 2.75rem 0;
+}
+
+@media (min-width: 992px) {
+  .wr-showcase {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    gap: 4.5rem;
+    padding: 4rem 0;
+  }
+
+  .wr-showcase-flip .wr-showcase-art {
+    order: 2;
+  }
+}
+
+.wr-showcase-art {
+  position: relative;
+}
+
+.wr-showcase-art img, .wr-showcase-art > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--wr-radius-xl);
+  box-shadow: var(--wr-shadow-lg);
+}
+
+.wr-showcase-art > svg {
+  border: 1px solid var(--wr-line);
+  background-color: #fff;
+}
+
+/* The yellow line again, behind a corner of the picture */
+.wr-showcase-art::before {
+  content: "";
+  position: absolute;
+  left: -0.9rem;
+  bottom: 2.25rem;
+  width: 0.4rem;
+  height: 5.5rem;
+  border-radius: 0.4rem;
+  background-color: var(--wr-yellow-400);
+}
+
+.wr-showcase-flip .wr-showcase-art::before {
+  left: auto;
+  right: -0.9rem;
+}
+
+.wr-showcase-title {
+  margin-bottom: 0.9rem;
+  font-size: clamp(1.55rem, 2.6vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.12;
+}
+
+.wr-showcase-text {
+  margin-bottom: 1.35rem;
+  color: var(--wr-slate-600);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.wr-ticks {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wr-ticks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  color: var(--wr-slate-700);
+  font-weight: 500;
+}
+
+.wr-ticks .wr-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-top: 0.05rem;
+  padding: 0.25rem;
+  border-radius: 50%;
+  background-color: var(--wr-blue-50);
+  color: var(--wr-blue-600);
+  stroke-width: 2.4;
+}
+
+/* Who the site is for: a dark band with yard lines */
+.wr-roles {
+  position: relative;
+  padding: 5rem 0;
+  overflow: hidden;
+  background-color: var(--wr-ink-900);
+  color: var(--wr-slate-300);
+}
+
+.wr-roles::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 5rem);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%);
+  mask-image: linear-gradient(180deg, #000, transparent 85%);
+  pointer-events: none;
+}
+
+.wr-roles > .container {
+  position: relative;
+}
+
+.wr-roles .wr-section-title {
+  color: #fff;
+}
+
+.wr-roles .wr-section-lead, .wr-roles .wr-eyebrow {
+  color: var(--wr-slate-300);
+}
+
+.wr-role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14.5rem, 1fr));
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.wr-role {
+  padding: 1.5rem 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--wr-radius-lg);
+  background-color: rgba(255, 255, 255, 0.035);
+}
+
+.wr-role-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 1rem;
+  border-radius: 0.7rem;
+  background-color: rgba(255, 214, 10, 0.12);
+  color: var(--wr-yellow-400);
+}
+
+.wr-role h3 {
+  margin-bottom: 0.45rem;
+  color: #fff;
+  font-size: 1.0625rem;
+}
+
+.wr-role p {
+  margin: 0;
+  color: var(--wr-slate-400);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* The last word before the foot of the page */
+.wr-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem 2.5rem;
+  padding: 2.75rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(120deg, var(--wr-blue-600) 0%, var(--wr-blue-800) 60%, var(--wr-ink-800) 130%);
+  color: #fff;
+  box-shadow: var(--wr-shadow-lg);
+}
+
+.wr-cta h2 {
+  margin: 0 0 0.4rem;
+  color: #fff;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.028em;
+}
+
+.wr-cta p {
+  margin: 0;
+  color: var(--wr-blue-100);
+}
+
+.wr-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Signing in: the form on one side, a picture on the other */
+.wr-auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: calc(100vh - 4.25rem);
+  min-height: calc(100dvh - 4.25rem);
+  background-color: #fff;
+}
+
+@media (min-width: 992px) {
+  .wr-auth {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  }
+}
+
+.wr-auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.wr-auth-form {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.wr-auth-wide {
+  max-width: 31rem;
+}
+
+.wr-auth-title {
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.wr-auth-lead {
+  margin-bottom: 1.75rem;
+  color: var(--wr-muted);
+}
+
+.wr-auth-form .btn-primary {
+  width: 100%;
+  --bs-btn-padding-y: 0.65rem;
+}
+
+.wr-auth-foot {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--wr-line);
+  color: var(--wr-muted);
+  font-size: 0.9rem;
+}
+
+.wr-auth-foot p:last-child {
+  margin-bottom: 0;
+}
+
+.wr-auth-art {
+  position: relative;
+  display: none;
+  overflow: hidden;
+  background-color: var(--wr-ink-900);
+}
+
+@media (min-width: 992px) {
+  .wr-auth-art {
+    display: block;
+  }
+}
+
+.wr-auth-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wr-auth-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(6, 10, 19, 0.9) 0%, rgba(6, 10, 19, 0.25) 45%, rgba(6, 10, 19, 0.1) 100%);
+}
+
+.wr-auth-caption {
+  position: absolute;
+  left: 2.5rem;
+  right: 2.5rem;
+  bottom: 2.5rem;
+  z-index: 1;
+  color: #fff;
+}
+
+.wr-auth-caption p {
+  max-width: 26rem;
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.wr-auth-caption .wr-eyebrow {
+  color: var(--wr-slate-300);
+}
+
+/* People who ask their device for less movement get none */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  a.wr-tile:hover, .wr-diagram-card:hover, .wr-diagram-card:focus {
+    transform: none;
+  }
 }

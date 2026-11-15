@@ -2,61 +2,274 @@
 
 @{
     ViewData["Title"] = "Football team management and film study";
+    ViewData["FullWidth"] = true;
 }
 
 <section class="wr-hero">
-    <div class="row">
-        <div class="col-lg-8">
-            <h1 class="display-5 fw-bold">The War Room</h1>
-            <p class="lead">
-                One place for your football program's depth charts, playbook, game film and schedule.
+    <img class="wr-hero-photo" src="~/img/film-room.webp" srcset="@Url.Content("~/img/film-room-900.webp") 900w, @Url.Content("~/img/film-room.webp") 1672w" sizes="100vw"
+         width="1672" height="941" alt="" fetchpriority="high"/>
+    <div class="wr-hero-shade"></div>
+    <div class="container">
+        <div class="wr-hero-body">
+            <p class="wr-eyebrow">Football team management and film study</p>
+            <h1 class="wr-hero-title">Your whole program. <span class="wr-mark">One room.</span></h1>
+            <p class="wr-hero-lead">
+                Depth charts, the playbook, game film and the week's schedule in one place,
+                so coaches plan faster and players show up prepared.
             </p>
             @if (Site.Value.AllowRegistration)
             {
-                <a class="btn btn-warning btn-lg me-2 mb-2" asp-controller="Account" asp-action="Register">Register your team</a>
-                <a class="btn btn-outline-light btn-lg mb-2" asp-controller="Account" asp-action="Login">Sign in</a>
-                <p class="small mt-3 mb-0">Registration is free. Each team works in its own private workspace.</p>
+                <div class="wr-hero-actions">
+                    <a class="btn btn-warning btn-lg" asp-controller="Account" asp-action="Register">Register your team</a>
+                    <a class="btn btn-outline-light btn-lg" asp-controller="Account" asp-action="Login">Sign in</a>
+                </div>
+                <p class="wr-hero-note">Registration is free. Each team works in its own private workspace.</p>
             }
             else
             {
-                <a class="btn btn-warning btn-lg mb-2" asp-controller="Account" asp-action="Login">Sign in</a>
-                <p class="small mt-3 mb-0">Each team works in its own private workspace. Accounts are given out by the team's head coach.</p>
+                <div class="wr-hero-actions">
+                    <a class="btn btn-warning btn-lg" asp-controller="Account" asp-action="Login">Sign in</a>
+                </div>
+                <p class="wr-hero-note">Each team works in its own private workspace. Accounts are given out by the team's head coach.</p>
             }
+            <ul class="wr-chips">
+                <li><svg class="wr-icon wr-icon-sm"><use href="#i-shield"></use></svg>A private workspace for every team</li>
+                <li><svg class="wr-icon wr-icon-sm"><use href="#i-users"></use></svg>Roles for coaches and players</li>
+                <li><svg class="wr-icon wr-icon-sm"><use href="#i-check"></use></svg>Playbook changes approved by the head coach</li>
+            </ul>
         </div>
     </div>
 </section>
 
-<div class="row g-4 mt-1">
-    <div class="col-md-6 col-lg-3">
-        <div class="card wr-feature">
-            <div class="card-body">
-                <h2 class="h5 card-title">Team and depth charts</h2>
-                <p class="card-text">Rosters, coaching groups and a depth chart for every week. Players see where they stand at each position.</p>
+<section class="wr-section">
+    <div class="container">
+        <div class="wr-section-head">
+            <p class="wr-eyebrow">What is inside</p>
+            <h2 class="wr-section-title">Everything the week runs on</h2>
+            <p class="wr-section-lead">From Monday's film to Friday's kickoff, the staff and the players work from the same page.</p>
+        </div>
+
+        <div class="wr-showcase">
+            <div class="wr-showcase-art">
+                <img src="~/img/depth-chart-board.webp" srcset="@Url.Content("~/img/depth-chart-board-900.webp") 900w, @Url.Content("~/img/depth-chart-board.webp") 1672w"
+                     sizes="(min-width: 992px) 46vw, 92vw" width="1672" height="941" loading="lazy"
+                     alt="A coach moves a name on a whiteboard depth chart for the receivers."/>
+            </div>
+            <div>
+                <p class="wr-eyebrow">Team</p>
+                <h3 class="wr-showcase-title">A depth chart for every week</h3>
+                <p class="wr-showcase-text">
+                    Build the roster, set up position groups and rank every spot. Next week starts from this week's chart,
+                    so you only move the names that changed.
+                </p>
+                <ul class="wr-ticks">
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Offence, defence and special teams</li>
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Coaches edit the groups they coach</li>
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Players see where they stand</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="wr-showcase wr-showcase-flip">
+            <div class="wr-showcase-art">
+                @* A pass play drawn the way the play designer draws one: the blue line of scrimmage, the yellow first-down line *@
+                <svg viewBox="0 0 560 400" role="img" aria-label="A pass play drawn on the field: four receivers' routes above the line of scrimmage.">
+                    <defs>
+                        <marker id="wr-arrow-ink" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0 0L10 5L0 10z" fill="#0e1627"/>
+                        </marker>
+                        <marker id="wr-arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0 0L10 5L0 10z" fill="#1f51e6"/>
+                        </marker>
+                    </defs>
+                    <rect width="560" height="400" fill="#f1f7f1"/>
+                    <path d="M0 40h560M0 180h560M0 320h560M0 390h560" stroke="#d3e2d3" stroke-width="2"/>
+                    <path d="M190 68v14M370 68v14M190 138v14M370 138v14M190 208v14M370 208v14M190 348v14M370 348v14" stroke="#c0d3c0" stroke-width="2"/>
+                    <path d="M0 110h560" stroke="#ffd60a" stroke-width="4"/>
+                    <path d="M0 250h560" stroke="#1f51e6" stroke-width="4"/>
+
+                    <g fill="none" stroke="#5b6980" stroke-width="3" stroke-linecap="round">
+                        <path d="M228 221l14 14M242 221l-14 14M258 221l14 14M272 221l-14 14M288 221l14 14M302 221l-14 14M318 221l14 14M332 221l-14 14"/>
+                        <path d="M193 188l14 14M207 188l-14 14M273 186l14 14M287 186l-14 14M353 188l14 14M367 188l-14 14"/>
+                        <path d="M63 198l14 14M77 198l-14 14M483 198l14 14M497 198l-14 14"/>
+                        <path d="M183 124l14 14M197 124l-14 14M363 128l14 14M377 128l-14 14"/>
+                    </g>
+
+                    <g fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M70 258V150L146 76" stroke="#0e1627" marker-end="url(#wr-arrow-ink)"/>
+                        <path d="M372 258v-58h76" stroke="#0e1627" marker-end="url(#wr-arrow-ink)"/>
+                        <path d="M490 258V150l-17 22" stroke="#0e1627" marker-end="url(#wr-arrow-ink)"/>
+                        <path d="M334 322c34 10 76 6 110-20" stroke="#0e1627" marker-end="url(#wr-arrow-ink)"/>
+                        <path d="M140 270v-64l154-52" stroke="#1f51e6" marker-end="url(#wr-arrow-blue)"/>
+                        <path d="M280 330v20" stroke="#0e1627" stroke-dasharray="1 7"/>
+                    </g>
+
+                    <g fill="#fff" stroke="#0e1627" stroke-width="3">
+                        <circle cx="70" cy="272" r="12"/>
+                        <circle cx="220" cy="272" r="12"/>
+                        <circle cx="250" cy="272" r="12"/>
+                        <rect x="268" y="260" width="24" height="24" rx="3"/>
+                        <circle cx="310" cy="272" r="12"/>
+                        <circle cx="340" cy="272" r="12"/>
+                        <circle cx="372" cy="272" r="12"/>
+                        <circle cx="490" cy="272" r="12"/>
+                        <circle cx="280" cy="316" r="12"/>
+                        <circle cx="322" cy="320" r="12"/>
+                    </g>
+                    <circle cx="140" cy="284" r="12" fill="#1f51e6" stroke="#1f51e6" stroke-width="3"/>
+
+                    <g>
+                        <rect x="306" y="18" width="236" height="36" rx="18" fill="#fff" stroke="#bfe6cf" stroke-width="1.5"/>
+                        <circle cx="326" cy="36" r="9" fill="#15803d"/>
+                        <path d="M321.5 36.3l3 3 5.4-5.8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="343" y="40.5" font-size="13" font-weight="600" fill="#116b38" textLength="186" lengthAdjust="spacingAndGlyphs">Approved by the head coach</text>
+                    </g>
+                </svg>
+            </div>
+            <div>
+                <p class="wr-eyebrow">Playbook</p>
+                <h3 class="wr-showcase-title">Draw it up. Approve it. Everyone has it.</h3>
+                <p class="wr-showcase-text">
+                    Draw formations and plays on the field with routes, blocks and motion. A change reaches players once the
+                    head coach approves it, so nobody studies an old version.
+                </p>
+                <ul class="wr-ticks">
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>A play designer that works on the field itself</li>
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Before and after, side by side, for every change</li>
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Players read approved plays only</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="wr-showcase">
+            <div class="wr-showcase-art">
+                @* An example of the tendency chart: how often an offence ran and passed on each down *@
+                <svg viewBox="0 0 560 400" role="img" aria-label="An example chart of how often an offence ran and passed on each down.">
+                    <rect width="560" height="400" fill="#fff"/>
+                    <text x="36" y="54" font-size="19" font-weight="700" fill="#0e1627">Run and pass by down</text>
+                    <text x="36" y="78" font-size="13.5" fill="#5b6980">Northgate on offence &#183; 2 games &#183; an example</text>
+
+                    <g font-size="13" font-weight="600" fill="#354155">
+                        <rect x="384" y="42" width="12" height="12" rx="3" fill="#1f51e6"/>
+                        <text x="402" y="53">Run</text>
+                        <rect x="450" y="42" width="12" height="12" rx="3" fill="#eda100"/>
+                        <text x="468" y="53">Pass</text>
+                    </g>
+
+                    <g font-size="14" font-weight="600" fill="#354155">
+                        <text x="36" y="143">1st down</text>
+                        <text x="36" y="207">2nd down</text>
+                        <text x="36" y="271">3rd down</text>
+                        <text x="36" y="335">4th down</text>
+                    </g>
+
+                    <g>
+                        <rect x="130" y="118" width="394" height="40" rx="9" fill="#eda100"/>
+                        <path d="M139 118h227v40H139a9 9 0 01-9-9v-22a9 9 0 019-9z" fill="#1f51e6"/>
+                        <rect x="130" y="182" width="394" height="40" rx="9" fill="#eda100"/>
+                        <path d="M139 182h180v40H139a9 9 0 01-9-9v-22a9 9 0 019-9z" fill="#1f51e6"/>
+                        <rect x="130" y="246" width="394" height="40" rx="9" fill="#eda100"/>
+                        <path d="M139 246h97v40H139a9 9 0 01-9-9v-22a9 9 0 019-9z" fill="#1f51e6"/>
+                        <rect x="130" y="310" width="394" height="40" rx="9" fill="#eda100"/>
+                        <path d="M139 310h208v40H139a9 9 0 01-9-9v-22a9 9 0 019-9z" fill="#1f51e6"/>
+                    </g>
+
+                    <g font-size="14" font-weight="700">
+                        <text x="146" y="143" fill="#fff">60%</text>
+                        <text x="480" y="143" fill="#0a101d">40%</text>
+                        <text x="146" y="207" fill="#fff">48%</text>
+                        <text x="480" y="207" fill="#0a101d">52%</text>
+                        <text x="146" y="271" fill="#fff">27%</text>
+                        <text x="480" y="271" fill="#0a101d">73%</text>
+                        <text x="146" y="335" fill="#fff">55%</text>
+                        <text x="480" y="335" fill="#0a101d">45%</text>
+                    </g>
+                </svg>
+            </div>
+            <div>
+                <p class="wr-eyebrow">Film room</p>
+                <h3 class="wr-showcase-title">Cut the game into teaching</h3>
+                <p class="wr-showcase-text">
+                    Upload game film, mark each play from the keyboard and draw on the picture. Build cutups for the whole team,
+                    a position group or one player, then see what an offence does by down and distance.
+                </p>
+                <ul class="wr-ticks">
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Arrows and notes that hold the video still</li>
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Cutups made into one video, without the downtime</li>
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Run and pass tendencies, with how many plays they rest on</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="wr-showcase wr-showcase-flip">
+            <div class="wr-showcase-art">
+                <img src="~/img/practice-plan.webp" srcset="@Url.Content("~/img/practice-plan-900.webp") 900w, @Url.Content("~/img/practice-plan.webp") 1672w"
+                     sizes="(min-width: 992px) 46vw, 92vw" width="1672" height="941" loading="lazy"
+                     alt="A coach ticks off Tuesday's practice plan on a clipboard while players warm up on the field."/>
+            </div>
+            <div>
+                <p class="wr-eyebrow">The week</p>
+                <h3 class="wr-showcase-title">Practices, games and meetings on one page</h3>
+                <p class="wr-showcase-text">
+                    One schedule for the whole team, with attendance for every event. Coaches also see how much time players
+                    put into film and the playbook each week.
+                </p>
+                <ul class="wr-ticks">
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Attendance by event and by player</li>
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Study time for film and for the playbook, kept apart</li>
+                    <li><svg class="wr-icon"><use href="#i-tick"></use></svg>Players see their own record</li>
+                </ul>
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card wr-feature">
-            <div class="card-body">
-                <h2 class="h5 card-title">Playbook</h2>
-                <p class="card-text">Draw formations and plays on the field. Changes reach players once the head coach approves them.</p>
+</section>
+
+<section class="wr-roles">
+    <div class="container">
+        <div class="wr-section-head">
+            <p class="wr-eyebrow">Who it is for</p>
+            <h2 class="wr-section-title">Built for the whole staff, and the players</h2>
+            <p class="wr-section-lead">Everyone signs in to the same team workspace and sees what their role needs.</p>
+        </div>
+        <div class="wr-role-grid">
+            <div class="wr-role">
+                <span class="wr-role-icon"><svg class="wr-icon"><use href="#i-shield"></use></svg></span>
+                <h3>Head coach</h3>
+                <p>Sets up the team, gives out accounts and permissions, and has the final say on the playbook.</p>
+            </div>
+            <div class="wr-role">
+                <span class="wr-role-icon"><svg class="wr-icon"><use href="#i-groups"></use></svg></span>
+                <h3>Coordinators</h3>
+                <p>Run their side of the ball: groups, positions, the depth chart and the schedule.</p>
+            </div>
+            <div class="wr-role">
+                <span class="wr-role-icon"><svg class="wr-icon"><use href="#i-playbook"></use></svg></span>
+                <h3>Position coaches</h3>
+                <p>Work with the groups they coach: depth, film and changes to the playbook.</p>
+            </div>
+            <div class="wr-role">
+                <span class="wr-role-icon"><svg class="wr-icon"><use href="#i-film"></use></svg></span>
+                <h3>Players</h3>
+                <p>See where they stand, study the film shared with them and follow their own study time.</p>
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card wr-feature">
-            <div class="card-body">
-                <h2 class="h5 card-title">Film and tendencies</h2>
-                <p class="card-text">Cut a game into plays, tag them, share them with the right players and chart run and pass tendencies.</p>
+</section>
+
+<section class="wr-section">
+    <div class="container">
+        <div class="wr-cta">
+            <div>
+                <h2>Ready when your staff is.</h2>
+                <p>Sign in to open your team's workspace.</p>
+            </div>
+            <div class="wr-cta-actions">
+                @if (Site.Value.AllowRegistration)
+                {
+                    <a class="btn btn-outline-light btn-lg" asp-controller="Account" asp-action="Register">Register your team</a>
+                }
+                <a class="btn btn-warning btn-lg" asp-controller="Account" asp-action="Login">Sign in</a>
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card wr-feature">
-            <div class="card-body">
-                <h2 class="h5 card-title">Schedule and study time</h2>
-                <p class="card-text">Practices, games and meetings in one list, with attendance and time spent on film and the playbook.</p>
-            </div>
-        </div>
-    </div>
-</div>
+</section>

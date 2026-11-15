@@ -23,7 +23,7 @@
             Renderer.draw(canvas, diagram, {
                 mode: canvas.getAttribute('data-mode') || 'view',
                 highlightIds: highlight ? highlight.split(',') : [],
-                highlightColour: canvas.getAttribute('data-highlight-colour') || '#f2a900'
+                highlightColour: canvas.getAttribute('data-highlight-colour') || '#eda100'
             });
             Renderer.centre(canvas);
         });

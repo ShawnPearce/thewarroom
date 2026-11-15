@@ -1,20 +1,6 @@
-﻿/* Styles that apply only to the elements written in _Layout.cshtml */
+﻿/* Styles that apply only to the elements written in _Layout.cshtml.
+   The frame of the site (side menu, top bar, footer) is styled with the rest of its look, in wwwroot/css/site.css. */
 
-a.navbar-brand {
-  white-space: normal;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.border-top {
-  border-top: 1px solid #e5e5e5;
-}
-
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+body {
+  margin: 0;
 }

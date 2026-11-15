@@ -2,17 +2,86 @@
 
 @{
     ViewData["Title"] = "Dashboard";
+    bool isPlayer = Model.Me.Role == UserRole.Player;
+    var nextEvent = Model.NextEvents.FirstOrDefault();
 }
 
-<h1 class="h3">Welcome, @Model.Me.FirstName</h1>
-<p class="text-muted">@User.GetRoleLabel() &middot; @Model.Me.TeamName</p>
+<section class="wr-welcome">
+    <div>
+        <p class="wr-eyebrow">@User.GetRoleLabel() &middot; @Model.Me.TeamName</p>
+        <h1 class="wr-welcome-title">Welcome, @Model.Me.FirstName</h1>
+    </div>
+    <p class="wr-welcome-date">@DateTime.Today.ToString("dddd, MMMM d")</p>
+</section>
+
+@* The week at a glance: each tile leads to its page *@
+<div class="wr-tiles">
+    @if (nextEvent != null)
+    {
+        <a class="wr-tile" asp-controller="Schedule" asp-action="Details" asp-route-id="@nextEvent.Id">
+            <span class="wr-tile-label"><svg class="wr-icon wr-icon-sm"><use href="#i-calendar"></use></svg>Next up</span>
+            <span class="wr-tile-value">@nextEvent.Title</span>
+            <span class="wr-tile-sub">@DisplayText.Date(nextEvent.EventDate), @DisplayText.Times(nextEvent.StartTime, nextEvent.EndTime)</span>
+        </a>
+    }
+    else
+    {
+        <a class="wr-tile" asp-controller="Schedule" asp-action="Index">
+            <span class="wr-tile-label"><svg class="wr-icon wr-icon-sm"><use href="#i-calendar"></use></svg>Next up</span>
+            <span class="wr-tile-value">Nothing scheduled</span>
+            <span class="wr-tile-sub">from today onwards</span>
+        </a>
+    }
+
+    @if (isPlayer)
+    {
+        <a class="wr-tile" asp-controller="DepthChart" asp-action="Index">
+            <span class="wr-tile-label"><svg class="wr-icon wr-icon-sm"><use href="#i-depth"></use></svg>Your spots</span>
+            <span class="wr-tile-value">@Model.MyPlacements.Count</span>
+            <span class="wr-tile-sub">
+                @(Model.MyPlacements.Any(p => p.Rank == 1) ? "starting at " + string.Join(", ", Model.MyPlacements.Where(p => p.Rank == 1).Select(p => p.PositionName))
+                    : "on this week's depth chart")
+            </span>
+        </a>
+        <a class="wr-tile" asp-controller="Cutups" asp-action="Index">
+            <span class="wr-tile-label"><svg class="wr-icon wr-icon-sm"><use href="#i-film"></use></svg>Film for you</span>
+            <span class="wr-tile-value">@Model.Cutups.Count</span>
+            <span class="wr-tile-sub">@(Model.Cutups.Count == 1 ? "cutup shared with you" : "cutups shared with you")</span>
+        </a>
+        <a class="wr-tile" asp-controller="Activity" asp-action="Mine">
+            <span class="wr-tile-label"><svg class="wr-icon wr-icon-sm"><use href="#i-clock"></use></svg>Study time this week</span>
+            <span class="wr-tile-value">@DisplayText.StudyTime((Model.MyWeek?.FilmSeconds ?? 0) + (Model.MyWeek?.PlaybookSeconds ?? 0))</span>
+            <span class="wr-tile-sub">film and playbook</span>
+        </a>
+    }
+    else
+    {
+        <a class="wr-tile" asp-controller="DepthChart" asp-action="Index">
+            <span class="wr-tile-label"><svg class="wr-icon wr-icon-sm"><use href="#i-depth"></use></svg>Depth chart</span>
+            <span class="wr-tile-value">@(Model.Week == null ? "Not started" : $"Week of {Model.Week.WeekStartDate:MMM d}")</span>
+            <span class="wr-tile-sub">
+                @(Model.Week == null ? "no week has been made yet" : string.IsNullOrWhiteSpace(Model.Week.Label) ? "this week's chart" : Model.Week.Label)
+            </span>
+        </a>
+        <a class="wr-tile" asp-controller="Approvals" asp-action="Index">
+            <span class="wr-tile-label"><svg class="wr-icon wr-icon-sm"><use href="#i-check"></use></svg>Playbook changes</span>
+            <span class="wr-tile-value">@Model.WaitingChanges.Count</span>
+            <span class="wr-tile-sub">@(Model.Me.Role == UserRole.HeadCoach ? "waiting for your decision" : "waiting for the head coach")</span>
+        </a>
+        <a class="wr-tile" asp-controller="Cutups" asp-action="Index">
+            <span class="wr-tile-label"><svg class="wr-icon wr-icon-sm"><use href="#i-cutups"></use></svg>Cutups</span>
+            <span class="wr-tile-value">@Model.Cutups.Count</span>
+            <span class="wr-tile-sub">@(Model.Cutups.Count == 1 ? "cutup made" : "cutups made")</span>
+        </a>
+    }
+</div>
 
 <div class="row g-4">
     @if (Model.Me.Role == UserRole.Player)
     {
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">Your depth chart spots</div>
+            <div class="card h-100">
+                <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-depth"></use></svg>Your depth chart spots</div>
                 <div class="card-body">
                     @if (Model.Week == null)
                     {
@@ -41,7 +110,7 @@
                     }
                     @if (Model.Week != null)
                     {
-                        <a asp-controller="DepthChart" asp-action="Index">See the full depth chart</a>
+                        <a class="wr-more" asp-controller="DepthChart" asp-action="Index">See the full depth chart<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
                     }
                 </div>
             </div>
@@ -50,18 +119,18 @@
     else
     {
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">Depth chart</div>
+            <div class="card h-100">
+                <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-depth"></use></svg>Depth chart</div>
                 <div class="card-body">
                     @if (Model.Week == null)
                     {
                         <p class="text-muted">The team has no depth chart yet.</p>
-                        <a asp-controller="DepthChart" asp-action="Index">Open the depth chart</a>
+                        <a class="wr-more" asp-controller="DepthChart" asp-action="Index">Open the depth chart<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
                     }
                     else
                     {
                         <p>@DisplayText.WeekOf(Model.Week)</p>
-                        <a asp-controller="DepthChart" asp-action="Index">Open this week's depth chart</a>
+                        <a class="wr-more" asp-controller="DepthChart" asp-action="Index">Open this week's depth chart<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
                     }
                 </div>
             </div>
@@ -69,8 +138,8 @@
     }
 
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">Next on the schedule</div>
+        <div class="card h-100">
+            <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-calendar"></use></svg>Next on the schedule</div>
             <div class="card-body">
                 @if (Model.NextEvents.Count == 0)
                 {
@@ -91,14 +160,14 @@
                         }
                     </ul>
                 }
-                <a asp-controller="Schedule" asp-action="Index">See the full schedule</a>
+                <a class="wr-more" asp-controller="Schedule" asp-action="Index">See the full schedule<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
             </div>
         </div>
     </div>
 
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">Playbook</div>
+        <div class="card h-100">
+            <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-playbook"></use></svg>Playbook</div>
             <div class="card-body">
                 @if (Model.Playbooks.Count == 0)
                 {
@@ -124,8 +193,8 @@
     </div>
 
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">@(Model.Me.Role == UserRole.Player ? "Film for you" : "Cutups")</div>
+        <div class="card h-100">
+            <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-film"></use></svg>@(isPlayer ? "Film for you" : "Cutups")</div>
             <div class="card-body">
                 @if (Model.Cutups.Count == 0)
                 {
@@ -145,24 +214,24 @@
                 }
                 @if (Model.Me.Role == UserRole.Player)
                 {
-                    <a asp-controller="Cutups" asp-action="Index">See all your film</a>
+                    <a class="wr-more" asp-controller="Cutups" asp-action="Index">See all your film<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
                 }
                 else
                 {
-                    <a asp-controller="Film" asp-action="Index">Open game film</a>
+                    <a class="wr-more" asp-controller="Film" asp-action="Index">Open game film<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
                 }
             </div>
         </div>
     </div>
 
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">@(Model.Me.Role == UserRole.Player ? "Your study time this week" : "Study time")</div>
+        <div class="card h-100">
+            <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-clock"></use></svg>@(isPlayer ? "Your study time this week" : "Study time")</div>
             <div class="card-body">
                 @if (Model.Me.Role != UserRole.Player)
                 {
                     <p class="text-muted">How long your players were signed in, watched film and read the playbook.</p>
-                    <a asp-controller="Activity" asp-action="Index">See this week's study time</a>
+                    <a class="wr-more" asp-controller="Activity" asp-action="Index">See this week's study time<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
                 }
                 else
                 {
@@ -177,7 +246,7 @@
                             <dd class="col-sm-7">@DisplayText.StudyTime(Model.MyWeek.PlaybookSeconds)</dd>
                         </dl>
                     }
-                    <a asp-controller="Activity" asp-action="Mine">See how it is counted</a>
+                    <a class="wr-more" asp-controller="Activity" asp-action="Mine">See how it is counted<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
                 }
             </div>
         </div>
@@ -186,8 +255,8 @@
     @if (Model.Me.Role != UserRole.Player)
     {
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">Playbook changes</div>
+            <div class="card h-100">
+                <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-check"></use></svg>Playbook changes</div>
                 <div class="card-body">
                     @if (Model.WaitingChanges.Count == 0)
                     {
@@ -209,15 +278,15 @@
                             }
                         </ul>
                     }
-                    <a asp-controller="Approvals" asp-action="Index">See all playbook changes</a>
+                    <a class="wr-more" asp-controller="Approvals" asp-action="Index">See all playbook changes<svg class="wr-icon wr-icon-sm"><use href="#i-arrow"></use></svg></a>
                 </div>
             </div>
         </div>
     }
 
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">Your account</div>
+        <div class="card h-100">
+            <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-users"></use></svg>Your account</div>
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Name</dt>
@@ -236,8 +305,8 @@
     @if (Model.Me.Role != UserRole.Player)
     {
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">Your permissions</div>
+            <div class="card h-100">
+                <div class="card-header wr-card-title"><svg class="wr-icon wr-icon-sm"><use href="#i-shield"></use></svg>Your permissions</div>
                 <div class="card-body">
                     <dl class="row mb-0">
                         <dt class="col-sm-8">Publish playbook changes without approval</dt>
