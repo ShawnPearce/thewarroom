@@ -36,7 +36,8 @@ namespace TheWarRoomApp.Controllers
             return View(new UpdateTeamDto
             {
                 Name = team!.Name,
-                AttendanceTrackingEnabled = team.AttendanceTrackingEnabled
+                AttendanceTrackingEnabled = team.AttendanceTrackingEnabled,
+                Rules = team.Rules
             });   // Settings View
         }
 
@@ -47,13 +48,24 @@ namespace TheWarRoomApp.Controllers
         {
             if (ModelState.IsValid)
             {
+                // The game the team plays before the save, so that the message can say when it was changed
+                FootballRules? gameBefore = null;
+                var current = await _client.GetAsync("api/Team");
+                if (current.IsSuccessStatusCode)
+                {
+                    gameBefore = (await current.Content.ReadFromJsonAsync<TeamDto>())!.Rules;
+                }
+
                 var response = await _client.PutAsJsonAsync("api/Team", team);
                 if (response.IsSuccessStatusCode)   // 204 No Content
                 {
                     // The team name is also shown from the login cookie, so the cookie is issued again with the new name
                     await UpdateTeamNameInCookieAsync(team.Name.Trim());
 
-                    TempData["Message"] = "Team settings saved.";
+                    TempData["Message"] = gameBefore != null && gameBefore != team.Rules
+                        ? $"Team settings saved. The team now plays {DisplayText.Rules(team.Rules)}: the depth chart and the playbooks are set up for "
+                            + $"{(team.Rules == FootballRules.Canadian ? 12 : 11)} players a side. What belongs only to the other game is put away, not deleted."
+                        : "Team settings saved.";
                     return RedirectToAction(nameof(Settings));
                 }
                 else if (response.StatusCode == HttpStatusCode.Conflict)   // 409

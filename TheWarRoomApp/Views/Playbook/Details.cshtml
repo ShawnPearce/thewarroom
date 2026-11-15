@@ -16,12 +16,18 @@
     }
 </div>
 <p class="text-muted">
+    @DisplayText.Game(Model.Rules, Model.PlayersPerSide) &middot;
     @DisplayText.Count(Model.FormationCount, "formation", "formations") &middot; @DisplayText.Count(Model.PlayCount, "play", "plays")
-    @if (User.IsCoach())
+    @if (User.IsCoach() && !Model.IsPutAway)
     {
         <text>&middot; @DisplayText.PlaybookRights(Model)</text>
     }
 </p>
+
+@if (Model.IsPutAway)
+{
+    <partial name="_PutAwayNotice" model="Model.Rules" />
+}
 
 @if (Model.Formations.Count == 0)
 {

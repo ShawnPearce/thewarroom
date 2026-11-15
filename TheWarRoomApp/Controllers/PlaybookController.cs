@@ -95,7 +95,7 @@ namespace TheWarRoomApp.Controllers
 
             return View("Designer", new DesignerViewModel
             {
-                DiagramJson = start?.DiagramJson ?? EmptyDiagram(playbook.Unit),
+                DiagramJson = start?.DiagramJson ?? EmptyDiagram(playbook.Unit, playbook.Rules),
                 DraftKey = $"new-formation-{playbook.Id}",
                 Page = NewFormationPage(playbook, start?.Id)
             });
@@ -450,8 +450,9 @@ namespace TheWarRoomApp.Controllers
             return await ApiFailureAsync(response);
         }
 
-        // An empty field for a unit: the ball on the line of scrimmage and nobody lined up yet
-        private static string EmptyDiagram(TeamUnit unit)
+        // An empty field for a unit: the ball on the line of scrimmage and nobody lined up yet.
+        // The game decides how wide the field is drawn and how many players a side may be put on it.
+        private static string EmptyDiagram(TeamUnit unit, FootballRules rules)
         {
             // The defence lines up past the line of scrimmage, so its field shows more of that side
             bool defence = unit == TeamUnit.Defence;
@@ -460,6 +461,7 @@ namespace TheWarRoomApp.Controllers
             {
                 schemaVersion = 1,
                 unit = unit.ToString(),
+                rules = rules.ToString(),
                 view = new { yMin = defence ? -8 : -12, yMax = defence ? 22 : 18 },
                 ballX = 0,
                 players = Array.Empty<object>(),

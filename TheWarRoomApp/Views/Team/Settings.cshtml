@@ -6,8 +6,8 @@
 
 <h1 class="h3">Team settings</h1>
 <hr />
-<div class="row">
-    <div class="col-md-5">
+<div class="row g-4">
+    <div class="col-lg-6">
         <form asp-action="Settings">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -15,6 +15,15 @@
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <span class="control-label d-block">Game</span>
+                <partial name="_GameChoice" model="Model.Rules" />
+                <span asp-validation-for="Rules" class="text-danger"></span>
+                <div class="form-text">
+                    The game sets the positions on the depth chart and how many players a side a formation has.
+                </div>
             </div>
 
             <div class="form-group">
@@ -31,6 +40,35 @@
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
         </form>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">What changing the game does</div>
+            <div class="card-body">
+                <ul class="wr-game-effects">
+                    <li>
+                        <strong>Depth chart.</strong>
+                        It shows the positions of the game you choose. Canadian football has two more slotbacks (W and R),
+                        and two defensive halfbacks and one safety where American football has a free and a strong safety.
+                        It has no tight end.
+                    </li>
+                    <li>
+                        <strong>Playbooks.</strong>
+                        Each game has its own offence, defence and special teams playbook. The first time you choose a game,
+                        its playbooks start from base formations with that game's number of players, on that game's field.
+                    </li>
+                    <li>
+                        <strong>Play designer.</strong>
+                        A side has up to 11 players in American football and up to 12 in Canadian football.
+                    </li>
+                </ul>
+                <p class="mb-0 text-muted">
+                    Nothing is deleted. Positions, formations and plays that belong only to the other game are put away,
+                    with the players listed at those positions, and are there again when you switch back.
+                </p>
+            </div>
+        </div>
     </div>
 </div>
 

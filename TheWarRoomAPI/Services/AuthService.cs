@@ -130,6 +130,7 @@ namespace TheWarRoomAPI.Services
                     Id = u.Id,
                     TeamId = u.TeamId,
                     TeamName = u.Team!.Name,
+                    Rules = u.Team.Rules,
                     FirstName = u.FirstName,
                     LastName = u.LastName,
                     Email = u.Email,
@@ -147,6 +148,7 @@ namespace TheWarRoomAPI.Services
         {
             var user = await _context.Users
                 .AsNoTracking()
+                .Include(u => u.Team)
                 .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
             if (user == null)
             {
@@ -207,6 +209,7 @@ namespace TheWarRoomAPI.Services
             {
                 Id = user.Id,
                 TeamId = user.TeamId,
+                Rules = user.Team!.Rules,
                 Role = user.Role,
                 CoordinatorUnit = user.CoordinatorUnit,
                 CanPublishPlaybook = user.CanPublishPlaybook,

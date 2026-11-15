@@ -25,7 +25,9 @@ namespace TheWarRoomAPI.Services
         {
             EnsureIsCoach(currentUser);
 
-            var query = RequestsOfTeam(currentUser.TeamId);
+            // The list keeps to the playbooks of the game the team plays; requests in the other game's playbooks
+            // are put away with them
+            var query = RequestsOfTeam(currentUser.TeamId).Where(r => r.Playbook!.Rules == currentUser.Rules);
             if (status != null)
             {
                 query = query.Where(r => r.Status == status);
@@ -164,7 +166,7 @@ namespace TheWarRoomAPI.Services
 
             bool isFormation = request.TargetType == PlaybookTargetType.Formation;
             request.ProposedName = dto.Name.Trim();
-            request.ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, request.Playbook!.Unit.ToString(), isFormation);
+            request.ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, request.Playbook!.Unit.ToString(), isFormation, request.Playbook.Rules);
             request.ProposedNotes = isFormation || string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim();
             if (request.Action == PlaybookChangeAction.Create)
             {

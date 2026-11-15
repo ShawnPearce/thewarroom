@@ -53,6 +53,7 @@ namespace TheWarRoomApp.Controllers
                 var dto = new RegisterTeamDto
                 {
                     TeamName = model.TeamName,
+                    Rules = model.Rules,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Email = model.Email,

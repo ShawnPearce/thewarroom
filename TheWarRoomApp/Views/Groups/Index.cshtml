@@ -40,7 +40,15 @@
                     <td>
                         @foreach (var position in item.Positions)
                         {
-                            <span class="badge text-bg-light" title="@position.Name">@position.Code</span>
+                            @* A position only the other game has is put away: it is left off the depth chart for now *@
+                            if (position.IsPutAway)
+                            {
+                                <span class="badge wr-position-away" title="@position.Name: @DisplayText.Rules(position.Rules!.Value) only, put away">@position.Code</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-light" title="@position.Name">@position.Code</span>
+                            }
                         }
                     </td>
                     <td>

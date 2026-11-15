@@ -37,7 +37,17 @@
         @foreach (var position in Model.Positions) {
                     <tr>
                         <td><strong>@position.Code</strong></td>
-                        <td>@position.Name</td>
+                        <td>
+                            @position.Name
+                            @if (position.Rules != null)
+                            {
+                                <span class="badge text-bg-light">@DisplayText.Rules(position.Rules.Value) only</span>
+                            }
+                            @if (position.IsPutAway)
+                            {
+                                <span class="badge text-bg-secondary" title="Left off the depth chart until the team plays this game again">Put away</span>
+                            }
+                        </td>
                         <td class="text-nowrap">
                             @if (Model.CanManage)
                             {

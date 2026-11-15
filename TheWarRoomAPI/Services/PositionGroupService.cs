@@ -219,12 +219,13 @@ namespace TheWarRoomAPI.Services
                 return null;
             }
 
-            return ToDto(position);
+            return ToDto(position, currentUser);
         }
 
         public async Task<PositionDto> CreatePositionAsync(CurrentUser currentUser, SavePositionDto dto)
         {
-            // Business rule: a position is created inside a group of this team
+            // Business rule: a position is created inside a group of this team.
+            // A position a coach adds belongs to both games; only the standard positions are tied to one.
             var group = await _context.PositionGroups
                 .FirstOrDefaultAsync(g => g.Id == dto.PositionGroupId && g.TeamId == currentUser.TeamId);
             if (group == null)
@@ -253,7 +254,7 @@ namespace TheWarRoomAPI.Services
             _context.Positions.Add(position);
             await _context.SaveChangesAsync();
 
-            return ToDto(position);
+            return ToDto(position, currentUser);
         }
 
         public async Task<bool> UpdatePositionAsync(CurrentUser currentUser, int id, SavePositionDto dto)
@@ -360,7 +361,7 @@ namespace TheWarRoomAPI.Services
                 SortOrder = group.SortOrder,
                 Positions = (group.Positions ?? new List<Position>())
                     .OrderBy(p => p.SortOrder)
-                    .Select(ToDto)
+                    .Select(p => ToDto(p, currentUser))
                     .ToList(),
                 Coaches = (group.CoachAssignments ?? new List<CoachGroupAssignment>())
                     .Where(a => a.Coach != null)
@@ -389,7 +390,7 @@ namespace TheWarRoomAPI.Services
             };
         }
 
-        private static PositionDto ToDto(Position position)
+        private static PositionDto ToDto(Position position, CurrentUser currentUser)
         {
             return new PositionDto
             {
@@ -397,7 +398,11 @@ namespace TheWarRoomAPI.Services
                 PositionGroupId = position.PositionGroupId,
                 Code = position.Code,
                 Name = position.Name,
-                SortOrder = position.SortOrder
+                SortOrder = position.SortOrder,
+                Rules = position.Rules,
+
+                // A position only the other game has is left off the depth chart while the team plays this one
+                IsPutAway = position.Rules != null && position.Rules != currentUser.Rules
             };
         }
     }

@@ -22,6 +22,12 @@
                     <span asp-validation-for="TeamName" class="text-danger"></span>
                 </div>
 
+                <div class="form-group">
+                    <span class="control-label d-block">Game</span>
+                    <partial name="_GameChoice" model="@(Model?.Rules ?? FootballRules.American)" />
+                    <div class="form-text">You can change this later in the team's settings.</div>
+                </div>
+
                 <div class="row">
                     <div class="form-group col-sm-6">
                         <label asp-for="FirstName" class="control-label"></label>

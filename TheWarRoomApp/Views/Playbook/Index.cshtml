@@ -4,8 +4,15 @@
     ViewData["Title"] = "Playbook";
 }
 
-<div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
-    <h1 class="h3 mb-0">Playbook</h1>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <h1 class="h3 mb-0">Playbook</h1>
+        @if (Model.Count > 0)
+        {
+            @* The playbooks are those of the game the team plays: 11 players a side, or 12 *@
+            <span class="wr-game-label">@DisplayText.Game(Model[0].Rules, Model[0].PlayersPerSide)</span>
+        }
+    </div>
     @if (User.IsCoach())
     {
         <a asp-controller="Approvals" asp-action="Index" class="btn btn-outline-primary">Playbook changes</a>

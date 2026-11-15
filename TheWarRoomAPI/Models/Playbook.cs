@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TheWarRoomAPI.Models
 {
-    // A team has one playbook per unit: offence, defence and special teams
-    [Index(nameof(TeamId), nameof(Unit), IsUnique = true)]
+    // A team has one playbook per unit: offence, defence and special teams.
+    // Each game has its own three, because a formation has 11 players a side in one and 12 in the other.
+    // The team works in the playbooks of the game it plays; the others are kept as they were left.
+    [Index(nameof(TeamId), nameof(Unit), nameof(Rules), IsUnique = true)]
     public class Playbook
     {
         public int Id { get; set; }
@@ -14,6 +16,9 @@ namespace TheWarRoomAPI.Models
         public Team? Team { get; set; }
 
         public TeamUnit Unit { get; set; }
+
+        // The game this playbook is drawn for
+        public FootballRules Rules { get; set; } = FootballRules.American;
 
         [Required]
         [StringLength(60)]

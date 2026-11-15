@@ -6,6 +6,12 @@ namespace TheWarRoomAPI.DTOs
     public class DepthChartDto
     {
         public DepthChartWeekDto Week { get; set; } = new DepthChartWeekDto();
+
+        // The game the team plays, and how many players a side that puts on the field (11 or 12).
+        // The chart shows the positions of this game; positions only the other game has are put away.
+        public FootballRules Rules { get; set; }
+        public int PlayersPerSide { get; set; }
+
         public List<DepthChartGroupDto> Groups { get; set; } = new List<DepthChartGroupDto>();
 
         // What the current user may do, so the page can show the right buttons

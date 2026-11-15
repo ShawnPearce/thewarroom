@@ -36,6 +36,10 @@ else
         <div class="col-auto">
             <noscript><input type="submit" value="Show" class="btn btn-outline-primary" /></noscript>
         </div>
+        <div class="col-auto">
+            @* The chart shows the positions of the game the team plays *@
+            <span class="wr-game-label">@DisplayText.Game(chart.Rules, chart.PlayersPerSide)</span>
+        </div>
     </form>
 
     @if (User.IsPlayer())

@@ -18,6 +18,18 @@ namespace TheWarRoomApp.Infrastructure
             };
         }
 
+        // "American football" or "Canadian football"
+        public static string Rules(FootballRules rules)
+        {
+            return rules == FootballRules.Canadian ? "Canadian football" : "American football";
+        }
+
+        // "Canadian football · 12 a side", shown where the game decides what a page holds
+        public static string Game(FootballRules rules, int playersPerSide)
+        {
+            return $"{Rules(rules)} · {playersPerSide} a side";
+        }
+
         public static string Role(UserRole role, TeamUnit? coordinatorUnit)
         {
             return role switch

@@ -8,6 +8,10 @@ namespace TheWarRoomAPI.DTOs
         public int Id { get; set; }
         public int TeamId { get; set; }
         public string TeamName { get; set; } = string.Empty;
+
+        // The game the team plays: American or Canadian football
+        public FootballRules Rules { get; set; }
+
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;

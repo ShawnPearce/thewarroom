@@ -11,6 +11,9 @@ namespace TheWarRoomApp.Models
         [Display(Name = "Team")]
         public string TeamName { get; set; } = string.Empty;
 
+        // The game the team plays: American or Canadian football
+        public FootballRules Rules { get; set; }
+
         [Display(Name = "First name")]
         public string FirstName { get; set; } = string.Empty;
 

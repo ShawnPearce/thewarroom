@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using TheWarRoomAPI.Data;
 using TheWarRoomAPI.DTOs;
 using TheWarRoomAPI.Models;
@@ -23,6 +25,43 @@ namespace TheWarRoomAPI.Tests
 
             // False means every change to the entity classes has a migration
             Assert.False(context.Database.HasPendingModelChanges());
+        }
+
+        [Fact]
+        public void ADatabaseFromBeforeTeamsChoseTheirGame_IsBroughtUpToDateAsAmerican()
+        {
+            using var connection = new SqliteConnection("Filename=:memory:");
+            connection.Open();
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
+
+            using var context = new AppDbContext(options);
+            var migrator = context.GetService<IMigrator>();
+
+            // The database as it was before a team could choose its game, with a team already in it
+            migrator.Migrate("AddCutupRendering");
+            context.Database.ExecuteSqlRaw("""
+                INSERT INTO Teams (Id, Name, AttendanceTrackingEnabled, CreatedAt) VALUES (1, 'Test Tigers', 0, '2026-09-01 12:00:00');
+                INSERT INTO PositionGroups (Id, TeamId, Unit, Name, SortOrder) VALUES (1, 1, 1, 'Tight Ends', 1), (2, 1, 2, 'Defensive Backs', 2);
+                INSERT INTO Positions (Id, TeamId, PositionGroupId, Code, Name, SortOrder) VALUES
+                    (1, 1, 1, 'TE', 'Tight End', 1), (2, 1, 2, 'FS', 'Free Safety', 2), (3, 1, 2, 'SS', 'Strong Safety', 3),
+                    (4, 1, 2, 'LCB', 'Left Cornerback', 4), (5, 1, 2, 'S', 'Single-high Safety', 5);
+                INSERT INTO Playbooks (Id, TeamId, Unit, Name) VALUES (1, 1, 1, 'Offence playbook');
+                """);
+
+            migrator.Migrate();
+
+            // The team and its playbook are American football, which is what they always were
+            Assert.Equal(FootballRules.American, context.Teams.Single().Rules);
+            Assert.Equal(FootballRules.American, context.Playbooks.Single().Rules);
+
+            // The three standard positions only the American game has are marked, so they can be put away later.
+            // A position both games have, and one the team made itself, are left for both games.
+            var positions = context.Positions.ToDictionary(p => p.Code, p => p.Rules);
+            Assert.Equal(FootballRules.American, positions["TE"]);
+            Assert.Equal(FootballRules.American, positions["FS"]);
+            Assert.Equal(FootballRules.American, positions["SS"]);
+            Assert.Null(positions["LCB"]);
+            Assert.Null(positions["S"]);
         }
 
         [Fact]

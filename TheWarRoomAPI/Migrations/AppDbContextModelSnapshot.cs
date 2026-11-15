@@ -635,6 +635,9 @@ namespace TheWarRoomAPI.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Rules")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("TeamId")
                         .HasColumnType("INTEGER");
 
@@ -643,7 +646,7 @@ namespace TheWarRoomAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TeamId", "Unit")
+                    b.HasIndex("TeamId", "Unit", "Rules")
                         .IsUnique();
 
                     b.ToTable("Playbooks");
@@ -689,6 +692,9 @@ namespace TheWarRoomAPI.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("PositionGroupId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Rules")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("SortOrder")
@@ -865,6 +871,9 @@ namespace TheWarRoomAPI.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Rules")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

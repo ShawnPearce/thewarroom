@@ -48,6 +48,7 @@
                         <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Decide what each coach may do, with three switches</li>
                         <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Choose which coaches coach which position groups</li>
                         <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Approve or reject changes to the playbook</li>
+                        <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Choose the game the team plays: American or Canadian football</li>
                         <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Switch attendance tracking on or off, and rename the team</li>
                         <li><svg class="wr-icon" aria-hidden="true"><use href="#i-tick"></use></svg>Delete a week's depth chart</li>
                     </ul>
@@ -82,7 +83,8 @@
                 {
                     <ol class="wr-guide-steps" role="list">
                         <li>On the main page, choose <span class="wr-ui">Register your team</span>.</li>
-                        <li>Enter the <b>Team name</b>, your own name, your email and a password of at least 8 characters.</li>
+                        <li>Enter the <b>Team name</b> and pick the <b>Game</b>: American football (11 players a side) or Canadian football (12 a side).</li>
+                        <li>Enter your own name, your email and a password of at least 8 characters.</li>
                         <li>Choose <span class="wr-ui">Register team</span>. You are signed in as the team's head coach.</li>
                     </ol>
                     <p class="wr-guide-note">Already registered? Choose <span class="wr-ui">Sign in</span> and enter your email and password.</p>
@@ -97,7 +99,8 @@
                 }
                 <p class="wr-guide-note">
                     A new team starts with standard position groups and positions, three playbooks and a set of base formations,
-                    so there is something to work from on day one.
+                    so there is something to work from on day one. They are those of the team's game: American football, 11 players a side,
+                    unless Canadian football was chosen. <b>Is the game wrong?</b> <a href="#hc-game">Change it</a> before you go on.
                 </p>
             </article>
 
@@ -332,6 +335,36 @@
                 <p class="wr-guide-note">The full list for every role is under <a href="#roles">Who can do what</a>.</p>
             </article>
 
+            <article class="wr-guide-task" id="hc-game">
+                <div class="wr-guide-task-head">
+                    <h4>Choose American or Canadian football</h4>
+                    <span class="wr-guide-who">Only you</span>
+                </div>
+                <p class="wr-guide-where"><span class="visually-hidden">In the menu, under</span> Team <i aria-hidden="true">&rsaquo;</i> Team settings</p>
+                <ol class="wr-guide-steps" role="list">
+                    <li>Under <b>Game</b>, choose <span class="wr-ui">American football</span> (11 players a side) or <span class="wr-ui">Canadian football</span> (12 players a side).</li>
+                    <li>Choose <span class="wr-ui">Save</span>.</li>
+                </ol>
+                <dl class="wr-guide-terms">
+                    <div>
+                        <dt>Depth chart</dt>
+                        <dd>Shows the positions of the game you chose. Canadian football has two more slotbacks (W and R), and two defensive halfbacks and one safety (LHB, RHB and S) where American football has a free and a strong safety. It has no tight end.</dd>
+                    </div>
+                    <div>
+                        <dt>Playbooks</dt>
+                        <dd>Each game has its own offence, defence and special teams playbook. The first time you choose a game, they start from base formations with that game's number of players, drawn on that game's field.</dd>
+                    </div>
+                    <div>
+                        <dt>Play designer</dt>
+                        <dd>A side has up to 11 players in American football and up to 12 in Canadian football, where the field is also drawn wider.</dd>
+                    </div>
+                </dl>
+                <p class="wr-guide-note">
+                    <b>Nothing is deleted.</b> Positions, formations, plays and waiting changes that belong only to the other game are put away,
+                    with the players listed at those positions. Switch back and they are there again.
+                </p>
+            </article>
+
             <article class="wr-guide-task" id="hc-team-settings">
                 <div class="wr-guide-task-head">
                     <h4>Change the team's settings</h4>
@@ -377,6 +410,13 @@
                 <p>
                     Only active players in the position's group can be placed there. Add the player to the group, and check that their status
                     on the roster is not Inactive.
+                </p>
+            </details>
+            <details class="wr-guide-faq">
+                <summary>Our plays are gone since I changed the game.</summary>
+                <p>
+                    They are put away, not deleted. Each game has its own playbooks, so the plays drawn for the other game are not listed now.
+                    Change the game back under Team settings and they are there again.
                 </p>
             </details>
             <details class="wr-guide-faq">

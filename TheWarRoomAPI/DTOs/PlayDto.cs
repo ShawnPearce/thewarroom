@@ -17,6 +17,10 @@ namespace TheWarRoomAPI.DTOs
         public int Version { get; set; }
         public DateTime UpdatedAt { get; set; }
 
+        // The game the play is drawn for, and whether its playbook is put away (see PlaybookDto)
+        public FootballRules Rules { get; set; }
+        public bool IsPutAway { get; set; }
+
         public bool CanChange { get; set; }
         public bool CanPublish { get; set; }
 

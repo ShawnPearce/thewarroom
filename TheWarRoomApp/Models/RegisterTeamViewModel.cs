@@ -10,6 +10,10 @@ namespace TheWarRoomApp.Models
         [Display(Name = "Team name")]
         public string TeamName { get; set; } = string.Empty;
 
+        // The game the team plays; the head coach can change it later in the team's settings
+        [Display(Name = "Game")]
+        public FootballRules Rules { get; set; } = FootballRules.American;
+
         [Required(ErrorMessage = "First name is required.")]
         [StringLength(50, ErrorMessage = "First name can't exceed 50 characters.")]
         [Display(Name = "First name")]

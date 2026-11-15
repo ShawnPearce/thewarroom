@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using TheWarRoomAPI.Models;
 
 namespace TheWarRoomAPI.DTOs
 {
@@ -11,5 +12,10 @@ namespace TheWarRoomAPI.DTOs
 
         // While this is off, nobody can record attendance
         public bool AttendanceTrackingEnabled { get; set; }
+
+        // The game the team plays. Changing it changes the positions and playbooks the team works with.
+        // Left out, the game stays as it is.
+        [EnumDataType(typeof(FootballRules), ErrorMessage = "Choose American or Canadian football.")]
+        public FootballRules? Rules { get; set; }
     }
 }

@@ -4,6 +4,7 @@ namespace TheWarRoomAPI.Diagrams
     //
     // Everything is measured in yards:
     //   x  runs across the field from the centre:  -26.67 (left sideline) to +26.67 (right sideline)
+    //      on an American field, and -32.5 to +32.5 on the wider Canadian one
     //   y  runs up the field from the line of scrimmage: negative is the offence's backfield, positive is downfield
     //
     // A formation is the same document with no paths and no text.
@@ -13,6 +14,10 @@ namespace TheWarRoomAPI.Diagrams
 
         // "Offence", "Defence" or "SpecialTeams"
         public string Unit { get; set; } = "Offence";
+
+        // "American" or "Canadian": the game the diagram is drawn for, which sets the width of the field
+        // and how many players a side may have. A diagram stored before there was a choice is American.
+        public string Rules { get; set; } = "American";
 
         // How much of the field is shown
         public DiagramView View { get; set; } = new DiagramView();

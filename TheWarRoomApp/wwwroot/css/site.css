@@ -1394,6 +1394,115 @@ a.wr-tile:hover {
   color: var(--wr-slate-700);
 }
 
+/* The game the team plays, American or Canadian football: two buttons, of which one is always pressed */
+.wr-game {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.wr-game-option {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  height: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--wr-slate-300);
+  border-radius: var(--wr-radius-lg);
+  background-color: #fff;
+  color: var(--wr-slate-600);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.wr-game-option:hover {
+  border-color: var(--wr-blue-300);
+}
+
+/* How many players a side, in a circle like a player on a diagram */
+.wr-game-count {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid var(--wr-slate-300);
+  border-radius: 50%;
+  color: var(--wr-slate-600);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+}
+
+.wr-game-text {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.wr-game-name {
+  color: var(--wr-ink-850);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.wr-game-detail {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.btn-check:checked + .wr-game-option {
+  border-color: var(--wr-blue-600);
+  background-color: var(--wr-blue-50);
+  box-shadow: 0 0 0 1px var(--wr-blue-600);
+}
+
+.btn-check:checked + .wr-game-option .wr-game-count {
+  border-color: var(--wr-blue-600);
+  background-color: var(--wr-blue-600);
+  color: #fff;
+}
+
+.btn-check:focus-visible + .wr-game-option {
+  box-shadow: var(--wr-ring);
+}
+
+@media (max-width: 419.98px) {
+  .wr-game {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* What a change of game does, beside the settings */
+.wr-game-effects {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding-left: 1.1rem;
+}
+
+/* A position that is put away, in the list of a group's positions */
+.wr-position-away {
+  border: 1px dashed var(--wr-slate-300);
+  background-color: transparent;
+  color: var(--wr-slate-400);
+  font-weight: 600;
+}
+
+/* Which game a page is set up for, beside its title: "Canadian football · 12 a side" */
+.wr-game-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background-color: var(--wr-slate-100);
+  color: var(--wr-slate-700);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* ---------- 6. Playbook ---------- */
 
 /* A diagram takes the width it is given; the script sets its height from how much of the field it shows */

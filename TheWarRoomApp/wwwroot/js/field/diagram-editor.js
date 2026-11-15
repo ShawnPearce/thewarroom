@@ -183,8 +183,10 @@
     };
 
     Designer.prototype.addPlayer = function (point, team) {
-        if (Model.countPlayers(this.diagram, team) >= Model.MAX_PLAYERS_PER_SIDE) {
-            this.message('A side can have at most ' + Model.MAX_PLAYERS_PER_SIDE + ' players on the field.');
+        // 11 a side in American football, 12 in Canadian football
+        var most = Model.maxPlayersPerSide(this.diagram);
+        if (Model.countPlayers(this.diagram, team) >= most) {
+            this.message('A side can have at most ' + most + ' players on the field.');
             return;
         }
 
@@ -369,7 +371,7 @@
     Designer.prototype.snapToField = function (point) {
         var view = this.diagram.view;
         return {
-            x: snapInside(point.x, -Model.HALF_WIDTH, Model.HALF_WIDTH),
+            x: snapInside(point.x, -Model.halfWidth(this.diagram), Model.halfWidth(this.diagram)),
             y: snapInside(point.y, view.yMin, view.yMax)
         };
     };
@@ -390,7 +392,7 @@
         });
 
         return {
-            x: snapInside(x, -Model.HALF_WIDTH - left, Model.HALF_WIDTH - right),
+            x: snapInside(x, -Model.halfWidth(this.diagram) - left, Model.halfWidth(this.diagram) - right),
             y: snapInside(y, view.yMin - down, view.yMax - up)
         };
     };

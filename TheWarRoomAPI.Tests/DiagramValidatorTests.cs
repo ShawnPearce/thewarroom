@@ -1,10 +1,16 @@
+using TheWarRoomAPI.Data;
 using TheWarRoomAPI.Diagrams;
+using TheWarRoomAPI.Models;
 
 namespace TheWarRoomAPI.Tests
 {
     // A diagram comes from the browser as text, so it is checked like any other input before it is stored
     public class DiagramValidatorTests
     {
+        // Most tests are about American football; the ones about the Canadian game say so
+        private const FootballRules American = FootballRules.American;
+        private const FootballRules Canadian = FootballRules.Canadian;
+
         private static DiagramDocument SimpleDiagram()
         {
             return new DiagramDocument
@@ -31,7 +37,7 @@ namespace TheWarRoomAPI.Tests
         [Fact]
         public void APlay_KeepsItsPlayersRoutesAndText()
         {
-            string stored = DiagramValidator.Normalize(Json(SimpleDiagram()), "Offence", isFormation: false);
+            string stored = DiagramValidator.Normalize(Json(SimpleDiagram()), "Offence", isFormation: false, American);
 
             var diagram = DiagramValidator.Parse(stored);
             Assert.Equal(2, diagram.Players.Count);
@@ -42,7 +48,7 @@ namespace TheWarRoomAPI.Tests
         [Fact]
         public void AFormation_KeepsOnlyThePlayers()
         {
-            string stored = DiagramValidator.Normalize(Json(SimpleDiagram()), "Offence", isFormation: true);
+            string stored = DiagramValidator.Normalize(Json(SimpleDiagram()), "Offence", isFormation: true, American);
 
             var diagram = DiagramValidator.Parse(stored);
             Assert.Equal(2, diagram.Players.Count);
@@ -56,7 +62,7 @@ namespace TheWarRoomAPI.Tests
             var sent = SimpleDiagram();
             sent.Unit = "Defence";
 
-            string stored = DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false);
+            string stored = DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false, American);
 
             Assert.Equal("Offence", DiagramValidator.Parse(stored).Unit);
         }
@@ -71,7 +77,7 @@ namespace TheWarRoomAPI.Tests
                  "drawings":[]}
                 """;
 
-            string stored = DiagramValidator.Normalize(sent, "Offence", isFormation: false);
+            string stored = DiagramValidator.Normalize(sent, "Offence", isFormation: false, American);
 
             Assert.DoesNotContain("somethingElse", stored);
             Assert.DoesNotContain("onclick", stored);
@@ -89,7 +95,7 @@ namespace TheWarRoomAPI.Tests
         [InlineData("{\"schemaVersion\":1,\"players\":\"oops\"}")]
         public void TextThatIsNotADiagram_IsRejected(string sent)
         {
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(sent, "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(sent, "Offence", isFormation: false, American));
         }
 
         [Fact]
@@ -98,7 +104,7 @@ namespace TheWarRoomAPI.Tests
             var sent = SimpleDiagram();
             sent.SchemaVersion = 2;
 
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false, American));
         }
 
         [Fact]
@@ -110,7 +116,7 @@ namespace TheWarRoomAPI.Tests
                 player.Team = "opp";
             }
 
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false, American));
         }
 
         [Fact]
@@ -122,7 +128,7 @@ namespace TheWarRoomAPI.Tests
                 sent.Players.Add(new DiagramPlayer { Id = $"p{i}", Label = "P", X = i - 6, Y = -1 });
             }
 
-            var error = Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true));
+            var error = Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true, American));
             Assert.Contains("11 players", error.Message);
         }
 
@@ -136,7 +142,7 @@ namespace TheWarRoomAPI.Tests
                 sent.Players.Add(new DiagramPlayer { Id = $"d{i}", Team = "opp", Label = "D", X = i - 5, Y = 2 });
             }
 
-            string stored = DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true);
+            string stored = DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true, American);
 
             Assert.Equal(22, DiagramValidator.Parse(stored).Players.Count);
         }
@@ -147,7 +153,7 @@ namespace TheWarRoomAPI.Tests
             var sent = SimpleDiagram();
             sent.Players[1].Id = "qb";
 
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false, American));
         }
 
         [Theory]
@@ -160,7 +166,7 @@ namespace TheWarRoomAPI.Tests
             sent.Players[0].X = x;
             sent.Players[0].Y = y;
 
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false, American));
         }
 
         [Fact]
@@ -169,7 +175,7 @@ namespace TheWarRoomAPI.Tests
             var sent = SimpleDiagram();
             sent.Players[1].Paths[0].Pts.Add(new[] { 0.0, 40.0 });   // 39 yards downfield, the view stops at 18
 
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false, American));
         }
 
         [Fact]
@@ -177,35 +183,125 @@ namespace TheWarRoomAPI.Tests
         {
             var longLabel = SimpleDiagram();
             longLabel.Players[0].Label = "QUARTERBACK";
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(longLabel), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(longLabel), "Offence", isFormation: false, American));
 
             var tooManyPaths = SimpleDiagram();
             for (int i = 0; i < 3; i++)
             {
                 tooManyPaths.Players[1].Paths.Add(new DiagramPath { Kind = "route", Pts = { new[] { 1.0, 1.0 } } });
             }
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(tooManyPaths), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(tooManyPaths), "Offence", isFormation: false, American));
 
             var unknownKind = SimpleDiagram();
             unknownKind.Players[1].Paths[0].Kind = "teleport";
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(unknownKind), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(unknownKind), "Offence", isFormation: false, American));
 
             var longText = SimpleDiagram();
             longText.Drawings[0].Text = new string('a', 61);
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(longText), "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(longText), "Offence", isFormation: false, American));
 
             var huge = "{\"schemaVersion\":1,\"padding\":\"" + new string('x', 70_000) + "\"}";
-            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(huge, "Offence", isFormation: false));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(huge, "Offence", isFormation: false, American));
         }
 
         [Fact]
         public void EveryBaseFormation_IsAValidDiagramWithElevenPlayers()
         {
-            foreach (var template in TheWarRoomAPI.Data.FormationTemplates.All())
+            var templates = FormationTemplates.For(American);
+            Assert.Equal(13, templates.Count);
+
+            foreach (var template in templates)
             {
-                string stored = DiagramValidator.Normalize(Json(template.Diagram), template.Unit.ToString(), isFormation: true);
+                string stored = DiagramValidator.Normalize(Json(template.Diagram), template.Unit.ToString(), isFormation: true, American);
                 Assert.Equal(11, DiagramValidator.Parse(stored).Players.Count);
             }
+        }
+
+        // ---------- Canadian football: 12 a side on a wider field ----------
+
+        [Fact]
+        public void EveryCanadianBaseFormation_IsAValidDiagramWithTwelvePlayers()
+        {
+            var templates = FormationTemplates.For(Canadian);
+
+            // The same number of formations for each unit as the American set has
+            Assert.Equal(
+                FormationTemplates.For(American).GroupBy(t => t.Unit).Select(g => g.Count()),
+                templates.GroupBy(t => t.Unit).Select(g => g.Count()));
+
+            foreach (var template in templates)
+            {
+                string stored = DiagramValidator.Normalize(Json(template.Diagram), template.Unit.ToString(), isFormation: true, Canadian);
+
+                var diagram = DiagramValidator.Parse(stored);
+                Assert.Equal(12, diagram.Players.Count);
+                Assert.Equal("Canadian", diagram.Rules);
+            }
+        }
+
+        [Fact]
+        public void ACanadianFormation_DoesNotFitTheAmericanGame()
+        {
+            // Twelve players are one too many for it
+            foreach (var template in FormationTemplates.For(Canadian))
+            {
+                Assert.Throws<InvalidOperationException>(() =>
+                    DiagramValidator.Normalize(Json(template.Diagram), template.Unit.ToString(), isFormation: true, American));
+            }
+        }
+
+        [Fact]
+        public void TwelveASide_IsAllowedInTheCanadianGame_AndThirteenIsNot()
+        {
+            var sent = new DiagramDocument { Unit = "Offence" };
+            for (int i = 0; i < 12; i++)
+            {
+                sent.Players.Add(new DiagramPlayer { Id = $"o{i}", Team = "own", Label = "O", X = i - 6, Y = -1 });
+                sent.Players.Add(new DiagramPlayer { Id = $"d{i}", Team = "opp", Label = "D", X = i - 6, Y = 1 });
+            }
+
+            string stored = DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true, Canadian);
+            Assert.Equal(24, DiagramValidator.Parse(stored).Players.Count);
+
+            sent.Players.Add(new DiagramPlayer { Id = "o12", Team = "own", Label = "O", X = 8, Y = -1 });
+            var error = Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true, Canadian));
+            Assert.Contains("12 players", error.Message);
+        }
+
+        [Fact]
+        public void TheCanadianField_IsWider()
+        {
+            // 30 yards from the centre is inside a Canadian field (32.5 a side) and outside an American one (26.67)
+            var sent = new DiagramDocument
+            {
+                Unit = "Offence",
+                Players = { new DiagramPlayer { Id = "x", Label = "X", X = -30, Y = -1 } }
+            };
+
+            Assert.NotNull(DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true, Canadian));
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true, American));
+
+            sent.Players[0].X = -33;
+            Assert.Throws<InvalidOperationException>(() => DiagramValidator.Normalize(Json(sent), "Offence", isFormation: true, Canadian));
+        }
+
+        [Fact]
+        public void TheGameComesFromThePlaybook_NotFromTheBrowser()
+        {
+            // A browser that claims the wider game does not get it
+            var sent = SimpleDiagram();
+            sent.Rules = "Canadian";
+
+            string stored = DiagramValidator.Normalize(Json(sent), "Offence", isFormation: false, American);
+            Assert.Equal("American", DiagramValidator.Parse(stored).Rules);
+        }
+
+        [Fact]
+        public void ADiagramStoredBeforeThereWasAChoice_IsAmerican()
+        {
+            var diagram = DiagramValidator.Parse("{ \"schemaVersion\": 1, \"unit\": \"Offence\", \"players\": [ { \"id\": \"qb\", \"label\": \"QB\", \"x\": 0, \"y\": -5 } ] }");
+
+            Assert.Equal("American", diagram.Rules);
         }
     }
 }

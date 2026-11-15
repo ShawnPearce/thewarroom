@@ -1,0 +1,25 @@
+@model FootballRules
+
+@* The choice between the two games, as two buttons of which one is always pressed.
+   It is posted as the form field "Rules". Used in the team's settings and when a team registers. *@
+<div class="wr-game" role="radiogroup" aria-label="The game the team plays">
+    <input type="radio" class="btn-check" name="Rules" id="rules-american" value="@FootballRules.American" autocomplete="off"
+           checked="@(Model == FootballRules.American)" />
+    <label class="wr-game-option" for="rules-american">
+        <span class="wr-game-count" aria-hidden="true">11</span>
+        <span class="wr-game-text">
+            <span class="wr-game-name">American football</span>
+            <span class="wr-game-detail">11 players a side</span>
+        </span>
+    </label>
+
+    <input type="radio" class="btn-check" name="Rules" id="rules-canadian" value="@FootballRules.Canadian" autocomplete="off"
+           checked="@(Model == FootballRules.Canadian)" />
+    <label class="wr-game-option" for="rules-canadian">
+        <span class="wr-game-count" aria-hidden="true">12</span>
+        <span class="wr-game-text">
+            <span class="wr-game-name">Canadian football</span>
+            <span class="wr-game-detail">12 players a side, on a wider field</span>
+        </span>
+    </label>
+</div>

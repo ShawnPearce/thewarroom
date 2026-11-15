@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using TheWarRoomAPI.Models;
 
 namespace TheWarRoomAPI.DTOs
 {
@@ -8,6 +9,10 @@ namespace TheWarRoomAPI.DTOs
         [Required(ErrorMessage = "Team name is required.")]
         [StringLength(100, ErrorMessage = "Team name can't exceed 100 characters.")]
         public string TeamName { get; set; } = string.Empty;
+
+        // The game the team plays. Left out, it is American football; the head coach can change it later.
+        [EnumDataType(typeof(FootballRules), ErrorMessage = "Choose American or Canadian football.")]
+        public FootballRules? Rules { get; set; }
 
         [Required(ErrorMessage = "First name is required.")]
         [StringLength(50, ErrorMessage = "First name can't exceed 50 characters.")]

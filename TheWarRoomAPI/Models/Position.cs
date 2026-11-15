@@ -28,6 +28,10 @@ namespace TheWarRoomAPI.Models
         [StringLength(50)]
         public string Name { get; set; } = string.Empty;
 
+        // Empty for a position both games have. A position only one game has (the tight end in American football,
+        // the slotbacks in Canadian football) names that game, and is put away while the team plays the other one.
+        public FootballRules? Rules { get; set; }
+
         public int SortOrder { get; set; }
     }
 }

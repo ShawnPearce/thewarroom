@@ -13,6 +13,10 @@ namespace TheWarRoomAPI.DTOs
         public string DiagramJson { get; set; } = string.Empty;
         public int Version { get; set; }
 
+        // The game the formation is drawn for, and whether its playbook is put away (see PlaybookDto)
+        public FootballRules Rules { get; set; }
+        public bool IsPutAway { get; set; }
+
         public bool CanChange { get; set; }
         public bool CanPublish { get; set; }
 

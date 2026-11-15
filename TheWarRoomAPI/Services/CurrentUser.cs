@@ -9,6 +9,10 @@ namespace TheWarRoomAPI.Services
     {
         public int Id { get; set; }
         public int TeamId { get; set; }
+
+        // The game the user's team plays. It decides which positions and playbooks the team is working with.
+        public FootballRules Rules { get; set; } = FootballRules.American;
+
         public UserRole Role { get; set; }
         public TeamUnit? CoordinatorUnit { get; set; }
         public bool CanPublishPlaybook { get; set; }

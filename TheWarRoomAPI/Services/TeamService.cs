@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TheWarRoomAPI.Data;
+using TheWarRoomAPI.Diagrams;
 using TheWarRoomAPI.DTOs;
 using TheWarRoomAPI.Models;
 
@@ -45,6 +46,7 @@ namespace TheWarRoomAPI.Services
             {
                 Name = dto.TeamName.Trim(),
                 AttendanceTrackingEnabled = false,
+                Rules = dto.Rules ?? FootballRules.American,
                 CreatedAt = now
             };
 
@@ -67,7 +69,7 @@ namespace TheWarRoomAPI.Services
 
             _context.Users.Add(headCoach);   // the team is saved with it through the navigation property
 
-            // Every new team starts with the standard position groups, positions and playbooks
+            // Every new team starts with the standard position groups, positions and playbooks of the game it plays
             TeamDefaults.AddTo(team, _context, now);
 
             await _context.SaveChangesAsync();
@@ -77,16 +79,21 @@ namespace TheWarRoomAPI.Services
 
         public async Task<TeamDto?> GetAsync(CurrentUser currentUser)
         {
-            return await _context.Teams
-                .Where(t => t.Id == currentUser.TeamId)
-                .Select(t => new TeamDto
-                {
-                    Id = t.Id,
-                    Name = t.Name,
-                    AttendanceTrackingEnabled = t.AttendanceTrackingEnabled,
-                    CreatedAt = t.CreatedAt
-                })
-                .FirstOrDefaultAsync();
+            var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == currentUser.TeamId);
+            if (team == null)
+            {
+                return null;
+            }
+
+            return new TeamDto
+            {
+                Id = team.Id,
+                Name = team.Name,
+                AttendanceTrackingEnabled = team.AttendanceTrackingEnabled,
+                Rules = team.Rules,
+                PlayersPerSide = DiagramValidator.PlayersPerSide(team.Rules),
+                CreatedAt = team.CreatedAt
+            };
         }
 
         public async Task<bool> UpdateAsync(CurrentUser currentUser, UpdateTeamDto dto)
@@ -121,6 +128,17 @@ namespace TheWarRoomAPI.Services
 
             team.Name = name;
             team.AttendanceTrackingEnabled = dto.AttendanceTrackingEnabled;
+
+            // Business rule: the head coach chooses the game the team plays, American (11 a side) or Canadian (12 a side).
+            // From then on the team works with that game's positions and playbooks. The first time a team takes up
+            // a game it is given the game's standard positions and base formations; what belongs only to the other
+            // game is put away, not deleted, and is there again when the team goes back to it.
+            if (dto.Rules != null && dto.Rules != team.Rules)
+            {
+                team.Rules = dto.Rules.Value;
+                await TeamDefaults.AddWhatTheGameNeedsAsync(team, _context, _clock.GetUtcNow().UtcDateTime);
+            }
+
             await _context.SaveChangesAsync();
             return true;
         }

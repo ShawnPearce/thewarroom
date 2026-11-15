@@ -16,6 +16,12 @@ namespace TheWarRoomAPI.Services
             };
         }
 
+        // "American football" or "Canadian football"
+        public static string Rules(FootballRules rules)
+        {
+            return rules == FootballRules.Canadian ? "Canadian football" : "American football";
+        }
+
         public static string FullName(User user)
         {
             return $"{user.FirstName} {user.LastName}";

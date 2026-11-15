@@ -26,6 +26,11 @@
     @Model.FormationName formation &middot; version @Model.Version &middot; last changed @DisplayText.When(Model.UpdatedAt)
 </p>
 
+@if (Model.IsPutAway)
+{
+    <partial name="_PutAwayNotice" model="Model.Rules" />
+}
+
 @if (Model.PendingRequestId != null)
 {
     <div class="alert alert-warning" role="status">

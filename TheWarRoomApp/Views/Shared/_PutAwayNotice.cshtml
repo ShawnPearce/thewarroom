@@ -1,0 +1,12 @@
+@model FootballRules
+
+@* Shown on a playbook, a formation or a play of the game the team is not playing now.
+   The model is the game the playbook was drawn for. *@
+@{
+    var gameNow = Model == FootballRules.American ? FootballRules.Canadian : FootballRules.American;
+}
+<div class="alert alert-secondary" role="status">
+    This belongs to the playbooks for @DisplayText.Rules(Model), which are put away while the team plays @DisplayText.Rules(gameNow).
+    It can be read here but not changed, and it is not listed under Playbook.
+    The head coach can change the game back in the team's settings.
+</div>

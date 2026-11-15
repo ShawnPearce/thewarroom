@@ -44,10 +44,10 @@
             self.bindSearch(panel);
         });
 
-        // The address can name a place inside a guide that is not the open one
-        this.followAddress();
+        // The address can name a place in a guide: the page opens there, and follows a link to one later
+        this.followAddress(true);
         window.addEventListener('hashchange', function () {
-            self.followAddress();
+            self.followAddress(false);
         });
 
         window.addEventListener('scroll', function () {
@@ -86,8 +86,9 @@
         })[0] || null;
     };
 
-    // Goes to the place the address names, opening its guide first if another one is open
-    Guide.prototype.followAddress = function () {
+    // Goes to the place the address names, opening its guide first if another one is open.
+    // "arriving" is true when the page has just been opened at that address.
+    Guide.prototype.followAddress = function (arriving) {
         var id = '';
         try {
             id = decodeURIComponent((window.location.hash || '').slice(1));
@@ -100,7 +101,8 @@
             return;
         }
 
-        // The browser goes to the place by itself, unless the place was not on the page when it tried
+        // After a click inside the page the browser glides to the place by itself,
+        // unless the place was not on the page when it tried
         var wasHidden = false;
 
         var panel = target.closest('[data-guide-panel]');
@@ -124,7 +126,8 @@
             target.open = true;
         }
 
-        if (wasHidden) {
+        // Arriving at the page, the place is shown straight away, without the glide
+        if (wasHidden || arriving) {
             target.scrollIntoView({ behavior: 'instant', block: 'start' });
         }
         this.mark();

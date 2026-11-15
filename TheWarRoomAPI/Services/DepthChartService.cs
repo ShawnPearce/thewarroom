@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TheWarRoomAPI.Data;
+using TheWarRoomAPI.Diagrams;
 using TheWarRoomAPI.DTOs;
 using TheWarRoomAPI.Models;
 
@@ -112,9 +113,18 @@ namespace TheWarRoomAPI.Services
                 .OrderBy(p => p.Rank)
                 .ToListAsync();
 
+            // Business rule: the chart shows the positions of the game the team plays. A position only the other
+            // game has is put away with the players listed at it. A group whose positions are all put away
+            // (the tight ends, in Canadian football) is left off the chart too.
+            groups = groups
+                .Where(group => group.Positions!.Count == 0 || group.Positions.Any(position => IsInUse(currentUser, position)))
+                .ToList();
+
             return new DepthChartDto
             {
                 Week = ToDto(week),
+                Rules = currentUser.Rules,
+                PlayersPerSide = DiagramValidator.PlayersPerSide(currentUser.Rules),
                 CanCreateWeek = AccessRules.CanCreateDepthChartWeek(currentUser),
                 CanDeleteWeek = AccessRules.CanManageTeam(currentUser),
                 Groups = groups.Select(group => new DepthChartGroupDto
@@ -124,6 +134,7 @@ namespace TheWarRoomAPI.Services
                     Unit = group.Unit,
                     CanEdit = AccessRules.CanEditDepthChart(currentUser, group),
                     Positions = group.Positions!
+                        .Where(position => IsInUse(currentUser, position))
                         .OrderBy(position => position.SortOrder)
                         .Select(position => new DepthChartPositionDto
                         {
@@ -227,8 +238,10 @@ namespace TheWarRoomAPI.Services
                 return null;
             }
 
+            // Only at the positions of the game the team plays (see GetWeekAsync)
             return await _context.DepthChartPlacements
                 .Where(p => p.DepthChartWeekId == week.Id && p.PlayerId == currentUser.Id)
+                .Where(p => p.Position!.Rules == null || p.Position.Rules == currentUser.Rules)
                 .OrderBy(p => p.Position!.SortOrder)
                 .Select(p => new MyPlacementDto
                 {
@@ -366,11 +379,14 @@ namespace TheWarRoomAPI.Services
                 .FirstOrDefaultAsync(w => w.Id == weekId && w.TeamId == currentUser.TeamId);
         }
 
+        // A position that is put away is not found: nothing at it can be looked at or changed
+        // until the team plays its game again.
         private async Task<Position?> FindPositionAsync(CurrentUser currentUser, int positionId)
         {
             return await _context.Positions
                 .Include(p => p.PositionGroup)
-                .FirstOrDefaultAsync(p => p.Id == positionId && p.TeamId == currentUser.TeamId);
+                .FirstOrDefaultAsync(p => p.Id == positionId && p.TeamId == currentUser.TeamId
+                    && (p.Rules == null || p.Rules == currentUser.Rules));
         }
 
         private async Task<DepthChartPlacement?> FindPlacementAsync(CurrentUser currentUser, int placementId)
@@ -378,7 +394,14 @@ namespace TheWarRoomAPI.Services
             return await _context.DepthChartPlacements
                 .Include(p => p.Position)
                     .ThenInclude(position => position!.PositionGroup)
-                .FirstOrDefaultAsync(p => p.Id == placementId && p.TeamId == currentUser.TeamId);
+                .FirstOrDefaultAsync(p => p.Id == placementId && p.TeamId == currentUser.TeamId
+                    && (p.Position!.Rules == null || p.Position.Rules == currentUser.Rules));
+        }
+
+        // Does the game the team plays have this position? Most positions belong to both games.
+        private static bool IsInUse(CurrentUser currentUser, Position position)
+        {
+            return position.Rules == null || position.Rules == currentUser.Rules;
         }
 
         // The placements at one position in one week, starter first
@@ -422,6 +445,7 @@ namespace TheWarRoomAPI.Services
 
         // Starts a new week as a copy of an earlier one.
         // Players who have since been deactivated, or who have left the position's group, are not carried over.
+        // Neither is anyone listed at a position that is put away: the new week is made for the game the team plays now.
         private async Task CopyPlacementsAsync(CurrentUser currentUser, int sourceWeekId, DepthChartWeek newWeek)
         {
             var source = await FindWeekAsync(currentUser, sourceWeekId);
@@ -432,6 +456,7 @@ namespace TheWarRoomAPI.Services
 
             var sourcePlacements = await _context.DepthChartPlacements
                 .Where(p => p.DepthChartWeekId == source.Id)
+                .Where(p => p.Position!.Rules == null || p.Position.Rules == currentUser.Rules)
                 .Include(p => p.Position)
                 .Include(p => p.Player)
                     .ThenInclude(u => u!.RosterEntry)

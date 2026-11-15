@@ -30,11 +30,12 @@
     // and its height follows from how much of the field the diagram shows.
     function layout(canvas, diagram) {
         var width = canvas.clientWidth || (canvas.parentElement && canvas.parentElement.clientWidth) || 600;
-        var scale = width / Model.FIELD_WIDTH;   // pixels per yard
+        var scale = width / Model.fieldWidth(diagram);   // pixels per yard: the whole width of the field is always shown
         return {
             width: width,
             height: (diagram.view.yMax - diagram.view.yMin) * scale,
             scale: scale,
+            halfWidth: Model.halfWidth(diagram),   // a Canadian field is wider than an American one
             view: diagram.view
         };
     }
@@ -42,7 +43,7 @@
     // Yards -> pixels. The y axis is flipped because on screen "up the field" is towards the top.
     function toPixels(size, x, y) {
         return {
-            x: (x + Model.HALF_WIDTH) * size.scale,
+            x: (x + size.halfWidth) * size.scale,
             y: (size.view.yMax - y) * size.scale
         };
     }
@@ -50,7 +51,7 @@
     // Pixels -> yards, for turning a click on the canvas into a place on the field
     function toYards(size, pixelX, pixelY) {
         return {
-            x: pixelX / size.scale - Model.HALF_WIDTH,
+            x: pixelX / size.scale - size.halfWidth,
             y: size.view.yMax - pixelY / size.scale
         };
     }
@@ -128,12 +129,12 @@
         context.lineWidth = 1;
         for (var y = Math.ceil(view.yMin / 5) * 5; y <= view.yMax; y += 5) {
             if (y !== 0) {
-                line(context, toPixels(size, -Model.HALF_WIDTH, y), toPixels(size, Model.HALF_WIDTH, y));
+                line(context, toPixels(size, -size.halfWidth, y), toPixels(size, size.halfWidth, y));
             }
         }
 
-        // Hash marks: short ticks every yard. High school hashes are 53 feet 4 inches in from each sideline.
-        var hashX = 8.89;
+        // Hash marks: short ticks every yard, where the diagram's game has them
+        var hashX = Model.hashX(diagram);
         context.strokeStyle = COLOURS.hashMark;
         for (var yard = Math.ceil(view.yMin); yard <= view.yMax; yard++) {
             if (yard % 5 !== 0) {
@@ -146,7 +147,7 @@
         // The line of scrimmage
         context.strokeStyle = COLOURS.scrimmage;
         context.lineWidth = 2;
-        line(context, toPixels(size, -Model.HALF_WIDTH, 0), toPixels(size, Model.HALF_WIDTH, 0));
+        line(context, toPixels(size, -size.halfWidth, 0), toPixels(size, size.halfWidth, 0));
 
         // The ball
         var ball = toPixels(size, diagram.ballX, 0);

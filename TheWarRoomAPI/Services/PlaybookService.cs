@@ -23,14 +23,17 @@ namespace TheWarRoomAPI.Services
 
         public async Task<List<PlaybookDto>> GetPlaybooksAsync(CurrentUser currentUser)
         {
+            // Business rule: the team works in the three playbooks of the game it plays.
+            // The playbooks of the other game are put away: kept as they were left, but not listed.
             var playbooks = await _context.Playbooks
-                .Where(p => p.TeamId == currentUser.TeamId)
+                .Where(p => p.TeamId == currentUser.TeamId && p.Rules == currentUser.Rules)
                 .OrderBy(p => p.Unit)
                 .Select(p => new PlaybookDto
                 {
                     Id = p.Id,
                     Unit = p.Unit,
                     Name = p.Name,
+                    Rules = p.Rules,
                     FormationCount = p.Formations!.Count,
                     PlayCount = p.Formations!.SelectMany(f => f.Plays!).Count()
                 })
@@ -41,6 +44,7 @@ namespace TheWarRoomAPI.Services
 
             foreach (var playbook in playbooks)
             {
+                playbook.PlayersPerSide = DiagramValidator.PlayersPerSide(playbook.Rules);
                 playbook.CanChange = AccessRules.CanChangePlaybook(currentUser, playbook.Unit);
                 playbook.CanPublish = AccessRules.CanPublishPlaybook(currentUser, playbook.Unit);
             }
@@ -62,16 +66,20 @@ namespace TheWarRoomAPI.Services
             EnsureCanRead(currentUser, playbook.Unit);
 
             var pendingFormationIds = await PendingFormationIdsAsync(currentUser, playbook.Id);
+            bool putAway = IsPutAway(currentUser, playbook);
 
             return new PlaybookDetailDto
             {
                 Id = playbook.Id,
                 Unit = playbook.Unit,
                 Name = playbook.Name,
+                Rules = playbook.Rules,
+                PlayersPerSide = DiagramValidator.PlayersPerSide(playbook.Rules),
+                IsPutAway = putAway,
                 FormationCount = playbook.Formations!.Count,
                 PlayCount = playbook.Formations.Sum(f => f.Plays!.Count),
-                CanChange = AccessRules.CanChangePlaybook(currentUser, playbook.Unit),
-                CanPublish = AccessRules.CanPublishPlaybook(currentUser, playbook.Unit),
+                CanChange = !putAway && AccessRules.CanChangePlaybook(currentUser, playbook.Unit),
+                CanPublish = !putAway && AccessRules.CanPublishPlaybook(currentUser, playbook.Unit),
                 Formations = playbook.Formations
                     .OrderBy(f => f.Id)
                     .Select(f => new FormationSummaryDto
@@ -108,6 +116,8 @@ namespace TheWarRoomAPI.Services
                     .ToListAsync()
                 : null;
 
+            bool putAway = IsPutAway(currentUser, formation.Playbook);
+
             return new FormationDto
             {
                 Id = formation.Id,
@@ -117,8 +127,10 @@ namespace TheWarRoomAPI.Services
                 Name = formation.Name,
                 DiagramJson = formation.DiagramJson,
                 Version = formation.Version,
-                CanChange = AccessRules.CanChangePlaybook(currentUser, unit),
-                CanPublish = AccessRules.CanPublishPlaybook(currentUser, unit),
+                Rules = formation.Playbook.Rules,
+                IsPutAway = putAway,
+                CanChange = !putAway && AccessRules.CanChangePlaybook(currentUser, unit),
+                CanPublish = !putAway && AccessRules.CanPublishPlaybook(currentUser, unit),
                 PendingRequestId = pending?.FirstOrDefault(r => r.TargetType == PlaybookTargetType.Formation)?.Id,
                 Plays = formation.Plays!
                     .OrderBy(p => p.Name)
@@ -154,6 +166,8 @@ namespace TheWarRoomAPI.Services
                     .FirstOrDefaultAsync()
                 : null;
 
+            bool putAway = IsPutAway(currentUser, playbook);
+
             return new PlayDto
             {
                 Id = play.Id,
@@ -167,8 +181,10 @@ namespace TheWarRoomAPI.Services
                 Notes = play.Notes,
                 Version = play.Version,
                 UpdatedAt = play.UpdatedAt,
-                CanChange = AccessRules.CanChangePlaybook(currentUser, playbook.Unit),
-                CanPublish = AccessRules.CanPublishPlaybook(currentUser, playbook.Unit),
+                Rules = playbook.Rules,
+                IsPutAway = putAway,
+                CanChange = !putAway && AccessRules.CanChangePlaybook(currentUser, playbook.Unit),
+                CanPublish = !putAway && AccessRules.CanPublishPlaybook(currentUser, playbook.Unit),
                 PendingRequestId = pendingRequestId
             };
         }
@@ -184,7 +200,7 @@ namespace TheWarRoomAPI.Services
                 return null;
             }
 
-            EnsureCanChange(currentUser, playbook.Unit);
+            EnsureCanChange(currentUser, playbook);
 
             var name = dto.Name.Trim();
             return await SubmitAsync(currentUser, playbook, new ApprovalRequest
@@ -193,7 +209,7 @@ namespace TheWarRoomAPI.Services
                 Action = PlaybookChangeAction.Create,
                 TargetName = name,
                 ProposedName = name,
-                ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, playbook.Unit.ToString(), isFormation: true)
+                ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, playbook.Unit.ToString(), isFormation: true, rules: playbook.Rules)
             });
         }
 
@@ -206,7 +222,7 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = formation.Playbook!;
-            EnsureCanChange(currentUser, playbook.Unit);
+            EnsureCanChange(currentUser, playbook);
             EnsureStartedFromCurrentVersion(dto.Version, formation.Version, formation.Name);
 
             return await SubmitAsync(currentUser, playbook, new ApprovalRequest
@@ -217,7 +233,7 @@ namespace TheWarRoomAPI.Services
                 BaseVersion = formation.Version,
                 TargetName = formation.Name,
                 ProposedName = dto.Name.Trim(),
-                ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, playbook.Unit.ToString(), isFormation: true)
+                ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, playbook.Unit.ToString(), isFormation: true, rules: playbook.Rules)
             });
         }
 
@@ -230,7 +246,7 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = formation.Playbook!;
-            EnsureCanChange(currentUser, playbook.Unit);
+            EnsureCanChange(currentUser, playbook);
 
             return await SubmitAsync(currentUser, playbook, new ApprovalRequest
             {
@@ -253,7 +269,7 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = formation.Playbook!;
-            EnsureCanChange(currentUser, playbook.Unit);
+            EnsureCanChange(currentUser, playbook);
 
             var name = dto.Name.Trim();
             return await SubmitAsync(currentUser, playbook, new ApprovalRequest
@@ -263,7 +279,7 @@ namespace TheWarRoomAPI.Services
                 FormationId = formation.Id,
                 TargetName = name,
                 ProposedName = name,
-                ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, playbook.Unit.ToString(), isFormation: false),
+                ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, playbook.Unit.ToString(), isFormation: false, rules: playbook.Rules),
                 ProposedNotes = CleanNotes(dto.Notes)
             });
         }
@@ -277,7 +293,7 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = play.Formation!.Playbook!;
-            EnsureCanChange(currentUser, playbook.Unit);
+            EnsureCanChange(currentUser, playbook);
             EnsureStartedFromCurrentVersion(dto.Version, play.Version, play.Name);
 
             return await SubmitAsync(currentUser, playbook, new ApprovalRequest
@@ -289,7 +305,7 @@ namespace TheWarRoomAPI.Services
                 BaseVersion = play.Version,
                 TargetName = play.Name,
                 ProposedName = dto.Name.Trim(),
-                ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, playbook.Unit.ToString(), isFormation: false),
+                ProposedJson = DiagramValidator.Normalize(dto.DiagramJson, playbook.Unit.ToString(), isFormation: false, rules: playbook.Rules),
                 ProposedNotes = CleanNotes(dto.Notes)
             });
         }
@@ -303,7 +319,7 @@ namespace TheWarRoomAPI.Services
             }
 
             var playbook = play.Formation!.Playbook!;
-            EnsureCanChange(currentUser, playbook.Unit);
+            EnsureCanChange(currentUser, playbook);
 
             return await SubmitAsync(currentUser, playbook, new ApprovalRequest
             {
@@ -414,16 +430,28 @@ namespace TheWarRoomAPI.Services
             }
         }
 
-        private static void EnsureCanChange(CurrentUser currentUser, TeamUnit unit)
+        private static void EnsureCanChange(CurrentUser currentUser, Playbook playbook)
         {
-            if (AccessRules.CanChangePlaybook(currentUser, unit))
+            if (!AccessRules.CanChangePlaybook(currentUser, playbook.Unit))
             {
-                return;
+                throw new ForbiddenException(currentUser.IsCoach
+                    ? $"The {Labels.Unit(playbook.Unit).ToLowerInvariant()} playbook is outside the playbooks you can change."
+                    : "Only coaches can change the playbook.");
             }
 
-            throw new ForbiddenException(currentUser.IsCoach
-                ? $"The {Labels.Unit(unit).ToLowerInvariant()} playbook is outside the playbooks you can change."
-                : "Only coaches can change the playbook.");
+            // Business rule: a playbook of the game the team is not playing is kept as it was left.
+            // It can be read, but nothing in it is changed until the team plays that game again.
+            if (IsPutAway(currentUser, playbook))
+            {
+                throw new InvalidOperationException(
+                    $"This playbook is for {Labels.Rules(playbook.Rules)}. It is put away while the team plays {Labels.Rules(currentUser.Rules)}.");
+            }
+        }
+
+        // A playbook belongs to one game: 11 players a side in American football, 12 in Canadian football
+        private static bool IsPutAway(CurrentUser currentUser, Playbook playbook)
+        {
+            return playbook.Rules != currentUser.Rules;
         }
 
         // Business rule: a change is drawn on top of one version. If someone else changed the formation or play
