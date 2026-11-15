@@ -51,6 +51,9 @@ namespace TheWarRoomAPI
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
+            // Switches that depend on where the application runs, such as whether new teams may register
+            builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection(SiteOptions.Section));
+
             // Film: where video files are kept, and the ffmpeg programs that read and make them.
             // "Film:Storage" chooses between a folder on this computer and an Amazon S3 bucket.
             builder.Services.Configure<FilmOptions>(builder.Configuration.GetSection(FilmOptions.Section));

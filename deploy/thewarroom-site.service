@@ -1,0 +1,28 @@
+# The War Room site (the MVC application), as a systemd service. Put in place by deploy/server.sh.
+# It listens on this server only (127.0.0.1:5228); Caddy stands in front of it and answers the internet over HTTPS.
+
+[Unit]
+Description=The War Room site
+After=network-online.target thewarroom-api.service
+Wants=network-online.target thewarroom-api.service
+
+[Service]
+User=thewarroom
+Group=thewarroom
+WorkingDirectory=/opt/thewarroom/current/site
+ExecStart=/opt/thewarroom/current/site/TheWarRoomApp
+EnvironmentFile=/etc/thewarroom/site.env
+SyslogIdentifier=thewarroom-site
+
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

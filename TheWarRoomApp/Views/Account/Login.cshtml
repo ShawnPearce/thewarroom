@@ -1,4 +1,5 @@
 @model LoginDto
+@inject Microsoft.Extensions.Options.IOptions<SiteOptions> Site
 
 @{
     ViewData["Title"] = "Sign in";
@@ -28,9 +29,12 @@
             </div>
         </form>
 
-        <p>
-            New program? <a asp-action="Register">Register your team</a>
-        </p>
+        @if (Site.Value.AllowRegistration)
+        {
+            <p>
+                New program? <a asp-action="Register">Register your team</a>
+            </p>
+        }
         <p class="small text-muted">
             Coaches and players are given their account by the head coach.
         </p>

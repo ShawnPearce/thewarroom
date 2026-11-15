@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TheWarRoomAPI.Data;
 using TheWarRoomAPI.DTOs;
 using TheWarRoomAPI.Models;
@@ -16,6 +17,7 @@ namespace TheWarRoomAPI.Tests
         private readonly TestDatabase _database = new TestDatabase();
         private readonly TestClock _clock = new TestClock(new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero));
         private readonly PasswordHasher<User> _passwordHasher = new PasswordHasher<User>();
+        private readonly SiteOptions _site = new SiteOptions();
 
         public void Dispose()
         {
@@ -29,7 +31,7 @@ namespace TheWarRoomAPI.Tests
 
         private TeamService CreateTeamService(AppDbContext context)
         {
-            return new TeamService(context, CreateAuthService(context), _passwordHasher, _clock);
+            return new TeamService(context, CreateAuthService(context), _passwordHasher, _clock, Options.Create(_site));
         }
 
         private async Task<LoginResultDto> RegisterTeamAsync(string email = Email, string teamName = "Test Tigers")
@@ -70,6 +72,26 @@ namespace TheWarRoomAPI.Tests
             Assert.Equal(user.Id, result.UserId);
             Assert.Equal(user.TeamId, result.TeamId);
             Assert.False(string.IsNullOrEmpty(result.SessionToken));
+        }
+
+        [Fact]
+        public async Task Register_WhereTheSiteDoesNotAllowIt_IsRefused()
+        {
+            // A public demo site has registration switched off
+            _site.AllowRegistration = false;
+
+            var error = await Assert.ThrowsAsync<ForbiddenException>(() => RegisterTeamAsync());
+            Assert.Contains("cannot be registered", error.Message);
+
+            using (var context = _database.CreateContext())
+            {
+                Assert.Equal(0, await context.Teams.CountAsync());
+                Assert.Equal(0, await context.Users.CountAsync());
+            }
+
+            // Switched on again, the same registration goes through
+            _site.AllowRegistration = true;
+            Assert.Equal("Test Tigers", (await RegisterTeamAsync()).TeamName);
         }
 
         [Fact]

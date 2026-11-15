@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using TheWarRoomApp.Infrastructure;
 using TheWarRoomApp.Models;
 
@@ -11,11 +12,15 @@ namespace TheWarRoomApp.Controllers
 {
     public class AccountController : WarRoomController
     {
-        private readonly HttpClient _client;
+        private const string RegistrationIsOff = "New teams cannot be registered on this site. Ask your head coach for an account.";
 
-        public AccountController(IHttpClientFactory httpClientFactory)
+        private readonly HttpClient _client;
+        private readonly SiteOptions _site;
+
+        public AccountController(IHttpClientFactory httpClientFactory, IOptions<SiteOptions> site)
         {
             _client = httpClientFactory.CreateClient("WarRoomAPI");
+            _site = site.Value;
         }
 
         // GET: Account/Register
@@ -25,6 +30,13 @@ namespace TheWarRoomApp.Controllers
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction("Dashboard", "Home");
+            }
+
+            // A public demo site has registration switched off. The API refuses it too.
+            if (!_site.AllowRegistration)
+            {
+                TempData["Error"] = RegistrationIsOff;
+                return RedirectToAction(nameof(Login));
             }
 
             return View();
@@ -59,6 +71,10 @@ namespace TheWarRoomApp.Controllers
                 else if (response.StatusCode == HttpStatusCode.Conflict)   // 409 email already used
                 {
                     ModelState.AddModelError("Email", await response.Content.ReadAsStringAsync());
+                }
+                else if (response.StatusCode == HttpStatusCode.Forbidden)   // 403 registration is switched off on this site
+                {
+                    ModelState.AddModelError(string.Empty, await response.Content.ReadAsStringAsync());
                 }
                 else
                 {

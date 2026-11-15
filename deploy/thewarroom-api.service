@@ -1,0 +1,31 @@
+# The War Room API, as a systemd service. Put in place by deploy/server.sh.
+# It listens on this server only (127.0.0.1:5180): the site calls it, the internet cannot.
+
+[Unit]
+Description=The War Room API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=thewarroom
+Group=thewarroom
+WorkingDirectory=/opt/thewarroom/current/api
+ExecStart=/opt/thewarroom/current/api/TheWarRoomAPI
+EnvironmentFile=/etc/thewarroom/api.env
+SyslogIdentifier=thewarroom-api
+
+# Started again when it stops unexpectedly. Asked to stop the way Ctrl+C does, so a video
+# that is being made is left in the queue properly; after 30 seconds it is stopped regardless.
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+# The program may write to its data folder and nowhere else that matters
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

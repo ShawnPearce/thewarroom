@@ -1,6 +1,10 @@
 name: CI
 
-# Builds the solution and runs the tests on every push and pull request
+# Builds the solution and runs the tests on every push and pull request.
+#
+# A push to main that passes is then put on the live server by the "deploy" job.
+# That job only runs once the repository has been told where the server is
+# (the DEPLOY_HOST variable): see "Deploying" in the README for what to set.
 on:
   push:
   pull_request:
@@ -31,3 +35,153 @@ jobs:
 
       - name: Run tests
         run: dotnet test TheWarRoomApp.sln --configuration Release --no-build
+
+  deploy:
+    name: Deploy to the live server
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_HOST != ''
+    runs-on: ubuntu-latest
+
+    # One deploy at a time: a second push waits for the first one to finish
+    concurrency:
+      group: deploy-live
+      cancel-in-progress: false
+
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'ubuntu' }}
+      SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check that everything the deploy needs has been set
+        env:
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+        run: |
+          missing=""
+          [ -n "$SITE_DOMAIN" ] || missing="$missing SITE_DOMAIN (variable)"
+          [ -n "$DEPLOY_KNOWN_HOSTS" ] || missing="$missing DEPLOY_KNOWN_HOSTS (variable)"
+          [ -n "$DEPLOY_SSH_KEY" ] || missing="$missing DEPLOY_SSH_KEY (secret)"
+          [ -n "$DEMO_PASSWORD" ] || missing="$missing DEMO_PASSWORD (secret)"
+
+          if [ -n "$missing" ]; then
+            echo "::error::Not set in the repository's settings:$missing. See \"Deploying\" in the README."
+            exit 1
+          fi
+
+      # The server is only talked to when it shows the key that was written down for it (DEPLOY_KNOWN_HOSTS)
+      - name: Set up the connection to the server
+        env:
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+          {
+            echo "Host live"
+            echo "  HostName $DEPLOY_HOST"
+            echo "  User $DEPLOY_USER"
+            echo "  IdentityFile ~/.ssh/deploy_key"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  ConnectTimeout 20"
+            # A quiet stretch, such as the server installing ffmpeg, must not look like a dead connection
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 6"
+          } > ~/.ssh/config
+
+      # Installs ffmpeg and the web server if they are not there yet, and makes the folders
+      - name: Prepare the server
+        run: |
+          ssh live 'rm -rf /tmp/thewarroom-deploy && mkdir -m 700 /tmp/thewarroom-deploy'
+          scp -q deploy/* live:/tmp/thewarroom-deploy/
+          ssh live 'sudo bash /tmp/thewarroom-deploy/server.sh prepare'
+
+      # Both programs are published with .NET inside them, for the kind of processor the server has,
+      # so nothing but the two folders has to be on the server
+      - name: Publish the API and the site
+        run: |
+          case "$(ssh live uname -m)" in
+            x86_64) runtime=linux-x64 ;;
+            aarch64 | arm64) runtime=linux-arm64 ;;
+            *) echo "::error::The server has a kind of processor this job does not know."; exit 1 ;;
+          esac
+
+          dotnet publish TheWarRoomAPI/TheWarRoomAPI.csproj --configuration Release --runtime "$runtime" --self-contained true --output publish/api
+          dotnet publish TheWarRoomApp/TheWarRoomApp.csproj --configuration Release --runtime "$runtime" --self-contained true --output publish/site
+
+          # Settings that are only for a developer's own computer stay off the server
+          rm -f publish/api/appsettings.Development.json publish/site/appsettings.Development.json
+
+      # Files that did not change since the release in use are not sent again
+      - name: Upload the release
+        run: |
+          release="$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}"
+          echo "RELEASE=$release" >> "$GITHUB_ENV"
+
+          ssh live "mkdir -p /opt/thewarroom/releases/$release"
+          rsync -az --delete --link-dest=/opt/thewarroom/current/api/ publish/api/ "live:/opt/thewarroom/releases/$release/api/"
+          rsync -az --delete --link-dest=/opt/thewarroom/current/site/ publish/site/ "live:/opt/thewarroom/releases/$release/site/"
+
+      # The server script turns these into the settings of the two programs, and removes what was sent
+      - name: Send the settings
+        env:
+          SITE_TIMEZONE: ${{ vars.SITE_TIMEZONE }}
+          ALLOW_REGISTRATION: ${{ vars.ALLOW_REGISTRATION }}
+          FILM_S3_BUCKET: ${{ vars.FILM_S3_BUCKET }}
+          FILM_S3_REGION: ${{ vars.FILM_S3_REGION }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          umask 077
+          {
+            printf 'SITE_DOMAIN=%s\n' "$SITE_DOMAIN"
+            printf 'SITE_TIMEZONE=%s\n' "$SITE_TIMEZONE"
+            printf 'ALLOW_REGISTRATION=%s\n' "$ALLOW_REGISTRATION"
+            printf 'FILM_S3_BUCKET=%s\n' "$FILM_S3_BUCKET"
+            printf 'FILM_S3_REGION=%s\n' "$FILM_S3_REGION"
+            printf 'DEMO_PASSWORD=%s\n' "$DEMO_PASSWORD"
+            printf 'AWS_ACCESS_KEY_ID=%s\n' "$AWS_ACCESS_KEY_ID"
+            printf 'AWS_SECRET_ACCESS_KEY=%s\n' "$AWS_SECRET_ACCESS_KEY"
+          } > settings.env
+
+          scp -q settings.env live:/tmp/thewarroom-deploy/settings.env
+          rm -f settings.env
+
+      # Restarts both programs on the new release. If they do not answer, the release before it is put back and this step fails.
+      - name: Switch to the new release
+        run: ssh live "sudo bash /tmp/thewarroom-deploy/server.sh activate $RELEASE"
+
+      # The first time, the web server needs a moment to get its certificate
+      - name: Check the site from the outside
+        run: |
+          for attempt in $(seq 1 36); do
+            status="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "https://$SITE_DOMAIN/Account/Login" || true)"
+            if [ "$status" = "200" ]; then
+              echo "https://$SITE_DOMAIN answers."
+              echo "Release $RELEASE is live at https://$SITE_DOMAIN" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "::error::The new release runs on the server, but https://$SITE_DOMAIN does not answer (last answer: $status). Check that the address points at the server and that ports 80 and 443 are open."
+          exit 1
+
+      - name: Remove the key from this machine
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

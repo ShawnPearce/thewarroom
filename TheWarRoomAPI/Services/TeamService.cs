@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TheWarRoomAPI.Data;
 using TheWarRoomAPI.DTOs;
 using TheWarRoomAPI.Models;
@@ -12,17 +13,27 @@ namespace TheWarRoomAPI.Services
         private readonly IAuthService _authService;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly TimeProvider _clock;
+        private readonly SiteOptions _site;
 
-        public TeamService(AppDbContext context, IAuthService authService, IPasswordHasher<User> passwordHasher, TimeProvider clock)
+        public TeamService(AppDbContext context, IAuthService authService, IPasswordHasher<User> passwordHasher, TimeProvider clock,
+            IOptions<SiteOptions> site)
         {
             _context = context;
             _authService = authService;
             _passwordHasher = passwordHasher;
             _clock = clock;
+            _site = site.Value;
         }
 
         public async Task<LoginResultDto> RegisterAsync(RegisterTeamDto dto)
         {
+            // Business rule: new teams register only where the site allows it.
+            // A public demo site has it switched off; accounts are then given out by head coaches only.
+            if (!_site.AllowRegistration)
+            {
+                throw new ForbiddenException("New teams cannot be registered on this site. Ask your head coach for an account.");
+            }
+
             var email = dto.Email.Trim();
 
             // Business rule: an email address can belong to only one account

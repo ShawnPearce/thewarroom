@@ -21,7 +21,7 @@ namespace TheWarRoomAPI.Tests
             LoginResultDto registered;
             using (var context = _world.NewContext())
             {
-                var teams = new TeamService(context, _world.Auth(context), _world.PasswordHasher, _world.Clock);
+                var teams = _world.Teams(context);
                 registered = await teams.RegisterAsync(new RegisterTeamDto
                 {
                     TeamName = "New Team", FirstName = "Casey", LastName = "Coach",

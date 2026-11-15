@@ -1,4 +1,6 @@
-﻿@{
+﻿@inject Microsoft.Extensions.Options.IOptions<SiteOptions> Site
+
+@{
     ViewData["Title"] = "Football team management and film study";
 }
 
@@ -9,9 +11,17 @@
             <p class="lead">
                 One place for your football program's depth charts, playbook, game film and schedule.
             </p>
-            <a class="btn btn-warning btn-lg me-2 mb-2" asp-controller="Account" asp-action="Register">Register your team</a>
-            <a class="btn btn-outline-light btn-lg mb-2" asp-controller="Account" asp-action="Login">Sign in</a>
-            <p class="small mt-3 mb-0">Registration is free. Each team works in its own private workspace.</p>
+            @if (Site.Value.AllowRegistration)
+            {
+                <a class="btn btn-warning btn-lg me-2 mb-2" asp-controller="Account" asp-action="Register">Register your team</a>
+                <a class="btn btn-outline-light btn-lg mb-2" asp-controller="Account" asp-action="Login">Sign in</a>
+                <p class="small mt-3 mb-0">Registration is free. Each team works in its own private workspace.</p>
+            }
+            else
+            {
+                <a class="btn btn-warning btn-lg mb-2" asp-controller="Account" asp-action="Login">Sign in</a>
+                <p class="small mt-3 mb-0">Each team works in its own private workspace. Accounts are given out by the team's head coach.</p>
+            }
         </div>
     </div>
 </section>

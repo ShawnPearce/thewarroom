@@ -32,6 +32,9 @@ namespace TheWarRoomAPI.Tests
         public FakeVideoTools Tools { get; } = new FakeVideoTools();
         public FilmOptions Film { get; } = new FilmOptions { MaxUploadBytes = 10_000 };
 
+        // The site's switches. A test changes one to see the rule that depends on it.
+        public SiteOptions Site { get; } = new SiteOptions();
+
         public void Dispose()
         {
             Database.Dispose();
@@ -51,7 +54,7 @@ namespace TheWarRoomAPI.Tests
         public DepthChartService DepthChart(AppDbContext context) => new DepthChartService(context, Clock);
         public ScheduleService Schedule(AppDbContext context) => new ScheduleService(context, Clock);
         public AttendanceService Attendance(AppDbContext context) => new AttendanceService(context, Schedule(context), Clock);
-        public TeamService Teams(AppDbContext context) => new TeamService(context, Auth(context), PasswordHasher, Clock);
+        public TeamService Teams(AppDbContext context) => new TeamService(context, Auth(context), PasswordHasher, Clock, Options.Create(Site));
         public PlaybookService Playbooks(AppDbContext context) => new PlaybookService(context, new PlaybookChangeApplier(context, Clock), Clock);
         public ApprovalService Approvals(AppDbContext context) => new ApprovalService(context, new PlaybookChangeApplier(context, Clock), Clock);
         public ScoutedTeamService ScoutedTeams(AppDbContext context) => new ScoutedTeamService(context);

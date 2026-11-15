@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using TheWarRoomApp.Infrastructure;
 
@@ -21,6 +23,32 @@ namespace TheWarRoomApp
 
                 // Shows a clear page when the API project is not running
                 options.Filters.Add<ApiUnavailableFilter>();
+            });
+
+            // Switches that depend on where the site runs (see SiteOptions)
+            var site = builder.Configuration.GetSection(SiteOptions.Section);
+            builder.Services.Configure<SiteOptions>(site);
+
+            // The sign-in cookie is protected with keys. On a server they are kept in a folder,
+            // so that people stay signed in when the site is restarted or a new version is put in place.
+            string? keysFolder = site[nameof(SiteOptions.KeysFolder)];
+            if (!string.IsNullOrWhiteSpace(keysFolder))
+            {
+                builder.Services.AddDataProtection()
+                    .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
+                    .SetApplicationName("TheWarRoom");
+            }
+
+            // The cookie that protects forms against requests from other sites, and the one that carries a message
+            // to the next page, are only sent over HTTPS when the site itself is reached over HTTPS,
+            // the same as the sign-in cookie below
+            builder.Services.AddAntiforgery(options =>
+            {
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            });
+            builder.Services.Configure<CookieTempDataProviderOptions>(options =>
+            {
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             });
 
             // Signing in creates a cookie. It expires after 30 minutes without activity.

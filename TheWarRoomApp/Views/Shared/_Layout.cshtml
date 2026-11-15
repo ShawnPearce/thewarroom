@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Options.IOptions<SiteOptions> Site
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,9 +103,12 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Sign in</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register your team</a>
-                        </li>
+                        @if (Site.Value.AllowRegistration)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register your team</a>
+                            </li>
+                        }
                     </ul>
                 }
             </div>

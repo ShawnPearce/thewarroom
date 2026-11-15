@@ -51,6 +51,7 @@ People sign in on the MVC site, which keeps a cookie. On every call to the API t
 database on each request, so a changed role or permission takes effect at once.
 
 The API trusts those headers. It must only be reachable by the MVC site, never from the internet.
+On the live server it listens on the server's own address (127.0.0.1) only.
 
 ### In the browser
 
@@ -223,12 +224,75 @@ all the way from upload to a finished cutup. Those are skipped on a computer wit
 `.github/workflows/ci.yml` restores, builds and runs the tests on every push and pull request.
 It installs ffmpeg first, so the tests that use it run there too.
 
+## Deploying
+
+A push to `main` that passes the tests is then put on the live server by the `deploy` job of the same workflow.
+The job is skipped until the repository has been told where the server is (the `DEPLOY_HOST` variable below).
+
+### The server
+
+One Ubuntu server, for example an AWS Lightsail or EC2 instance with 1 GB of memory or more:
+
+| What | Where | Reachable from |
+|---|---|---|
+| Caddy, the web server | Ports 80 and 443. It gets the HTTPS certificate for the site's address by itself and renews it. | The internet |
+| The site (`TheWarRoomApp`) | `127.0.0.1:5228`, as the service `thewarroom-site` | Caddy only |
+| The API (`TheWarRoomAPI`) | `127.0.0.1:5180`, as the service `thewarroom-api` | The site only |
+| The database, the keys of the sign-in cookies | `/var/lib/thewarroom` | The two programs |
+| Film | The S3 bucket, or `/var/lib/thewarroom/film-storage` when no bucket is set | |
+
+Nothing is installed by hand. The files in `deploy/` do it: `server.sh` installs ffmpeg and Caddy when they are missing,
+writes the settings of the two programs, and puts the two service files and the Caddy settings in place.
+
+### What a deploy does
+
+1. Publishes the API and the site with .NET inside them, for the kind of processor the server has.
+2. Uploads them to a new folder under `/opt/thewarroom/releases`. Files that did not change are not sent again.
+3. Runs `deploy/server.sh` on the server: it writes the settings, switches `/opt/thewarroom/current` to the new release,
+   restarts both programs and asks each whether it answers. If one does not, the release before it is put back and the job fails.
+4. Asks the site for its sign-in page from the outside, over HTTPS.
+
+### Setting it up, once
+
+1. Make the server (Ubuntu 24.04), give it a fixed IP address, and open ports 22, 80 and 443.
+2. Point the site's address at it with a DNS record of type A.
+3. In the repository on GitHub, under Settings, Secrets and variables, Actions, add:
+
+   | Variable | Value |
+   |---|---|
+   | `DEPLOY_HOST` | The server's IP address |
+   | `DEPLOY_KNOWN_HOSTS` | The line `ssh-keyscan -t ed25519 <the IP address>` prints: the server's own key, so the job only ever talks to this server |
+   | `SITE_DOMAIN` | The site's address, such as `warroom.example.com` |
+   | `FILM_S3_BUCKET`, `FILM_S3_REGION` | The bucket for film and its region. Leave both out to keep film on the server's disk. |
+   | `DEPLOY_USER` | Only when the server's user is not `ubuntu` |
+   | `SITE_TIMEZONE` | Only when the team is not on Toronto time (`America/Toronto`) |
+   | `ALLOW_REGISTRATION` | `true` lets visitors register new teams. Left out, only the demo teams and the accounts their head coaches make exist. |
+
+   | Secret | Value |
+   |---|---|
+   | `DEPLOY_SSH_KEY` | The private key that can sign in to the server |
+   | `DEMO_PASSWORD` | The password of the demo accounts on the live site, at least 8 characters |
+   | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | An access key that may use the bucket (only with `FILM_S3_BUCKET`) |
+
+4. Add the site's address, as `https://warroom.example.com`, to the bucket's CORS rule (see "Film storage").
+
+The next push to `main` deploys.
+
+### Looking after it
+
+- What the programs write: `sudo journalctl -u thewarroom-api -n 100` and `sudo journalctl -u thewarroom-site -n 100`.
+- The demo teams are added when the database is first made. Changing `DEMO_PASSWORD` later does not change their passwords.
+- To keep a copy of the data, copy `/var/lib/thewarroom/warroom.db` while the API is stopped (`sudo systemctl stop thewarroom-api`, then `start`).
+- To go back to an earlier release: `sudo ln -sfn releases/<its folder> /opt/thewarroom/current`, then
+  `sudo systemctl restart thewarroom-api thewarroom-site`. The newest three releases are kept.
+
 ## Limits, and what is not done yet
 
 - A cutup's video has no sound, and is always 1280 x 720 at 30 pictures a second.
 - Cutups are made one at a time by the one running copy of the API.
 - A video is sent in one piece, so an upload that is interrupted starts again from the beginning.
-- The site is not deployed anywhere yet: there is no step that publishes it after a push.
+- The deploy job has been tried out in parts (the server script with stand-in system commands, both programs
+  run the way the server runs them), but it has not yet run against a real server.
 
 ## Libraries
 

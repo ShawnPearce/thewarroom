@@ -1,0 +1,7 @@
+# The War Room, answered over HTTPS. Written by deploy/server.sh, which puts the site's address in.
+# Caddy gets the certificate for that address by itself and renews it; plain HTTP is sent on to HTTPS.
+
+SITE_DOMAIN {
+	encode gzip
+	reverse_proxy 127.0.0.1:5228
+}

@@ -63,6 +63,10 @@ namespace TheWarRoomAPI.Controllers
                 var result = await _teamService.RegisterAsync(dto);
                 return CreatedAtAction(nameof(GetTeam), null, result);   // 201 Created
             }
+            catch (ForbiddenException ex)
+            {
+                return Forbidden(ex.Message);   // 403 Forbidden (registration is switched off on this site)
+            }
             catch (InvalidOperationException ex)
             {
                 return Conflict(ex.Message);   // 409 Conflict with error message (email already used)
